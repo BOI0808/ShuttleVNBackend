@@ -22,8 +22,8 @@ and integrations such as SMS, email, or Zalo.
 ## Stack And Solution Layout
 
 - ASP.NET Core Web API, C#, PostgreSQL, EF Core, FluentValidation, Serilog, Swagger/OpenAPI.
-- Target authentication is JWT access tokens. Store secrets in configuration/user secrets or
-  environment variables, never in source control.
+- Authentication uses ASP.NET Core Cookie Authentication. Store cookie, data-protection,
+  and other secrets in configuration/user secrets or environment variables, never in source control.
 - Keep Clean Architecture dependency direction:
 
 ```text
@@ -37,7 +37,7 @@ Core -> (no project dependencies)
 | --- | --- |
 | `ShuttleVNBackend.Core` | Entities, enums, domain invariants, and domain-only abstractions. |
 | `ShuttleVNBackend.Application` | Use cases, DTOs, validation, authorization requirements, repository contracts, and application exceptions. |
-| `ShuttleVNBackend.Infrastructure` | EF Core DbContext/mappings/migrations, repository implementations, auth/token providers, logging, and external clients. |
+| `ShuttleVNBackend.Infrastructure` | EF Core DbContext/mappings/migrations, repository implementations, authentication providers, logging, and external clients. |
 | `ShuttleVNBackend.Api` | Controllers, HTTP request/response mapping, dependency injection, middleware, authentication, and OpenAPI. |
 
 Do not put controller concerns, EF Core queries, HTTP types, or provider SDK types in Core.
@@ -149,7 +149,11 @@ Implementation conventions:
 - Apply `[Authorize]` by default to staff/admin operations; explicitly allow only public endpoints such as register, login, available-court lookup, guest booking, and booking-code lookup when intended.
 - Enforce role checks server-side. UI visibility is not authorization.
 - Required role model: `Customer`, `Employee`, `Admin`; Admin includes employee operational permissions.
-- The proposal requires JWT authentication. Do not introduce or extend cookie-based auth for API clients. If the existing bootstrap still uses cookies, migrate it deliberately as a cohesive auth change rather than supporting mixed schemes silently.
+- Use ASP.NET Core Cookie Authentication as the only application authentication scheme. Do not add JWT bearer authentication or token refresh endpoints unless the architecture is explicitly changed.
+- On successful login, issue a claims principal and let the cookie handler create the auth cookie. On logout, call `SignOutAsync`; do not clear authentication only on the client.
+- Configure the auth cookie as `HttpOnly`, `Secure` outside local development, and with an explicit `SameSite` policy. Keep the cookie name stable (`shuttlevn.auth`) unless a migration is planned.
+- Cookie-authenticated state-changing endpoints must be protected against CSRF. Use ASP.NET Core antiforgery validation for unsafe HTTP methods and require the frontend to send the configured request token/header.
+- When frontend and API run on separate origins, configure CORS with explicit allowed origins and `AllowCredentials()`. Never use `AllowAnyOrigin()` with credentials; client requests must opt into credentials.
 - Use appropriate status codes: `400` malformed request, `401` unauthenticated, `403` forbidden, `404` absent resource, `409` state/concurrency/overlap conflict, and `422` business validation failure if that is the established API convention.
 - Map known application exceptions in `ExceptionHandlingMiddleware`; log unexpected failures with safe contextual identifiers.
 
@@ -179,8 +183,8 @@ Implementation conventions:
 - Audit create/update/delete-style actions for courts, schedules, pricing rules, bookings, and invoices. Include actor account when known, action, entity name/id, and safely serialized old/new values.
 - Hash passwords with a modern ASP.NET password hasher; never implement custom hashing. Enforce account status on authentication and protected requests.
 - Lock or disable an account after five consecutive failed login attempts according to the account policy and record the event in audit logs. Reset the failure counter after a successful login.
-- Never trust an account, employee, customer, or role ID supplied by the client when it can be derived from JWT claims.
-- Put connection strings, JWT keys, LLM credentials, and Serilog sinks in configuration. Provide redacted sample values only in committed `appsettings` files.
+- Never trust an account, employee, customer, or role ID supplied by the client when it can be derived from the authenticated cookie claims.
+- Put connection strings, cookie/data-protection configuration, LLM credentials, and Serilog sinks in configuration. Provide redacted sample values only in committed `appsettings` files.
 - Design external calls, especially AI calls, with timeout, cancellation, structured logging, and a graceful unavailable response. Standard booking/management workflows must continue when AI is unavailable.
 
 ## AI Assistant Boundary
