@@ -8,4 +8,5 @@ public interface ICustomerRepository
     public Task<PagedResult<Customer>> GetAllCustomers(PageRequest page, CancellationToken ct = default);
     public Task<Customer?> GetCustomerById(Guid id, CancellationToken ct = default);
     public Task<Customer?> GetCustomerByEmail(string email, CancellationToken ct = default);
+    public Task<Customer?> GetCustomerByAccountId(Guid accountId, CancellationToken ct = default);
 }
