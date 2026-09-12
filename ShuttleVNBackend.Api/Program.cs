@@ -20,7 +20,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"))
-    .AddPolicy("StaffOnly", policy => policy.RequireRole("Employee", "Admin"));
+    .AddPolicy("StaffOnly", policy => policy.RequireRole("Employee", "Admin"))
+    .AddPolicy("AdminOnly", policy => policy.RequireClaim("IsAdmin", "true"));
 
 var app = builder.Build();
 

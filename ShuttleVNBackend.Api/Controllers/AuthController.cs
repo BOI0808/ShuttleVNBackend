@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.User.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
@@ -14,7 +15,8 @@ namespace ShuttleVNBackend.Api.Controllers;
 [Route("auth")]
 public class AuthController(
     AppAuthService appAuthService,
-    AccountService accountService) : ControllerBase
+    AccountService accountService,
+    IEmployeeRepository employeeRepository) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -37,6 +39,12 @@ public class AuthController(
             new(ClaimTypes.Email, account.LoginEmail),
             new(ClaimTypes.Role, role)
         };
+
+        if (account.AccountType == AccountType.Employee)
+        {
+            var employee = await employeeRepository.GetEmployeeByAccountId(account.AccountId);
+            claims.Add(new Claim("IsAdmin", (employee?.IsAdmin ?? false).ToString().ToLowerInvariant()));
+        }
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(
