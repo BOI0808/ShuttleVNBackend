@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,5 +35,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using var scope = app.Services.CreateScope();
+
+var db = scope.ServiceProvider.GetRequiredService<ShuttleVnDbContext>();
+db.Database.Migrate();
+
+app.Run();
 
 app.Run();
