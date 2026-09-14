@@ -16,6 +16,7 @@ Thumbs.db
 .vs/
 bin/
 obj/
+appsettings.Development.json
 
 # User-specific files
 *.user
