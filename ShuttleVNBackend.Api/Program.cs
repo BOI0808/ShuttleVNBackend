@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ShuttleVNBackend.Api.Middlewares;
 using ShuttleVNBackend.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
