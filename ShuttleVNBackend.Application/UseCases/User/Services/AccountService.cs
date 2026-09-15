@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Authentication;
+using ShuttleVNBackend.Application.DTOs.User;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.User;
@@ -92,6 +93,30 @@ public class AccountService(
             throw new NotFoundException("Account not found");
         
         account.Status = status;
+        await unitOfWork.SaveChangesAsync();
+    }
+
+     public async Task ChangePassword(Guid accountId, ChangePasswordDto dto) 
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+            errors["CurrentPassword"] = ["Current password is required"];
+        if (string.IsNullOrWhiteSpace(dto.NewPassword) || dto.NewPassword.Length < 8)
+            errors["NewPassword"] = ["New password must be at least 8 characters"];
+        if (!string.Equals(dto.NewPassword, dto.ConfirmNewPassword))
+            errors["ConfirmNewPassword"] = ["Passwords do not match"];
+        if (errors.Count > 0)
+            throw new ValidationException(errors: errors);
+
+        var account = await accountRepository.GetByIdAsync(accountId)
+                     ?? throw new NotFoundException("Account not found");
+
+        var verifyResult = _hasher.VerifyHashedPassword(account, account.PasswordHash, dto.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            throw new ValidationException("Current password is incorrect");
+
+        account.PasswordHash = _hasher.HashPassword(account, dto.NewPassword);
+        account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
     }
 }
