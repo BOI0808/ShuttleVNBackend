@@ -22,7 +22,7 @@ public class AuthController(
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         var account = await accountService.Register(dto);
-        return Ok(ApiResponseFactory.Success(new
+        return Created("", ApiResponseFactory.Success(new
         {
             accountId = account.AccountId
         }));
