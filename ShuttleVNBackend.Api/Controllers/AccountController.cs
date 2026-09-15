@@ -10,7 +10,7 @@ namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
 [Route("accounts")]
-public class AccountsController(
+public class AccountController(
     AccountService accountService,
     CustomerService customerService) : ControllerBase
 {
