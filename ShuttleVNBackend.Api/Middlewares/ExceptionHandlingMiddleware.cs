@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.Exceptions;
 using ValidationException = ShuttleVNBackend.Application.Exceptions.ValidationException;
 
@@ -19,15 +19,12 @@ public class ExceptionHandlingMiddleware(
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = ex.StatusCode;
 
-            var problem = new ProblemDetails
-            {
-                Status = ex.StatusCode,
-                Title = ex.Code,
-                Detail = ex.Message
-            };
-
+            IDictionary<string, string[]> errors = new Dictionary<string, string[]>();
             if (ex is ValidationException validationEx)
-                problem.Extensions["errors"] = validationEx.Errors;
+                errors = validationEx.Errors;
+            
+            var problem = ApiResponseFactory.Failure<object>(
+                ex.Message, errors);
 
             await context.Response.WriteAsJsonAsync(problem);
         }
@@ -38,12 +35,8 @@ public class ExceptionHandlingMiddleware(
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            await context.Response.WriteAsJsonAsync(new ProblemDetails
-            {
-                Status = 500,
-                Title = "INTERNAL_ERROR",
-                Detail = "Something went wrong"
-            });
+            await context.Response.WriteAsJsonAsync(
+                ApiResponseFactory.Failure<object>("Internal server error"));
         }
     }
 }

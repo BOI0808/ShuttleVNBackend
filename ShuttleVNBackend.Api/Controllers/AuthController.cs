@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
@@ -12,7 +13,7 @@ using ShuttleVNBackend.Core.Entities.User.Enums;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("auth")]
+[Route("api/auth")]
 public class AuthController(
     AppAuthService appAuthService,
     AccountService accountService,
@@ -23,7 +24,10 @@ public class AuthController(
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         var account = await accountService.Register(dto);
-        return Ok(new { accountId = account.AccountId });
+        return Created("", ApiResponseFactory.Success(new
+        {
+            accountId = account.AccountId
+        }));
     }
 
     [HttpPost("login")]
@@ -52,7 +56,10 @@ public class AuthController(
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = true });
 
-        return Ok(new { message = "Logged in" });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            message = "Logged in"
+        }));
     }
 
     [HttpPost("logout")]
@@ -60,7 +67,10 @@ public class AuthController(
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Ok(new { message = "Logged out" });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            message = "Logged out"
+        }));
     }
 
     [HttpPost("issue-code")]
@@ -69,7 +79,10 @@ public class AuthController(
     {
         var code = await appAuthService.IssueCode(dto.Email, dto.Type);
         // return for testing. Implement EmailService later
-        return Ok(new { code });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            Code = code
+        }));
     }
 
     [HttpPost("reset-password")]
@@ -77,6 +90,9 @@ public class AuthController(
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
     {
         await appAuthService.ResetPassword(dto);
-        return Ok(new { message = "Password reset successfully" });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            message = "Password reset successfully"
+        }));
     }
 }

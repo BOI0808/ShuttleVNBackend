@@ -1,0 +1,57 @@
+﻿# Build output
+**/bin/
+**/obj/
+
+# IDE files
+.idea/
+.vs/
+.vscode/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+*.md
+**/Docs/
+
+# Development configuration
+**/appsettings.Development.json
+
+# NuGet
+**/.nuget/
+**/packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test results
+**/TestResults/
+**/*.trx
+
+# CI/CD
+.github/
+
+# AI Assistant
+.aiassistant/
+
+# Scripts
+*.bat
+*.sh
+
+# License
+LICENSE
