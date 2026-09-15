@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Api.Middlewares;
@@ -6,7 +7,14 @@ using ShuttleVNBackend.Infrastructure.Persistence;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+    });
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
