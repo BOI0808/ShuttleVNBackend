@@ -56,6 +56,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+app.UseCors("Frontend");
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
