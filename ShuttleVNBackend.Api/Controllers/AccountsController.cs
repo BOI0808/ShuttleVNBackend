@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.User;
 using ShuttleVNBackend.Application.UseCases.User.Services;
@@ -19,7 +20,7 @@ public class AccountsController(
     {
         var page = new PageRequest(pageNumber, pageSize);
         var pagedResult = await accountService.GetAllAccounts(page);
-        return Ok(pagedResult);
+        return Ok(ApiResponseFactory.Success(pagedResult));
     }
 
     [HttpPost("{accountId:guid}/lock")]
@@ -27,7 +28,10 @@ public class AccountsController(
     public async Task<IActionResult> LockAccount([FromRoute] Guid accountId)
     {
         await accountService.UpdateAccountStatus(accountId, AccountStatus.Disabled);
-        return Ok(new { message = "Account locked" });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            message = "Account locked"
+        }));
     }
 
     [HttpPost("{accountId:guid}/unlock")]
@@ -35,7 +39,10 @@ public class AccountsController(
     public async Task<IActionResult> UnlockAccount([FromRoute] Guid accountId)
     {
         await accountService.UpdateAccountStatus(accountId, AccountStatus.Active);
-        return Ok(new { message = "Account unlocked" });
+        return Ok(ApiResponseFactory.Success(new
+        {
+            message = "Account unlocked"
+        }));
     }
 
     [HttpGet("customers")]
@@ -44,7 +51,7 @@ public class AccountsController(
     {
         var page = new PageRequest(pageNumber, pageSize);
         var pagedResult = await customerService.GetAllCustomers(page);
-        return Ok(pagedResult);
+        return Ok(ApiResponseFactory.Success(pagedResult));
     }
 
     [HttpGet("customers/{id:guid}")]
@@ -53,7 +60,7 @@ public class AccountsController(
     {
         var customer = await customerService.GetCustomerById(id);
         if (customer is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
-        return Ok(customer);
+        return Ok(ApiResponseFactory.Success(customer));
     }
 
     // Create customer (profile-only)
@@ -62,7 +69,10 @@ public class AccountsController(
     public async Task<IActionResult> CreateCustomer([FromBody] CustomerProfileDto dto)
     {
         var created = await customerService.CreateCustomer(dto);
-        return CreatedAtAction(nameof(GetCustomer), new { id = created.CustomerId }, created);
+        return CreatedAtAction(
+            nameof(GetCustomer), 
+            new { id = created.CustomerId },
+            ApiResponseFactory.Success(created));
     }
 
     [HttpPut("customers/{id:guid}")]
@@ -70,6 +80,6 @@ public class AccountsController(
     public async Task<IActionResult> UpdateCustomer([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
     {
         var updated = await customerService.UpdateCustomer(id, dto);
-        return Ok(updated);
+        return Ok(ApiResponseFactory.Success(updated));
     }
 }
