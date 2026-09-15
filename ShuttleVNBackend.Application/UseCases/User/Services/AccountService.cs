@@ -11,6 +11,7 @@ namespace ShuttleVNBackend.Application.UseCases.User.Services;
 
 public class AccountService(
     IAccountRepository accountRepository,
+    ICustomerRepository customerRepository,
     IUnitOfWork unitOfWork,
     AppAuthService appAuthService)
 {
@@ -56,19 +57,28 @@ public class AccountService(
         account.PasswordHash = _hasher.HashPassword(account, dto.Password);
         await unitOfWork.AddAsync(account);
 
-        var customer = new Customer
-        {
-            CustomerId = Guid.NewGuid(),
-            AccountId = account.AccountId,
-            FullName = dto.FullName,
-            Phone = dto.Phone,
-            Email = dto.Email,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-        await unitOfWork.AddAsync(customer);
+        var existingCustomer = await customerRepository.GetByEmailAsync(dto.Email);
+        if (existingCustomer is not null) {
+            existingCustomer.AccountId = account.AccountId;
+            existingCustomer.FullName = dto.FullName;
+            existingCustomer.Phone = dto.Phone;
+            existingCustomer.UpdatedAt = now;
+        }
+        else {
+            var customer = new Customer
+            {
+                CustomerId = Guid.NewGuid(),
+                AccountId = account.AccountId,
+                FullName = dto.FullName,
+                Phone = dto.Phone,
+                Email = dto.Email,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await unitOfWork.AddAsync(customer);
+        }
+
         await unitOfWork.SaveChangesAsync();
-        
         return account;
     }
 
