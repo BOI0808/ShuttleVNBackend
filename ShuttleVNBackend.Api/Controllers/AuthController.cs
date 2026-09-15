@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.User;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
@@ -48,10 +49,7 @@ public class AuthController(
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = true });
 
-        return Ok(ApiResponseFactory.Success(new
-        {
-            message = "Logged in"
-        }));
+        return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(account)));
     }
 
     [HttpPost("logout")]
@@ -71,10 +69,7 @@ public class AuthController(
     {
         var code = await appAuthService.IssueCode(dto.Email, dto.Type);
         // return for testing. Implement EmailService later
-        return Ok(ApiResponseFactory.Success(new
-        {
-            Code = code
-        }));
+        return Ok(ApiResponseFactory.Success(code));
     }
 
     [HttpPost("reset-password")]
