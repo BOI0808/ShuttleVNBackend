@@ -12,7 +12,7 @@ using ShuttleVNBackend.Core.Entities.User.Enums;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("auth")]
+[Route("api/yauth")]
 public class AuthController(
     AppAuthService appAuthService,
     AccountService accountService) : ControllerBase

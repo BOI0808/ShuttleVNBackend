@@ -9,7 +9,7 @@ using ShuttleVNBackend.Core.Entities.User.Enums;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("accounts")]
+[Route("api/accounts")]
 public class AccountController(
     AccountService accountService,
     CustomerService customerService) : ControllerBase
