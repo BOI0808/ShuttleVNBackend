@@ -7,7 +7,7 @@ using ShuttleVNBackend.Application.UseCases.User.Services;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("employees")]
+[Route("api/employees")]
 [Authorize(Policy = "StaffOnly")]
 public class EmployeesController(EmployeeService employeeService) : ControllerBase
 {

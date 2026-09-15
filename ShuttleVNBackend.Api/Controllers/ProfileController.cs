@@ -7,7 +7,7 @@ using ShuttleVNBackend.Application.UseCases.User.Services;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("profile")]
+[Route("api/profile")]
 [Authorize]
 public class ProfileController(ProfileService profileService) : ControllerBase
 {
