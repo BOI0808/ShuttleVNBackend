@@ -88,4 +88,18 @@ public class EmployeeService(
         await unitOfWork.SaveChangesAsync();
         return employee;
     }
+
+      public async Task<Employee> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
+    {
+        var employee = await employeeRepository.GetEmployeeById(employeeId)
+                      ?? throw new NotFoundException("Employee not found");
+
+        var account = await accountRepository.GetByIdAsync(employee.AccountId)
+                     ?? throw new NotFoundException("Account not found");
+
+        account.Status = status;
+        account.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.SaveChangesAsync();
+        return employee;
+    }
 }

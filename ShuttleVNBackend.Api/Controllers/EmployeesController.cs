@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.User;
 using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Core.Entities.User.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -40,4 +41,20 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> SetAdminRole([FromRoute] Guid id, [FromBody] SetAdminRoleDto dto)
         => Ok(await employeeService.SetAdminRole(id, dto.IsAdmin));
+
+    [HttpPost("{id:guid}/lock")]                    
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> LockEmployee([FromRoute] Guid id)
+    {
+        await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled);
+        return Ok(new { message = "Account locked" });
+    }
+
+    [HttpPost("{id:guid}/unlock")]                 
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> UnlockEmployee([FromRoute] Guid id)
+    {
+        await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active);
+        return Ok(new { message = "Account unlocked" });
+    }
 }
