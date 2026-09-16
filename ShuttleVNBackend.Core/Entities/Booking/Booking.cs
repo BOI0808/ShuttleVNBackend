@@ -1,4 +1,6 @@
 ﻿using ShuttleVNBackend.Core.Entities.Booking.Enums;
+using ShuttleVNBackend.Core.Entities.Court;
+using ShuttleVNBackend.Core.Entities.User;
 
 namespace ShuttleVNBackend.Core.Entities.Booking;
 
@@ -15,4 +17,7 @@ public class Booking
     public decimal TotalCost { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public virtual Customer Customer { get; set; } = null!;
+    public virtual BadmintonCourt Court { get; set; } = null!;
 }
