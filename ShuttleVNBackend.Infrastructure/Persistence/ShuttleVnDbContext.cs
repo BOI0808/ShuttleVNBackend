@@ -17,7 +17,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<Court> Courts => Set<Court>();
+    public DbSet<BadmintonCourt> Courts => Set<BadmintonCourt>();
     public DbSet<CourtSchedule> CourtSchedules => Set<CourtSchedule>();
     public DbSet<PricingRule> PricingRules => Set<PricingRule>();
     public DbSet<Booking> Bookings => Set<Booking>();
@@ -37,6 +37,16 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.AccountType).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();
         });
+        
+        // Auto include `Customer` and `Employee` for `UserAccount` queries
+        // In case that data isn't needed, use `.IgnoreAutoIncludes()`
+        modelBuilder.Entity<UserAccount>()
+            .Navigation(u => u.Customer)
+            .AutoInclude();
+
+        modelBuilder.Entity<UserAccount>()
+            .Navigation(u => u.Employee)
+            .AutoInclude();
 
         modelBuilder.Entity<Employee>(entity =>
         {
@@ -45,7 +55,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.Email).IsRequired();
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasOne<UserAccount>()
-                .WithOne()
+                .WithOne(u => u.Employee)
                 .HasForeignKey<Employee>(e => e.AccountId)
                 .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired();
@@ -58,13 +68,13 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.Email).IsRequired();
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasOne<UserAccount>()
-                .WithOne()
+                .WithOne(u => u.Customer)
                 .HasForeignKey<Customer>(e => e.AccountId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
         });
 
-        modelBuilder.Entity<Court>(entity =>
+        modelBuilder.Entity<BadmintonCourt>(entity =>
         {
             entity.HasKey(e => e.CourtId);
             entity.Property(e => e.Status).HasConversion<string>();
@@ -74,8 +84,8 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         {
             entity.HasKey(e => e.ScheduleId);
             entity.HasIndex(e => new { e.CourtId, e.DayOfWeek, e.OpenTime }).IsUnique();
-            entity.HasOne<Court>()
-                .WithMany()
+            entity.HasOne<BadmintonCourt>()
+                .WithMany(c => c.CourtSchedules)
                 .HasForeignKey(e => e.CourtId);
             
             entity.HasExclusionConstraint(ex => ex
@@ -90,8 +100,8 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasKey(e => e.PricingRuleId);
             entity.HasIndex(e => new { e.CourtId, e.DayOfWeek, e.StartTime }).IsUnique();
             entity.Property(e => e.PricePerHour).HasPrecision(10, 2);
-            entity.HasOne<Court>()
-                .WithMany()
+            entity.HasOne<BadmintonCourt>()
+                .WithMany(c => c.PricingRules)
                 .HasForeignKey(e => e.CourtId);
             
             entity.HasExclusionConstraint(ex => ex
@@ -108,11 +118,11 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.TotalCost).HasPrecision(10, 2);
             entity.Property(e => e.Status).HasConversion<string>();
 
-            entity.HasOne<Customer>()
+            entity.HasOne(e => e.Customer)
                 .WithMany()
                 .HasForeignKey(e => e.CustomerId);
 
-            entity.HasOne<Court>()
+            entity.HasOne(e => e.Court)
                 .WithMany()
                 .HasForeignKey(e => e.CourtId);
             
@@ -131,13 +141,13 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.OldStatus).HasConversion<string>();
             entity.Property(e => e.NewStatus).HasConversion<string>();
 
-            entity.HasOne<Booking>()
+            entity.HasOne(e => e.Booking)
                 .WithMany()
                 .HasForeignKey(e => e.BookingId);
 
-            entity.HasOne<Employee>()
+            entity.HasOne(e => e.Employee)
                 .WithMany()
-                .HasForeignKey(e => e.ChangedBy)
+                .HasForeignKey(e => e.ChangedByEmployee)
                 .IsRequired(false);
         });
 
@@ -149,13 +159,13 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.PaymentMethod).HasConversion<string>();
 
-            entity.HasOne<Booking>()
+            entity.HasOne(e => e.Booking)
                 .WithMany()
                 .HasForeignKey(e => e.BookingId);
 
-            entity.HasOne<Employee>()
+            entity.HasOne(e => e.Employee)
                 .WithMany()
-                .HasForeignKey(e => e.IssuedBy);
+                .HasForeignKey(e => e.IssuedByEmployee);
 
             // BR-13
             entity.HasIndex(e => e.BookingId)
@@ -166,7 +176,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Audit>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasOne<UserAccount>()
+            entity.HasOne(e => e.UserAccount)
                 .WithMany()
                 .HasForeignKey(e => e.AccountId)
                 .IsRequired(false);

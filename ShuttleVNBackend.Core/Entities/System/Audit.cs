@@ -1,4 +1,6 @@
-﻿namespace ShuttleVNBackend.Core.Entities.System;
+﻿using ShuttleVNBackend.Core.Entities.User;
+
+namespace ShuttleVNBackend.Core.Entities.System;
 
 public class Audit
 {
@@ -10,4 +12,6 @@ public class Audit
     public string OldValue { get; set; } = null!;
     public string NewValue { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+    
+    public virtual UserAccount? UserAccount { get; set; }
 }
