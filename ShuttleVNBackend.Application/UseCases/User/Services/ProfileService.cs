@@ -12,7 +12,7 @@ public class ProfileService(
     IEmployeeRepository employeeRepository,
     IUnitOfWork unitOfWork)
 {
-    public async Task<UserAccount> UpdateMyProfile(Guid accountId, AccountType accountType, UpdateProfileDto dto)
+    public async Task<UserAccount> UpdateProfile(Guid accountId, AccountType accountType, UpdateProfileDto dto)
     {
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(dto.FullName)) errors["FullName"] = ["Full name is required"];
