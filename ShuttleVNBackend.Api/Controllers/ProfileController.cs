@@ -15,7 +15,7 @@ public class ProfileController(
     AccountService accountService) : ControllerBase
 {
     [HttpPut]
-    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileDto dto)
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
         var account = await profileService.UpdateMyProfile(User.GetAccountId(), User.GetAccountType(), dto);
         return Ok(AccountDto.FromEntity(account));
