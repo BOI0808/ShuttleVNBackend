@@ -64,7 +64,7 @@ public class EmployeeService(
         return employee;
     }
 
-    public async Task<Employee> UpdateEmployee(Guid id, EmployeeProfileDto dto)
+    public async Task<Employee> UpdateEmployee(Guid id, CustomerProfileDto dto)
     {
         var employee = await employeeRepository.GetEmployeeById(id)
                        ?? throw new NotFoundException("Employee not found");
@@ -78,12 +78,12 @@ public class EmployeeService(
         return employee;
     }
 
-    public async Task<Employee> SetAdminRole(Guid id, bool isAdmin)
+    public async Task<Employee> GrantAdminRole(Guid id)   
     {
         var employee = await employeeRepository.GetEmployeeById(id)
-                       ?? throw new NotFoundException("Employee not found");
+                    ?? throw new NotFoundException("Employee not found");
 
-        employee.IsAdmin = isAdmin;
+        employee.IsAdmin = true;   
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
         return employee;

@@ -27,13 +27,17 @@ public class AccountRepository(ShuttleVnDbContext dbContext): IAccountRepository
 
     public async Task<UserAccount?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await dbContext.UserAccounts.FirstOrDefaultAsync(
-            x => x.AccountId == id, ct);
+        return await dbContext.UserAccounts
+            .Include(a => a.Customer)
+            .Include(a => a.Employee)
+            .FirstOrDefaultAsync(x => x.AccountId == id, ct);
     }
 
     public async Task<UserAccount?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         return await dbContext.UserAccounts
+            .Include(a => a.Customer)
+            .Include(a => a.Employee)
             .Where(u => u.LoginEmail == email)
             .FirstOrDefaultAsync(ct);
     }

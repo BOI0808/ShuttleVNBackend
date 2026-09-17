@@ -85,6 +85,10 @@ public class AccountService(
 
     public async Task<PagedResult<UserAccount>> GetAllAccounts(PageRequest page)
         => await accountRepository.GetAllAsync(page);
+
+    public async Task<UserAccount> GetAccountById(Guid accountId)  
+        => await accountRepository.GetByIdAsync(accountId)
+            ?? throw new NotFoundException("Account not found");    
     
     public async Task UpdateAccountStatus(Guid accountId, AccountStatus status)
     {
