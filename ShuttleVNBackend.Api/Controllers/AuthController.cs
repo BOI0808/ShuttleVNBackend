@@ -19,8 +19,7 @@ namespace ShuttleVNBackend.Api.Controllers;
 [Route("api/auth")]
 public class AuthController(
     AppAuthService appAuthService,
-    AccountService accountService,
-    IEmployeeRepository employeeRepository) : ControllerBase
+    AccountService accountService) : ControllerBase
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -47,11 +46,7 @@ public class AuthController(
             new(ClaimTypes.Role, role)
         };
 
-        if (account.AccountType == AccountType.Employee)
-        {
-            var employee = await employeeRepository.GetEmployeeByAccountId(account.AccountId);
-            claims.Add(new Claim("IsAdmin", (employee?.IsAdmin ?? false).ToString().ToLowerInvariant()));
-        }
+        claims.Add(new Claim("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant()));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(
