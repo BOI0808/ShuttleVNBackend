@@ -93,6 +93,6 @@ public class AuthController(
     public async Task<IActionResult> GetMe()
     {
         var account = await accountService.GetAccountById(User.GetAccountId());
-        return Ok(AccountDto.FromEntity(account));
+        return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(account)));
     }
 }
