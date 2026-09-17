@@ -1,0 +1,56 @@
+2026-09-17 18:34:56.221 +07:00 [ERR] An error occurred using the connection to database '' on server ''.
+2026-09-17 18:38:52.009 +07:00 [INF] User profile is available. Using 'C:\Users\Khoi\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-09-17 18:38:52.146 +07:00 [INF] Now listening on: http://localhost:5062
+2026-09-17 18:38:52.149 +07:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-09-17 18:38:52.150 +07:00 [INF] Hosting environment: Development
+2026-09-17 18:38:52.152 +07:00 [INF] Content root path: D:\Shuttle-VN\ShuttleVNBackend\ShuttleVNBackend.API
+2026-09-17 18:39:02.899 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/ - null null
+2026-09-17 18:39:02.951 +07:00 [WRN] Failed to determine the https port for redirect.
+2026-09-17 18:39:02.989 +07:00 [INF] Cookies was not authenticated. Failure message: Unprotect ticket failed
+2026-09-17 18:39:02.996 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/ - 404 0 null 99.3685ms
+2026-09-17 18:39:03.012 +07:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5062/, Response status code: 404
+2026-09-17 18:39:07.834 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/index.html - null null
+2026-09-17 18:39:07.897 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/index.html - 200 null text/html;charset=utf-8 63.1543ms
+2026-09-17 18:39:07.928 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/index.css - null null
+2026-09-17 18:39:07.928 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui.css - null null
+2026-09-17 18:39:07.932 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui-bundle.js - null null
+2026-09-17 18:39:07.932 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui-standalone-preset.js - null null
+2026-09-17 18:39:07.932 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/index.js - null null
+2026-09-17 18:39:07.942 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/index.js - 200 null application/javascript;charset=utf-8 10.0844ms
+2026-09-17 18:39:07.945 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/index.css - 200 152 text/css 16.9243ms
+2026-09-17 18:39:07.945 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui.css - 200 26499 text/css 16.9063ms
+2026-09-17 18:39:07.956 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui-bundle.js - 200 421507 text/javascript 23.8978ms
+2026-09-17 18:39:07.956 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/swagger-ui-standalone-preset.js - 200 77731 text/javascript 23.8981ms
+2026-09-17 18:39:08.156 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/swagger/v1/swagger.json - null null
+2026-09-17 18:39:08.284 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 127.9717ms
+2026-09-17 18:39:45.293 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/api/employees?pageNumber=1&pageSize=20 - null null
+2026-09-17 18:39:45.304 +07:00 [INF] Cookies was not authenticated. Failure message: Unprotect ticket failed
+2026-09-17 18:39:45.311 +07:00 [INF] Authorization failed. These requirements were not met:
+RolesAuthorizationRequirement:User.IsInRole must be true for one of the following roles: (Employee|Admin)
+2026-09-17 18:39:45.317 +07:00 [INF] AuthenticationScheme: Cookies was challenged.
+2026-09-17 18:39:45.318 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/api/employees?pageNumber=1&pageSize=20 - 401 0 null 24.8078ms
+2026-09-17 18:39:55.070 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5062/api/auth/me - null null
+2026-09-17 18:39:55.079 +07:00 [INF] Cookies was not authenticated. Failure message: Unprotect ticket failed
+2026-09-17 18:39:55.084 +07:00 [INF] Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-09-17 18:39:55.086 +07:00 [INF] AuthenticationScheme: Cookies was challenged.
+2026-09-17 18:39:55.087 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5062/api/auth/me - 401 0 null 16.554ms
+2026-09-17 18:40:36.157 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5062/api/employees/123e4567-e89b-12d3-a456-426614174000/set-admin - null 0
+2026-09-17 18:40:36.163 +07:00 [INF] CORS policy execution failed.
+2026-09-17 18:40:36.164 +07:00 [INF] Request origin http://localhost:5062 does not have permission to access the resource.
+2026-09-17 18:40:36.166 +07:00 [INF] Cookies was not authenticated. Failure message: Unprotect ticket failed
+2026-09-17 18:40:36.171 +07:00 [INF] Authorization failed. These requirements were not met:
+RolesAuthorizationRequirement:User.IsInRole must be true for one of the following roles: (Employee|Admin)
+ClaimsAuthorizationRequirement:Claim.Type=IsAdmin and Claim.Value is one of the following values: (true)
+2026-09-17 18:40:36.179 +07:00 [INF] AuthenticationScheme: Cookies was challenged.
+2026-09-17 18:40:36.180 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5062/api/employees/123e4567-e89b-12d3-a456-426614174000/set-admin - 401 0 null 23.4834ms
+2026-09-17 18:40:37.037 +07:00 [INF] Request starting HTTP/1.1 POST http://localhost:5062/api/employees/123e4567-e89b-12d3-a456-426614174000/set-admin - null 0
+2026-09-17 18:40:37.042 +07:00 [INF] CORS policy execution failed.
+2026-09-17 18:40:37.043 +07:00 [INF] Request origin http://localhost:5062 does not have permission to access the resource.
+2026-09-17 18:40:37.044 +07:00 [INF] Cookies was not authenticated. Failure message: Unprotect ticket failed
+2026-09-17 18:40:37.047 +07:00 [INF] Authorization failed. These requirements were not met:
+RolesAuthorizationRequirement:User.IsInRole must be true for one of the following roles: (Employee|Admin)
+ClaimsAuthorizationRequirement:Claim.Type=IsAdmin and Claim.Value is one of the following values: (true)
+2026-09-17 18:40:37.051 +07:00 [INF] AuthenticationScheme: Cookies was challenged.
+2026-09-17 18:40:37.054 +07:00 [INF] Request finished HTTP/1.1 POST http://localhost:5062/api/employees/123e4567-e89b-12d3-a456-426614174000/set-admin - 401 0 null 16.9644ms
+2026-09-17 18:41:05.989 +07:00 [INF] Application is shutting down...

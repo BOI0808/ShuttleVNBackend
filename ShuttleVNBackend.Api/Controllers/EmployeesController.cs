@@ -34,13 +34,13 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> UpdateEmployee([FromRoute] Guid id, [FromBody] EmployeeProfileDto dto)
+    public async Task<IActionResult> UpdateEmployee([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
         => Ok(await employeeService.UpdateEmployee(id, dto));
 
     [HttpPost("{id:guid}/set-admin")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> SetAdminRole([FromRoute] Guid id, [FromBody] SetAdminRoleDto dto)
-        => Ok(await employeeService.SetAdminRole(id, dto.IsAdmin));
+    public async Task<IActionResult> GrantAdminRole([FromRoute] Guid id)  
+        => Ok(await employeeService.GrantAdminRole(id));
 
     [HttpPost("{id:guid}/lock")]                    
     [Authorize(Policy = "AdminOnly")]
