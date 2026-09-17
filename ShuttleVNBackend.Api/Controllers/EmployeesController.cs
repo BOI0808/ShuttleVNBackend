@@ -14,14 +14,14 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 {
     [HttpGet]
     public async Task<IActionResult> ListEmployees([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
-        => Ok(await employeeService.GetAllEmployees(new PageRequest(pageNumber, pageSize)));
+        => Ok(ApiResponseFactory.Success(await employeeService.GetAllEmployees(new PageRequest(pageNumber, pageSize))));
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetEmployee([FromRoute] Guid id)
     {
         var employee = await employeeService.GetEmployeeById(id);
         if (employee is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
-        return Ok(employee);
+        return Ok(ApiResponseFactory.Success(employee));
     }
 
     [HttpPost]
@@ -29,25 +29,25 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto)
     {
         var created = await employeeService.CreateEmployee(dto);
-        return CreatedAtAction(nameof(GetEmployee), new { id = created.EmployeeId }, created);
+        return CreatedAtAction(nameof(GetEmployee), new { id = created.EmployeeId }, ApiResponseFactory.Success(created));
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UpdateEmployee([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
-        => Ok(await employeeService.UpdateEmployee(id, dto));
+        => Ok(ApiResponseFactory.Success(await employeeService.UpdateEmployee(id, dto)));
 
     [HttpPost("{id:guid}/set-admin")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GrantAdminRole([FromRoute] Guid id)  
-        => Ok(await employeeService.GrantAdminRole(id));
+        => Ok(ApiResponseFactory.Success(await employeeService.GrantAdminRole(id)));
 
     [HttpPost("{id:guid}/lock")]                    
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> LockEmployee([FromRoute] Guid id)
     {
         await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled);
-        return Ok(new { message = "Account locked" });
+        return Ok(ApiResponseFactory.Success(new { message = "Employee account locked" }));
     }
 
     [HttpPost("{id:guid}/unlock")]                 
@@ -55,6 +55,6 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     public async Task<IActionResult> UnlockEmployee([FromRoute] Guid id)
     {
         await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active);
-        return Ok(new { message = "Account unlocked" });
+        return Ok(ApiResponseFactory.Success(new { message = "Employee account unlocked" }));
     }
 }
