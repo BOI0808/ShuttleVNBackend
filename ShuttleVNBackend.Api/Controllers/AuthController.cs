@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.DTOs.User;
+using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.User.Enums;
+
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -42,6 +45,8 @@ public class AuthController(
             new(ClaimTypes.Email, account.LoginEmail),
             new(ClaimTypes.Role, role)
         };
+
+        claims.Add(new Claim("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant()));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(
@@ -81,5 +86,13 @@ public class AuthController(
         {
             message = "Password reset successfully"
         }));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetMe()
+    {
+        var account = await accountService.GetAccountById(User.GetAccountId());
+        return Ok(AccountDto.FromEntity(account));
     }
 }

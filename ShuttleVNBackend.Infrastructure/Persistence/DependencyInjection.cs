@@ -22,11 +22,14 @@ public static class DependencyInjection
 
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IVerificationCodeRepository, VerificationCodeRepository>();
 
         services.AddScoped<AppAuthService>();
         services.AddScoped<AccountService>();
         services.AddScoped<CustomerService>();
+        services.AddScoped<EmployeeService>();
+        services.AddScoped<ProfileService>();
 
         return services;
     }

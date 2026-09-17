@@ -32,4 +32,6 @@ public class CustomerRepository(ShuttleVnDbContext dbContext): ICustomerReposito
     public async Task<Customer?> GetCustomerByEmail(string email, CancellationToken ct = default)
         => await dbContext.Customers
             .FirstOrDefaultAsync(c => c.Email == email, ct);
+    public async Task<Customer?> GetCustomerByAccountId(Guid accountId, CancellationToken ct = default)
+        => await dbContext.Customers.FirstOrDefaultAsync(c => c.AccountId == accountId, ct);
 }

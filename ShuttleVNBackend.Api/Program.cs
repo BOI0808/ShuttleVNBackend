@@ -46,17 +46,29 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.Name = "shuttlevn.auth";
         options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = context =>          
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+            options.Events.OnRedirectToAccessDenied = context =>   
+        {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"))
-    .AddPolicy("StaffOnly", policy => policy.RequireRole("Employee", "Admin"));
+    .AddPolicy("StaffOnly", policy => policy.RequireRole("Employee", "Admin"))
+    .AddPolicy("AdminOnly", policy => policy.RequireClaim("IsAdmin", "true"));
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -73,7 +85,5 @@ using var scope = app.Services.CreateScope();
 
 var db = scope.ServiceProvider.GetRequiredService<ShuttleVnDbContext>();
 db.Database.Migrate();
-
-app.Run();
 
 app.Run();
