@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using ShuttleVNBackend.Api;
 using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Api.Middlewares;
+using ShuttleVNBackend.Api.Options;
 using ShuttleVNBackend.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,6 +64,9 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"))
     .AddPolicy("StaffOnly", policy => policy.RequireRole("Employee", "Admin"))
     .AddPolicy("AdminOnly", policy => policy.RequireClaim("IsAdmin", "true"));
+
+builder.Services.Configure<AdminAccountOptions>(
+    builder.Configuration.GetSection(AdminAccountOptions.SectionName));
 
 var app = builder.Build();
 
