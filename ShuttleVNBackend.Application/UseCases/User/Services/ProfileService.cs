@@ -22,7 +22,7 @@ public class ProfileService(
         var now = DateTime.UtcNow;
         if (accountType == AccountType.Customer)
         {
-            var customer = await customerRepository.GetCustomerByAccountId(accountId)
+            var customer = await customerRepository.GetByAccountIdAsync(accountId)
                           ?? throw new NotFoundException("Profile not found");
             customer.FullName = dto.FullName;
             customer.Phone = dto.Phone;
@@ -30,7 +30,7 @@ public class ProfileService(
         }
         else
         {
-            var employee = await employeeRepository.GetEmployeeByAccountId(accountId)
+            var employee = await employeeRepository.GetByAccountIdAsync(accountId)
                           ?? throw new NotFoundException("Profile not found");
             employee.FullName = dto.FullName;
             employee.Phone = dto.Phone;

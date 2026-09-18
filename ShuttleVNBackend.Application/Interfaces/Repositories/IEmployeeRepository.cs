@@ -5,8 +5,8 @@ namespace ShuttleVNBackend.Application.Interfaces.Repositories;
 
 public interface IEmployeeRepository
 {
-    Task<PagedResult<Employee>> GetAllEmployees(PageRequest page, CancellationToken ct = default);
-    Task<Employee?> GetEmployeeById(Guid id, CancellationToken ct = default);
-    Task<Employee?> GetEmployeeByAccountId(Guid accountId, CancellationToken ct = default);
-    Task<Employee?> GetEmployeeByEmail(string email, CancellationToken ct = default);
+    Task<PagedResult<Employee>> GetAllAsync(PageRequest page, CancellationToken ct = default);
+    Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Employee?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default);
+    Task<Employee?> GetByEmailAsync(string email, CancellationToken ct = default);
 }

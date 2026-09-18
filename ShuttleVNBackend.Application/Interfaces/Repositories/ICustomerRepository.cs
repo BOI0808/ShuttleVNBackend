@@ -5,8 +5,8 @@ namespace ShuttleVNBackend.Application.Interfaces.Repositories;
 
 public interface ICustomerRepository
 {
-    public Task<PagedResult<Customer>> GetAllCustomers(PageRequest page, CancellationToken ct = default);
-    public Task<Customer?> GetCustomerById(Guid id, CancellationToken ct = default);
-    public Task<Customer?> GetCustomerByEmail(string email, CancellationToken ct = default);
-    public Task<Customer?> GetCustomerByAccountId(Guid accountId, CancellationToken ct = default);
+    public Task<PagedResult<Customer>> GetAllAsync(PageRequest page, CancellationToken ct = default);
+    public Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    public Task<Customer?> GetByEmailAsync(string email, CancellationToken ct = default);
+    public Task<Customer?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default);
 }

@@ -15,12 +15,12 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 {
     [HttpGet]
     public async Task<IActionResult> ListEmployees([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
-        => Ok(ApiResponseFactory.Success(await employeeService.GetAllEmployees(new PageRequest(pageNumber, pageSize))));
+        => Ok(ApiResponseFactory.Success(await employeeService.GetAllAsync(new PageRequest(pageNumber, pageSize))));
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetEmployee([FromRoute] Guid id)
     {
-        var employee = await employeeService.GetEmployeeById(id);
+        var employee = await employeeService.GetByIdAsync(id);
         if (employee is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
         return Ok(ApiResponseFactory.Success(employee));
     }

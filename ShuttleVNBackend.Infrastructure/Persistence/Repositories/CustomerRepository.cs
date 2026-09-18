@@ -7,7 +7,7 @@ namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories;
 
 public class CustomerRepository(ShuttleVnDbContext dbContext): ICustomerRepository
 {
-    public async Task<PagedResult<Customer>> GetAllCustomers(PageRequest page, CancellationToken ct = default)
+    public async Task<PagedResult<Customer>> GetAllAsync(PageRequest page, CancellationToken ct = default)
     {
         var query = dbContext.Customers.OrderBy(x => x.CreatedAt);
         var totalCount = await query.CountAsync(ct);
@@ -25,13 +25,13 @@ public class CustomerRepository(ShuttleVnDbContext dbContext): ICustomerReposito
         };
     }
 
-    public async Task<Customer?> GetCustomerById(Guid id, CancellationToken ct = default)
+    public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await dbContext.Customers.FirstOrDefaultAsync(
             c => c.CustomerId == id, ct);
 
-    public async Task<Customer?> GetCustomerByEmail(string email, CancellationToken ct = default)
+    public async Task<Customer?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await dbContext.Customers
             .FirstOrDefaultAsync(c => c.Email == email, ct);
-    public async Task<Customer?> GetCustomerByAccountId(Guid accountId, CancellationToken ct = default)
+    public async Task<Customer?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default)
         => await dbContext.Customers.FirstOrDefaultAsync(c => c.AccountId == accountId, ct);
 }

@@ -50,7 +50,7 @@ public class AccountController(
     public async Task<IActionResult> ListCustomers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
         var page = new PageRequest(pageNumber, pageSize);
-        var pagedResult = await customerService.GetAllCustomers(page);
+        var pagedResult = await customerService.GetAllAsync(page);
         return Ok(ApiResponseFactory.Success(pagedResult));
     }
 
@@ -58,7 +58,7 @@ public class AccountController(
     [Authorize(Policy = "StaffOnly")]
     public async Task<IActionResult> GetCustomer([FromRoute] Guid id)
     {
-        var customer = await customerService.GetCustomerById(id);
+        var customer = await customerService.GetByIdAsync(id);
         if (customer is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
         return Ok(ApiResponseFactory.Success(customer));
     }
