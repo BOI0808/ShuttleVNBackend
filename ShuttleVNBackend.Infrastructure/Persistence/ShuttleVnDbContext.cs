@@ -37,16 +37,6 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.AccountType).HasConversion<string>();
             entity.Property(e => e.Status).HasConversion<string>();
         });
-        
-        // Auto include `Customer` and `Employee` for `UserAccount` queries
-        // In case that data isn't needed, use `.IgnoreAutoIncludes()`
-        modelBuilder.Entity<UserAccount>()
-            .Navigation(u => u.Customer)
-            .AutoInclude();
-
-        modelBuilder.Entity<UserAccount>()
-            .Navigation(u => u.Employee)
-            .AutoInclude();
 
         modelBuilder.Entity<Employee>(entity =>
         {
