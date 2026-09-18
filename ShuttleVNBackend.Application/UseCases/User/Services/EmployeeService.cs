@@ -32,8 +32,6 @@ public class EmployeeService(
 
         if (await accountRepository.GetByEmailAsync(dto.Email) is not null)
             throw new ConflictException("Email is already registered");
-        if (await employeeRepository.GetByEmailAsync(dto.Email) is not null)
-            throw new ConflictException("Email is already used by another employee");
 
         var now = DateTime.UtcNow;
         var account = new UserAccount
