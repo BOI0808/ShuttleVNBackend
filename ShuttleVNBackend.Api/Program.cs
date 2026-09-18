@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using ShuttleVNBackend.Api;
+using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Api.Middlewares;
 using ShuttleVNBackend.Infrastructure.Persistence;
 
@@ -85,5 +87,7 @@ using var scope = app.Services.CreateScope();
 
 var db = scope.ServiceProvider.GetRequiredService<ShuttleVnDbContext>();
 db.Database.Migrate();
+
+await app.SeedAdminAccountAsync();
 
 app.Run();
