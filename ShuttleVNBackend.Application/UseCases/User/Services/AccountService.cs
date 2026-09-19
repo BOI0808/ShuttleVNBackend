@@ -58,7 +58,7 @@ public class AccountService(
         account.PasswordHash = _hasher.HashPassword(account, dto.Password);
         await unitOfWork.AddAsync(account);
 
-        var existingCustomer = await customerRepository.GetCustomerByEmail(dto.Email);
+        var existingCustomer = await customerRepository.GetByEmailAsync(dto.Email);
         if (existingCustomer is not null) {
             existingCustomer.AccountId = account.AccountId;
             existingCustomer.FullName = dto.FullName;

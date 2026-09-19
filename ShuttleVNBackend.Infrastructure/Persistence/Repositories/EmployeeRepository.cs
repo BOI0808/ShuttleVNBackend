@@ -35,9 +35,9 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
     public async Task<Employee?> GetEmployeeById(Guid id, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == id, ct);
 
-    public async Task<Employee?> GetEmployeeByAccountId(Guid accountId, CancellationToken ct = default)
+    public async Task<Employee?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.AccountId == accountId, ct);
 
-    public async Task<Employee?> GetEmployeeByEmail(string email, CancellationToken ct = default)
+    public async Task<Employee?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.Email == email, ct);
 }

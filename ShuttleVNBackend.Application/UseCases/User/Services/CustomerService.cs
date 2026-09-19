@@ -10,11 +10,11 @@ public class CustomerService(
     ICustomerRepository customerRepository,
     IUnitOfWork unitOfWork)
 {
-    public async Task<PagedResult<Customer>> GetAllCustomers(PageRequest page)
-        => await customerRepository.GetAllCustomers(page);
+    public async Task<PagedResult<Customer>> GetAllAsync(PageRequest page)
+        => await customerRepository.GetAllAsync(page);
     
-    public async Task<Customer?> GetCustomerById(Guid id)
-        => await customerRepository.GetCustomerById(id);
+    public async Task<Customer?> GetByIdAsync(Guid id)
+        => await customerRepository.GetByIdAsync(id);
 
     public async Task<Customer> CreateCustomer(CustomerProfileDto dto)
     {
@@ -28,7 +28,7 @@ public class CustomerService(
         if (errors.Count > 0)
             throw new ValidationException(errors: errors);
 
-        var existing = await customerRepository.GetCustomerByEmail(dto.Email);
+        var existing = await customerRepository.GetByEmailAsync(dto.Email);
         if (existing is not null)
             throw new ConflictException("Email is already used by another customer");
 
@@ -51,7 +51,7 @@ public class CustomerService(
 
     public async Task<Customer> UpdateCustomer(Guid id, CustomerProfileDto dto)
     {
-        var customer = await customerRepository.GetCustomerById(id)
+        var customer = await customerRepository.GetByIdAsync(id)
                        ?? throw new NotFoundException("Customer not found");
 
         if (!string.IsNullOrWhiteSpace(dto.FullName))

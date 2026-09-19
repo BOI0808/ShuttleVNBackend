@@ -32,7 +32,7 @@ public class EmployeeService(
 
         if (await accountRepository.GetByEmailAsync(dto.Email) is not null)
             throw new ConflictException("Email is already registered");
-        if (await employeeRepository.GetEmployeeByEmail(dto.Email) is not null)
+        if (await employeeRepository.GetByEmailAsync(dto.Email) is not null)
             throw new ConflictException("Email is already used by another employee");
 
         var now = DateTime.UtcNow;
@@ -67,7 +67,7 @@ public class EmployeeService(
 
     public async Task<UserAccount> UpdateEmployee(Guid id, CustomerProfileDto dto)
     {
-        var employee = await employeeRepository.GetEmployeeById(id)
+        var employee = await employeeRepository.GetByIdAsync(id)
                        ?? throw new NotFoundException("Employee not found");
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
@@ -81,10 +81,10 @@ public class EmployeeService(
 
     public async Task<UserAccount> GrantAdminRole(Guid id)   
     {
-        var employee = await employeeRepository.GetEmployeeById(id)
-                    ?? throw new NotFoundException("Employee not found");
+        var employee = await employeeRepository.GetByIdAsync(id)
+                       ?? throw new NotFoundException("Employee not found");
 
-        employee.IsAdmin = true;   
+        employee.IsAdmin = true;
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
         return await employeeRepository.GetEmployeeAccountById(id) ?? throw new NotFoundException("Employee not found");
@@ -92,11 +92,11 @@ public class EmployeeService(
 
       public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
     {
-        var employee = await employeeRepository.GetEmployeeById(employeeId)
-                      ?? throw new NotFoundException("Employee not found");
+        var employee = await employeeRepository.GetByIdAsync(employeeId)
+                       ?? throw new NotFoundException("Employee not found");
 
         var account = await accountRepository.GetByIdAsync(employee.AccountId)
-                     ?? throw new NotFoundException("Account not found");
+                      ?? throw new NotFoundException("Account not found");
 
         account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;

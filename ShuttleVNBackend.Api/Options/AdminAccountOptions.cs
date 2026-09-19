@@ -1,0 +1,10 @@
+﻿namespace ShuttleVNBackend.Api.Options;
+
+public class AdminAccountOptions
+{
+    public const string SectionName = "DefaultAdmin";
+    public string FullName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
