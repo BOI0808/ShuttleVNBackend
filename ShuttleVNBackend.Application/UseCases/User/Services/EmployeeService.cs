@@ -15,13 +15,13 @@ public class EmployeeService(
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
 
-    public async Task<PagedResult<Employee>> GetAllEmployees(PageRequest page)
+    public async Task<PagedResult<UserAccount>> GetAllEmployees(PageRequest page)
         => await employeeRepository.GetAllEmployees(page);
 
-    public async Task<Employee?> GetEmployeeById(Guid id)
-        => await employeeRepository.GetEmployeeById(id);
+    public async Task<UserAccount?> GetEmployeeById(Guid id)
+        => await employeeRepository.GetEmployeeAccountById(id);
 
-    public async Task<Employee> CreateEmployee(CreateEmployeeDto dto)
+    public async Task<UserAccount> CreateEmployee(CreateEmployeeDto dto)
     {
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(dto.FullName)) errors["FullName"] = ["Full name is required"];
@@ -59,12 +59,12 @@ public class EmployeeService(
             CreatedAt = now,
             UpdatedAt = now
         };
-        await unitOfWork.AddAsync(employee);
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        account.Employee = employee;
+        return account;
     }
 
-    public async Task<Employee> UpdateEmployee(Guid id, CustomerProfileDto dto)
+    public async Task<UserAccount> UpdateEmployee(Guid id, CustomerProfileDto dto)
     {
         var employee = await employeeRepository.GetEmployeeById(id)
                        ?? throw new NotFoundException("Employee not found");
@@ -75,10 +75,10 @@ public class EmployeeService(
 
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return await employeeRepository.GetEmployeeAccountById(id) ?? throw new NotFoundException("Employee not found");
     }
 
-    public async Task<Employee> GrantAdminRole(Guid id)   
+    public async Task<UserAccount> GrantAdminRole(Guid id)   
     {
         var employee = await employeeRepository.GetEmployeeById(id)
                     ?? throw new NotFoundException("Employee not found");
@@ -86,10 +86,10 @@ public class EmployeeService(
         employee.IsAdmin = true;   
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return await employeeRepository.GetEmployeeAccountById(id) ?? throw new NotFoundException("Employee not found");
     }
 
-      public async Task<Employee> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
+      public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
     {
         var employee = await employeeRepository.GetEmployeeById(employeeId)
                       ?? throw new NotFoundException("Employee not found");
@@ -100,6 +100,6 @@ public class EmployeeService(
         account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return await employeeRepository.GetEmployeeAccountById(employeeId) ?? throw new NotFoundException("Employee not found");
     }
 }
