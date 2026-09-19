@@ -32,7 +32,7 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
             .Include(a => a.Employee)
             .FirstOrDefaultAsync(a => a.Employee != null && a.Employee.EmployeeId == employeeId, ct);
 
-    public async Task<Employee?> GetEmployeeById(Guid id, CancellationToken ct = default)
+    public async Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == id, ct);
 
     public async Task<Employee?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default)
