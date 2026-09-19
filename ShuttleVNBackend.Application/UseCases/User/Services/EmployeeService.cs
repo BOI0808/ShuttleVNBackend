@@ -59,6 +59,7 @@ public class EmployeeService(
             CreatedAt = now,
             UpdatedAt = now
         };
+        await unitOfWork.AddAsync(employee);
         await unitOfWork.SaveChangesAsync();
         account.Employee = employee;
         return account;
