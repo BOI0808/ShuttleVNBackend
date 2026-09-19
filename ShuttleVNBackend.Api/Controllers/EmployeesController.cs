@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
-using ShuttleVNBackend.API.DTOs.User;
+using ShuttleVNBackend.Api.DTOs.User;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.User;
 using ShuttleVNBackend.Application.UseCases.User.Services;
@@ -31,8 +31,8 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetEmployee([FromRoute] Guid id)
     {
-        var employee = await employeeService.GetEmployeeById(id);
-        if (employee is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
+        var account = await employeeService.GetEmployeeById(id);
+        if (account is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
         return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(account)));
     }
 
@@ -60,7 +60,7 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     [HttpPost("{id:guid}/lock")]                    
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> LockEmployee([FromRoute] Guid id)
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled))));s
+        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled))));
 
     [HttpPost("{id:guid}/unlock")]                 
     [Authorize(Policy = "AdminOnly")]

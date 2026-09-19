@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.User;
+using ShuttleVNBackend.Core.Entities.User.Enums;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories;
 
