@@ -27,16 +27,15 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
         };
     }
 
-    public async Task<UserAccount?> GetEmployeeAccountById(Guid employeeId, CancellationToken ct = default)
+    public async Task<UserAccount?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await dbContext.UserAccounts
             .Include(a => a.Employee)
-            .FirstOrDefaultAsync(a => a.Employee != null && a.Employee.EmployeeId == employeeId, ct);
+            .FirstOrDefaultAsync(a => a.Employee != null && a.Employee.EmployeeId == id, ct);
 
-    public async Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => await dbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == id, ct);
-
-    public async Task<Employee?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default)
-        => await dbContext.Employees.FirstOrDefaultAsync(e => e.AccountId == accountId, ct);
+    public async Task<UserAccount?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default)
+        => await dbContext.UserAccounts
+            .Include(a => a.Employee)
+            .FirstOrDefaultAsync(a => a.AccountId == accountId && a.Employee != null, ct);
 
     public async Task<Employee?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.Email == email, ct);
