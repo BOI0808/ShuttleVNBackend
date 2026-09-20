@@ -8,7 +8,7 @@ namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories;
 
 public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeRepository
 {
-    public async Task<PagedResult<UserAccount>> GetAllEmployees(PageRequest page, CancellationToken ct = default)
+    public async Task<PagedResult<UserAccount>> GetAllEmployeeAccounts(PageRequest page, CancellationToken ct = default)
     {
         var query = dbContext.UserAccounts
         .Include(a => a.Employee)

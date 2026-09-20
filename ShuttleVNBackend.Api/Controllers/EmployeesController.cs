@@ -17,7 +17,7 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     [HttpGet]
     public async Task<IActionResult> ListEmployees([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await employeeService.GetAllEmployees(new PageRequest(pageNumber, pageSize));
+        var result = await employeeService.GetAllEmployeeAccounts(new PageRequest(pageNumber, pageSize));
         var mapped = new PagedResult<AccountDto>
         {
             Items = result.Items.Select(AccountDto.FromEntity).ToList(),
@@ -29,9 +29,9 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     }
     
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetEmployee([FromRoute] Guid id)
+    public async Task<IActionResult> GetEmployeeAccount([FromRoute] Guid id)
     {
-        var account = await employeeService.GetEmployeeById(id);
+        var account = await employeeService.GetEmployeeAccount(id);
         if (account is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
         return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(account)));
     }
@@ -42,7 +42,7 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     {
         var created = await employeeService.CreateEmployee(dto);
         return CreatedAtAction(
-            nameof(GetEmployee), 
+            nameof(GetEmployeeAccount), 
             new { id = created.Employee!.EmployeeId }, 
             ApiResponseFactory.Success(AccountDto.FromEntity(created)));
     }

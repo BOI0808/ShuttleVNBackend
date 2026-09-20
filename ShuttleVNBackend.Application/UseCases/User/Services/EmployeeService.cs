@@ -15,10 +15,10 @@ public class EmployeeService(
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
 
-    public async Task<PagedResult<UserAccount>> GetAllEmployees(PageRequest page)
-        => await employeeRepository.GetAllEmployees(page);
+    public async Task<PagedResult<UserAccount>> GetAllEmployeeAccounts(PageRequest page)
+        => await employeeRepository.GetAllEmployeeAccounts(page);
 
-    public async Task<UserAccount?> GetEmployeeById(Guid id)
+    public async Task<UserAccount?> GetEmployeeAccount(Guid id)
         => await employeeRepository.GetByIdAsync(id);
 
     public async Task<UserAccount> CreateEmployee(CreateEmployeeDto dto)
