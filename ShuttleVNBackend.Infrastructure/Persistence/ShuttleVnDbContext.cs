@@ -42,8 +42,8 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         {
             entity.HasKey(e => e.EmployeeId);
             entity.HasIndex(e => e.AccountId).IsUnique();
-            entity.Property(e => e.Email).IsRequired();
-            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Email).IsRequired(false);
+            entity.HasIndex(e => e.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
             entity.HasOne<UserAccount>()
                 .WithOne(u => u.Employee)
                 .HasForeignKey<Employee>(e => e.AccountId)
