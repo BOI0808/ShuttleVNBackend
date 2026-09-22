@@ -89,41 +89,25 @@ public class EmployeeService(
         return account;
     }
 
-    public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
+    public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)
     {
         var account = await employeeRepository.GetByIdAsync(employeeId) ?? throw new NotFoundException("Employee not found");
-
-        if (account.Status == AccountStatus.Deleted)
-            throw new ConflictException("Cannot change status of a deleted employee");
-        if (status == AccountStatus.Deleted)
-            throw new ConflictException("Use the delete endpoint to delete an employee");
-
         account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
         return account;
     }
 
-    public async Task<UserAccount> DeleteEmployee(Guid id)
+    public async Task DeleteEmployee(Guid id)
     {
         var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
         var employee = account.Employee ?? throw new NotFoundException("Employee not found");
 
-        if (account.Status == AccountStatus.Deleted)
-            throw new ConflictException("Employee already deleted");
-
-        var seq = await employeeRepository.GetNextDeletedSequenceAsync();
-        var maskedLoginEmail = $"DELETED_{seq:D3}";
-
-        account.LoginEmail = maskedLoginEmail;
-        account.PasswordHash = string.Empty;
-        account.Status = AccountStatus.Deleted;
-        account.UpdatedAt = DateTime.UtcNow;
-
+        employee.AccountId = null;
         employee.Email = null;
         employee.UpdatedAt = DateTime.UtcNow;
 
+        unitOfWork.Remove(account);
         await unitOfWork.SaveChangesAsync();
-        return account;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using ShuttleVNBackend.Application.DTOs.Authentication;
@@ -32,8 +32,8 @@ public class AppAuthService(
         if (account is null || !IsValidPassword(account, dto.Password))
             throw new ValidationException("Invalid email or password");
 
-        return account.Status is AccountStatus.Disabled or AccountStatus.Deleted
-            ? throw new UnauthorizedException("This account is disabled or no longer exists.")
+        return account.Status is AccountStatus.Disabled
+            ? throw new UnauthorizedException("This account is disabled. Please contact support.")
             : account;
     }
 
