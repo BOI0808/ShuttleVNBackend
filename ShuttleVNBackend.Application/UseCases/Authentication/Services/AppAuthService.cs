@@ -32,8 +32,8 @@ public class AppAuthService(
         if (account is null || !IsValidPassword(account, dto.Password))
             throw new ValidationException("Invalid email or password");
 
-        return account.Status is AccountStatus.Disabled
-            ? throw new UnauthorizedException("This account is disabled. Please contact support.")
+        return account.Status is AccountStatus.Disabled or AccountStatus.Deleted
+            ? throw new UnauthorizedException("This account is disabled or no longer exists.")
             : account;
     }
 

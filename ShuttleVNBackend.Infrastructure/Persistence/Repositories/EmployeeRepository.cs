@@ -12,7 +12,7 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
     {
         var query = dbContext.UserAccounts
         .Include(a => a.Employee)
-        .Where(a => a.AccountType == AccountType.Employee)
+        .Where(a => a.AccountType == AccountType.Employee && a.Status != AccountStatus.Deleted)
         .OrderBy(a => a.CreatedAt);
 
         var totalCount = await query.CountAsync(ct);
@@ -39,4 +39,21 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
 
     public async Task<Employee?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await dbContext.Employees.FirstOrDefaultAsync(e => e.Email == email, ct);
+
+    public async Task<int> GetNextDeletedSequenceAsync(CancellationToken ct = default)
+    {
+        var maskedEmails = await dbContext.UserAccounts
+            .Where(a => a.LoginEmail.StartsWith("DELETED_"))
+            .Select(a => a.LoginEmail)
+            .ToListAsync(ct);
+
+        var maxSeq = maskedEmails
+            .Select(e => e["DELETED_".Length..])
+            .Where(suffix => int.TryParse(suffix, out _))
+            .Select(int.Parse)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return maxSeq + 1;
+    }
 }

@@ -72,7 +72,6 @@ public class EmployeeService(
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
         if (!string.IsNullOrWhiteSpace(dto.Phone)) employee.Phone = dto.Phone;
-        // Email không được đổi
 
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
@@ -93,8 +92,37 @@ public class EmployeeService(
     public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
     {
         var account = await employeeRepository.GetByIdAsync(employeeId) ?? throw new NotFoundException("Employee not found");
-        account.Status = status; 
+
+        if (account.Status == AccountStatus.Deleted)
+            throw new ConflictException("Cannot change status of a deleted employee");
+        if (status == AccountStatus.Deleted)
+            throw new ConflictException("Use the delete endpoint to delete an employee");
+
+        account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.SaveChangesAsync();
+        return account;
+    }
+
+    public async Task<UserAccount> DeleteEmployee(Guid id)
+    {
+        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
+        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
+
+        if (account.Status == AccountStatus.Deleted)
+            throw new ConflictException("Employee already deleted");
+
+        var seq = await employeeRepository.GetNextDeletedSequenceAsync();
+        var maskedLoginEmail = $"DELETED_{seq:D3}";
+
+        account.LoginEmail = maskedLoginEmail;
+        account.PasswordHash = string.Empty;
+        account.Status = AccountStatus.Deleted;
+        account.UpdatedAt = DateTime.UtcNow;
+
+        employee.Email = null;
+        employee.UpdatedAt = DateTime.UtcNow;
+
         await unitOfWork.SaveChangesAsync();
         return account;
     }
