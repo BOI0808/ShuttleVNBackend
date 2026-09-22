@@ -47,8 +47,8 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasOne<UserAccount>()
                 .WithOne(u => u.Employee)
                 .HasForeignKey<Employee>(e => e.AccountId)
-                .OnDelete(DeleteBehavior.NoAction)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -180,4 +180,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
     public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
         => await Set<T>().AddAsync(entity, ct);
+
+    public new void Remove<T>(T entity) where T : class
+        => Set<T>().Remove(entity);
 }
