@@ -72,7 +72,6 @@ public class EmployeeService(
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
         if (!string.IsNullOrWhiteSpace(dto.Phone)) employee.Phone = dto.Phone;
-        // Email không được đổi
 
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
@@ -90,12 +89,25 @@ public class EmployeeService(
         return account;
     }
 
-    public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)  
+    public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)
     {
         var account = await employeeRepository.GetByIdAsync(employeeId) ?? throw new NotFoundException("Employee not found");
-        account.Status = status; 
+        account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
         return account;
+    }
+
+    public async Task DeleteEmployee(Guid id)
+    {
+        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
+        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
+
+        employee.AccountId = null;
+        employee.Email = null;
+        employee.UpdatedAt = DateTime.UtcNow;
+
+        unitOfWork.Remove(account);
+        await unitOfWork.SaveChangesAsync();
     }
 }

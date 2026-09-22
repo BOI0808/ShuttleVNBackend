@@ -66,4 +66,12 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UnlockEmployee([FromRoute] Guid id)
         => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active))));
+    
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> DeleteEmployee([FromRoute] Guid id)
+    {
+        await employeeService.DeleteEmployee(id);
+        return NoContent();
+    }
 }
