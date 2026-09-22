@@ -9,5 +9,4 @@ public interface IEmployeeRepository
     Task<UserAccount?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<UserAccount?> GetByAccountIdAsync(Guid accountId, CancellationToken ct = default);
     Task<Employee?> GetByEmailAsync(string email, CancellationToken ct = default);
-    Task<int> GetNextDeletedSequenceAsync(CancellationToken ct = default);
 }
