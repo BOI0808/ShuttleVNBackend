@@ -3,5 +3,6 @@
 public enum AccountStatus
 {
     Active,
-    Disabled
+    Disabled,
+    Deleted
 }
