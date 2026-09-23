@@ -14,5 +14,7 @@ public static class ClaimsPrincipalExtensions
     }
 
     public static AccountType GetAccountType(this ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.Role) == "Customer" ? AccountType.Customer : AccountType.Employee;
+    {
+        return user.FindFirstValue(ClaimTypes.Role) == "Customer" ? AccountType.Customer : AccountType.Employee;
+    }
 }

@@ -70,7 +70,7 @@ public class AccountController(
     {
         var created = await customerService.CreateCustomer(dto);
         return CreatedAtAction(
-            nameof(GetCustomer), 
+            nameof(GetCustomer),
             new { id = created.CustomerId },
             ApiResponseFactory.Success(created));
     }

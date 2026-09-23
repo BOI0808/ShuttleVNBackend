@@ -9,9 +9,7 @@ using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.User.Enums;
-
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -43,10 +41,9 @@ public class AuthController(
         {
             new(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
             new(ClaimTypes.Email, account.LoginEmail),
-            new(ClaimTypes.Role, role)
+            new(ClaimTypes.Role, role),
+            new("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant())
         };
-
-        claims.Add(new Claim("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant()));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(
@@ -62,10 +59,7 @@ public class AuthController(
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Ok(ApiResponseFactory.Success(new
-        {
-            message = "Logged out"
-        }));
+        return NoContent();
     }
 
     [HttpPost("issue-code")]
