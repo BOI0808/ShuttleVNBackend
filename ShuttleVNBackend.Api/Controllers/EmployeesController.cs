@@ -27,7 +27,7 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
         };
         return Ok(ApiResponseFactory.Success(mapped));
     }
-    
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetEmployeeAccount([FromRoute] Guid id)
     {
@@ -42,31 +42,41 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     {
         var created = await employeeService.CreateEmployee(dto);
         return CreatedAtAction(
-            nameof(GetEmployeeAccount), 
-            new { id = created.Employee!.EmployeeId }, 
+            nameof(GetEmployeeAccount),
+            new { id = created.Employee!.EmployeeId },
             ApiResponseFactory.Success(AccountDto.FromEntity(created)));
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UpdateEmployee([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.UpdateEmployee(id, dto))));
+    {
+        return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.UpdateEmployee(id, dto))));
+    }
 
     [HttpPost("{id:guid}/set-admin")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> GrantAdminRole([FromRoute] Guid id)  
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.GrantAdminRole(id))));
+    public async Task<IActionResult> GrantAdminRole([FromRoute] Guid id)
+    {
+        return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.GrantAdminRole(id))));
+    }
 
-    [HttpPost("{id:guid}/lock")]                    
+    [HttpPost("{id:guid}/lock")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> LockEmployee([FromRoute] Guid id)
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled))));
+    {
+        return Ok(ApiResponseFactory.Success(
+            AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled))));
+    }
 
-    [HttpPost("{id:guid}/unlock")]                 
+    [HttpPost("{id:guid}/unlock")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UnlockEmployee([FromRoute] Guid id)
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active))));
-    
+    {
+        return Ok(ApiResponseFactory.Success(
+            AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active))));
+    }
+
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> DeleteEmployee([FromRoute] Guid id)
