@@ -52,11 +52,6 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     public async Task<IActionResult> UpdateEmployee([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
         => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.UpdateEmployee(id, dto))));
 
-    [HttpPost("{id:guid}/set-admin")]
-    [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> GrantAdminRole([FromRoute] Guid id)  
-        => Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.GrantAdminRole(id))));
-
     [HttpPost("{id:guid}/lock")]                    
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> LockEmployee([FromRoute] Guid id)

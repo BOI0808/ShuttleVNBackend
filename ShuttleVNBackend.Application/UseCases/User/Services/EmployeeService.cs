@@ -78,17 +78,6 @@ public class EmployeeService(
         return account;
     }
 
-    public async Task<UserAccount> GrantAdminRole(Guid id)   
-    {
-        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
-        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
-
-        employee.IsAdmin = true;
-        employee.UpdatedAt = DateTime.UtcNow;
-        await unitOfWork.SaveChangesAsync();
-        return account;
-    }
-
     public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)
     {
         var account = await employeeRepository.GetByIdAsync(employeeId) ?? throw new NotFoundException("Employee not found");
