@@ -103,6 +103,9 @@ public class EmployeeService(
         var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
         var employee = account.Employee ?? throw new NotFoundException("Employee not found");
 
+        if (employee.IsAdmin)
+            throw new ConflictException("Cannot delete an administrator account");
+
         employee.AccountId = null;
         employee.Email = null;
         employee.UpdatedAt = DateTime.UtcNow;
