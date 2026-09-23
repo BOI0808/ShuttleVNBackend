@@ -15,13 +15,13 @@ public class EmployeeService(
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
 
-    public async Task<PagedResult<Employee>> GetAllAsync(PageRequest page)
-        => await employeeRepository.GetAllAsync(page);
+    public async Task<PagedResult<UserAccount>> GetAllEmployeeAccounts(PageRequest page)
+        => await employeeRepository.GetAllEmployeeAccounts(page);
 
-    public async Task<Employee?> GetByIdAsync(Guid id)
+    public async Task<UserAccount?> GetEmployeeAccount(Guid id)
         => await employeeRepository.GetByIdAsync(id);
-    
-    public async Task<Employee> CreateEmployee(CreateEmployeeDto dto)
+
+    public async Task<UserAccount> CreateEmployee(CreateEmployeeDto dto)
     {
         var errors = new Dictionary<string, string[]>();
         if (string.IsNullOrWhiteSpace(dto.FullName)) errors["FullName"] = ["Full name is required"];
@@ -59,45 +59,53 @@ public class EmployeeService(
         };
         await unitOfWork.AddAsync(employee);
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        account.Employee = employee;
+        return account;
     }
 
-    public async Task<Employee> UpdateEmployee(Guid id, CustomerProfileDto dto)
+    public async Task<UserAccount> UpdateEmployee(Guid id, CustomerProfileDto dto)
     {
-        var employee = await employeeRepository.GetByIdAsync(id)
-                       ?? throw new NotFoundException("Employee not found");
+        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
+        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
         if (!string.IsNullOrWhiteSpace(dto.Phone)) employee.Phone = dto.Phone;
-        if (!string.IsNullOrWhiteSpace(dto.Email)) employee.Email = dto.Email;
 
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return account;
     }
 
-    public async Task<Employee> GrantAdminRole(Guid id)
+    public async Task<UserAccount> GrantAdminRole(Guid id)   
     {
-        var employee = await employeeRepository.GetByIdAsync(id)
-                       ?? throw new NotFoundException("Employee not found");
+        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
+        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
 
         employee.IsAdmin = true;
         employee.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return account;
     }
 
-    public async Task<Employee> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)
+    public async Task<UserAccount> SetEmployeeAccountStatus(Guid employeeId, AccountStatus status)
     {
-        var employee = await employeeRepository.GetByIdAsync(employeeId)
-                       ?? throw new NotFoundException("Employee not found");
-
-        var account = await accountRepository.GetByIdAsync(employee.AccountId)
-                      ?? throw new NotFoundException("Account not found");
-
+        var account = await employeeRepository.GetByIdAsync(employeeId) ?? throw new NotFoundException("Employee not found");
         account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
-        return employee;
+        return account;
+    }
+
+    public async Task DeleteEmployee(Guid id)
+    {
+        var account = await employeeRepository.GetByIdAsync(id) ?? throw new NotFoundException("Employee not found");
+        var employee = account.Employee ?? throw new NotFoundException("Employee not found");
+
+        employee.AccountId = null;
+        employee.Email = null;
+        employee.UpdatedAt = DateTime.UtcNow;
+
+        unitOfWork.Remove(account);
+        await unitOfWork.SaveChangesAsync();
     }
 }
