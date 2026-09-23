@@ -22,7 +22,7 @@ public class ExceptionHandlingMiddleware(
             IDictionary<string, string[]> errors = new Dictionary<string, string[]>();
             if (ex is ValidationException validationEx)
                 errors = validationEx.Errors;
-            
+
             var problem = ApiResponseFactory.Failure<object>(
                 ex.Message, errors);
 

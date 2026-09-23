@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.User;
 using ShuttleVNBackend.Api.Extensions;
-using ShuttleVNBackend.Api.DTOs.User;   
 using ShuttleVNBackend.Application.DTOs.User;
 using ShuttleVNBackend.Application.UseCases.User.Services;
 

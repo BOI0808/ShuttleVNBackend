@@ -48,15 +48,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.Name = "shuttlevn.auth";
         options.SlidingExpiration = true;
-        options.Events.OnRedirectToLogin = context =>          
+        options.Events.OnRedirectToLogin = context =>
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return Task.CompletedTask;
         };
-            options.Events.OnRedirectToAccessDenied = context =>   
+        options.Events.OnRedirectToAccessDenied = context =>
         {
-        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return Task.CompletedTask;
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
         };
     });
 
