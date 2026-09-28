@@ -17,7 +17,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<BadmintonCourt> Courts => Set<BadmintonCourt>();
+    public DbSet<BadmintonCourt> BadmintonCourts => Set<BadmintonCourt>();
     public DbSet<CourtSchedule> CourtSchedules => Set<CourtSchedule>();
     public DbSet<PricingRule> PricingRules => Set<PricingRule>();
     public DbSet<Booking> Bookings => Set<Booking>();

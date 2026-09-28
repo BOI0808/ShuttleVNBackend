@@ -189,7 +189,7 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
 
                     b.HasKey("CourtId");
 
-                    b.ToTable("Courts");
+                    b.ToTable("BadmintonCourts");
                 });
 
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Court.CourtSchedule", b =>
@@ -356,14 +356,13 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AccountId")
+                    b.Property<Guid?>("AccountId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FullName")
@@ -386,7 +385,8 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Email\" IS NOT NULL");
 
                     b.ToTable("Employees");
                 });
@@ -548,8 +548,7 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.HasOne("ShuttleVNBackend.Core.Entities.User.UserAccount", null)
                         .WithOne("Employee")
                         .HasForeignKey("ShuttleVNBackend.Core.Entities.User.Employee", "AccountId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Court.BadmintonCourt", b =>
