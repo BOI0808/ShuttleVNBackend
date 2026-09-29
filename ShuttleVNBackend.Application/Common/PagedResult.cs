@@ -1,4 +1,4 @@
-﻿namespace ShuttleVNBackend.Application.Common;
+namespace ShuttleVNBackend.Application.Common;
 
 public sealed record PagedResult<T>
 {
@@ -6,5 +6,5 @@ public sealed record PagedResult<T>
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }
-    public int TotalPage => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
 }
