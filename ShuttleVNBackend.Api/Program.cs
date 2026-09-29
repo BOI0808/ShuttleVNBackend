@@ -92,5 +92,6 @@ var db = scope.ServiceProvider.GetRequiredService<ShuttleVnDbContext>();
 db.Database.Migrate();
 
 await app.SeedAdminAccountAsync();
+await app.SeedCourtsAsync();
 
 app.Run();
