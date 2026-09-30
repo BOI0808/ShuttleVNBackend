@@ -5,6 +5,7 @@ using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
 using ShuttleVNBackend.Application.UseCases.Court.Services;
+using ShuttleVNBackend.Application.UseCases.Statistics.Services;
 using ShuttleVNBackend.Infrastructure.Persistence.Repositories;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         services.AddScoped<IVerificationCodeRepository, VerificationCodeRepository>();
 
         services.AddScoped<AppAuthService>();
@@ -33,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<EmployeeService>();
         services.AddScoped<ProfileService>();
         services.AddScoped<CourtService>();
+        services.AddScoped<StatisticsService>();
 
         return services;
     }
