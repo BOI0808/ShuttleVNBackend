@@ -13,4 +13,5 @@ public interface ICourtRepository
     Task<BadmintonCourt?> GetByIdAsync(int courtId, CancellationToken ct = default);
     Task<IReadOnlyList<CourtGridSource>> GetAllForGridAsync(DateOnly date, int isoDayOfWeek, CancellationToken ct = default);
     Task<HashSet<int>> GetCourtIdsInUseAsync(DateOnly date, TimeOnly time, CancellationToken ct = default);
+    Task<int> CountUpcomingBookingsAsync(int courtId, DateOnly fromDate, CancellationToken ct = default);
 }

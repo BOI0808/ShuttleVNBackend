@@ -1,13 +1,16 @@
+using System.Text.Json;
 using ShuttleVNBackend.Application.Common;
+using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.DTOs.Court;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Core.Entities.Booking;
 using ShuttleVNBackend.Core.Entities.Court;
+using ShuttleVNBackend.Core.Entities.System;
 using ShuttleVNBackend.Core.Entities.Court.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Court.Services;
 
-public class CourtService(ICourtRepository courtRepository)
+public class CourtService(ICourtRepository courtRepository, IUnitOfWork unitOfWork)
 {
     private const int SlotMinutes = 30;
     private const int SlotCount = 34;
@@ -95,5 +98,40 @@ public class CourtService(ICourtRepository courtRepository)
             covered += minutes;
         }
         return covered == 0 ? 0 : Math.Round(total / covered, 2);
+    }
+
+    public async Task<UpdateCourtStatusResultDto> UpdateCourtStatusAsync(
+    int courtId, UpdateCourtStatusDto dto, Guid? actorAccountId, CancellationToken ct = default)
+    {
+        if (!Enum.IsDefined(dto.Status))
+            throw new ValidationException(errors: new Dictionary<string, string[]> { ["Status"] = ["Invalid court status"] });
+
+        var court = await courtRepository.GetByIdAsync(courtId, ct)
+                    ?? throw new NotFoundException("Court not found");
+
+        var oldStatus = court.Status;
+        if (oldStatus != dto.Status)
+        {
+            court.Status = dto.Status;
+            court.UpdatedAt = DateTime.UtcNow;
+
+            await unitOfWork.AddAsync(new Audit
+            {
+                AccountId = actorAccountId,
+                Action = "UPDATE_STATUS",
+                EntityName = "Court",
+                EntityId = courtId.ToString(),
+                OldValue = JsonSerializer.Serialize(new { Status = oldStatus.ToString().ToUpperInvariant() }),
+                NewValue = JsonSerializer.Serialize(new { Status = dto.Status.ToString().ToUpperInvariant(), dto.Reason }),
+                CreatedAt = DateTime.UtcNow
+            });
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        var affected = dto.Status == CourtStatus.Active
+            ? 0
+            : await courtRepository.CountUpcomingBookingsAsync(courtId, DateOnly.FromDateTime(VietnamNow), ct);
+
+        return new UpdateCourtStatusResultDto(ToDto(court, await GetInUseIdsAsync(ct)), affected);
     }
 }

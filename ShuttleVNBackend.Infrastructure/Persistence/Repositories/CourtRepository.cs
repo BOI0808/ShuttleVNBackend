@@ -74,4 +74,9 @@ public class CourtRepository(ShuttleVnDbContext dbContext) : ICourtRepository
             .ToListAsync(ct);
         return [.. ids];
     }
+
+    public async Task<int> CountUpcomingBookingsAsync(int courtId, DateOnly fromDate, CancellationToken ct = default)
+    => await dbContext.Bookings.CountAsync(b =>
+        b.CourtId == courtId && b.Date >= fromDate
+        && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
 }

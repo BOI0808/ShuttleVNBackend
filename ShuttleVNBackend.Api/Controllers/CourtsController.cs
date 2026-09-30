@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.Common;
+using ShuttleVNBackend.Application.DTOs.Court;
 using ShuttleVNBackend.Application.UseCases.Court.Services;
 using ShuttleVNBackend.Core.Entities.Court.Enums;
 
@@ -36,4 +38,13 @@ public class CourtsController(CourtService courtService) : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetCourtGrid([FromQuery] DateOnly? date, CancellationToken ct = default)
         => Ok(ApiResponseFactory.Success(await courtService.GetCourtGridAsync(date, ct)));
+
+    [HttpPatch("{id:int}/status")]
+    [Authorize(Policy = "StaffOnly")]
+    public async Task<IActionResult> UpdateCourtStatus(
+        [FromRoute] int id, [FromBody] UpdateCourtStatusDto dto, CancellationToken ct = default)
+    {
+        var actorId = User.GetAccountId();
+        return Ok(ApiResponseFactory.Success(await courtService.UpdateCourtStatusAsync(id, dto, actorId, ct)));
+    }
 }
