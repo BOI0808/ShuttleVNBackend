@@ -1,4 +1,4 @@
-﻿using ShuttleVNBackend.Core.Entities.User.Enums;
+﻿using ShuttleVNBackend.Core.Entities.System.Enums;
 
 namespace ShuttleVNBackend.Core.Entities.System;
 
@@ -6,7 +6,7 @@ public class Audit
 {
     public int Id { get; set; }
     public Guid? ActorId { get; set; }
-    public AccountType? ActorType { get; set; }
+    public ActorType ActorType { get; set; }
     public string Action { get; set; } = null!;
     public string EntityName { get; set; } = null!;
     public string EntityId { get; set; } = null!;
