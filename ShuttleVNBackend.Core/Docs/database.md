@@ -261,13 +261,14 @@ CREATE UNIQUE INDEX ON Invoice (bookingId) WHERE status = 'UNPAID'
 
 **Audit** (Lịch sử sửa đổi của toàn hệ thống)
 
-| Field      | Type         | Ghi chú   |
-|------------|--------------|-----------|
-| id         | int          | PK        |
-| accountId  | uuid         | FK, NULL  |
-| action     | string       |           |
-| entityName | string       |           |
-| entityId   | string       |           |
-| oldValue   | string/JsonB |           |
-| newValue   | string/JsonB |           |
-| createdAt  | DateTime     |           |
+| Field      | Type         | Ghi chú  |
+|------------|--------------|----------|
+| id         | int          | PK       |
+| actorId    | uuid         | FK, NULL |
+| actorType  | AccountType  | NULL     |
+| action     | string       |          |
+| entityName | string       |          |
+| entityId   | string       |          |
+| oldValue   | string/JsonB |          |
+| newValue   | string/JsonB |          |
+| createdAt  | DateTime     |          |

@@ -1,17 +1,17 @@
 ﻿using ShuttleVNBackend.Core.Entities.User;
+using ShuttleVNBackend.Core.Entities.User.Enums;
 
 namespace ShuttleVNBackend.Core.Entities.System;
 
 public class Audit
 {
     public int Id { get; set; }
-    public Guid? AccountId { get; set; }
+    public Guid? ActorId { get; set; }
+    public AccountType? ActorType { get; set; }
     public string Action { get; set; } = null!;
     public string EntityName { get; set; } = null!;
     public string EntityId { get; set; } = null!;
     public string OldValue { get; set; } = null!;
     public string NewValue { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
-    
-    public virtual UserAccount? UserAccount { get; set; }
 }
