@@ -1,5 +1,4 @@
-﻿using ShuttleVNBackend.Core.Entities.User;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+﻿using ShuttleVNBackend.Core.Entities.User.Enums;
 
 namespace ShuttleVNBackend.Core.Entities.System;
 
@@ -11,7 +10,7 @@ public class Audit
     public string Action { get; set; } = null!;
     public string EntityName { get; set; } = null!;
     public string EntityId { get; set; } = null!;
-    public string OldValue { get; set; } = null!;
-    public string NewValue { get; set; } = null!;
+    public string? OldValue { get; set; }
+    public string? NewValue { get; set; }
     public DateTime CreatedAt { get; set; }
 }
