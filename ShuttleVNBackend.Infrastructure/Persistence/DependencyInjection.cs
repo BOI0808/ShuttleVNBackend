@@ -2,9 +2,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.User;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Infrastructure.Persistence.Interceptors;
 using ShuttleVNBackend.Infrastructure.Persistence.Repositories;
+using ShuttleVNBackend.Infrastructure.User;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence;
 
@@ -24,12 +27,15 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IVerificationCodeRepository, VerificationCodeRepository>();
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         services.AddScoped<AppAuthService>();
         services.AddScoped<AccountService>();
         services.AddScoped<CustomerService>();
         services.AddScoped<EmployeeService>();
         services.AddScoped<ProfileService>();
+        
+        services.AddScoped<AuditInterceptor>();
 
         return services;
     }
