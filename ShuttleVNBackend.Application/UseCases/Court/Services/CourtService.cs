@@ -18,8 +18,8 @@ internal static class CourtValidation
  
     public static void ValidateDayOfWeek(int dayOfWeek, Dictionary<string, string[]> errors)
     {
-        if (dayOfWeek is < 0 or > 6)
-            errors["DayOfWeek"] = ["DayOfWeek must be between 0 and 6."];
+        if (dayOfWeek is < 1 or > 7)
+            errors["DayOfWeek"] = ["DayOfWeek must be between 1 and 7."];
     }
  
     public static void ValidateTimeRange(
@@ -39,8 +39,6 @@ public class CourtService(
     private const int SlotMinutes = 30;
     private const int SlotCount = 34;
     private static readonly TimeOnly GridStart = new(5, 0);
-
-    private static DateTime VietnamNow => DateTime.UtcNow.AddHours(7);
 
     public async Task<PagedResult<CourtDto>> GetCourtsAsync(CancellationToken ct = default)
     {
@@ -65,7 +63,7 @@ public class CourtService(
 
     public async Task<CourtGridResponseDto> GetCourtGridAsync(DateOnly? date, CancellationToken ct = default)
     {
-        var now = VietnamNow;
+        var now = clock.GetUtcNow().UtcDateTime;
         var day = date ?? DateOnly.FromDateTime(now);
         var isoDay = day.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)day.DayOfWeek;
 
@@ -101,14 +99,14 @@ public class CourtService(
 
         var affected = dto.Status == CourtStatus.Active
             ? 0
-            : await bookingRepository.CountUpcomingByCourtAsync(courtId, DateOnly.FromDateTime(VietnamNow), ct);
+            : await bookingRepository.CountUpcomingByCourtAsync(courtId, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct);
 
         return new UpdateCourtStatusResultDto(ToDto(court, await GetInUseIdsAsync(ct)), affected);
     }
 
     private async Task<HashSet<int>> GetInUseIdsAsync(CancellationToken ct)
     {
-        var now = VietnamNow;
+        var now = clock.GetUtcNow().UtcDateTime;
         return await courtRepository.GetCourtIdsInUseAsync(
             DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now), ct);
     }
@@ -181,7 +179,7 @@ public class CourtService(
             UpdatedAt = now
         };
 
-        for (var day = 0; day < 7; day++)
+        for (var day = 1; day < 8; day++)
         {
             court.CourtSchedules.Add(new CourtSchedule
             {

@@ -5,16 +5,19 @@ using ShuttleVNBackend.Core.Entities.Booking.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Statistics.Services;
 
-public class StatisticsService(IStatisticsRepository statisticsRepository)
+public class StatisticsService(
+    IStatisticsRepository statisticsRepository,
+    TimeProvider clock)
 {
     private const int MaxRangeDays = 366;
     private const int FirstHour = 5;
-    private const int HourBuckets = 17; // 05:00 → 22:00
+    private const int HourBuckets = 17;
 
     public async Task<CourtUsageSummaryDto> GetCourtUsageAsync(
         DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+        var now = clock.GetUtcNow().UtcDateTime;
+        var today = DateOnly.FromDateTime(now);
         var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
         var to = toDate ?? today;
 
