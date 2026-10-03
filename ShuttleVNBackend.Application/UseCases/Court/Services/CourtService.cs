@@ -137,10 +137,15 @@ public class CourtService(
         var covered = 0;
         foreach (var r in rules)
         {
+            if (start >= r.EndTime || end <= r.StartTime)
+                continue;
+
             var from = start > r.StartTime ? start : r.StartTime;
             var to = end < r.EndTime ? end : r.EndTime;
+            if (from >= to)
+                continue;
+
             var minutes = (int)(to - from).TotalMinutes;
-            if (minutes <= 0) continue;
             total += r.PricePerHour * minutes;
             covered += minutes;
         }
