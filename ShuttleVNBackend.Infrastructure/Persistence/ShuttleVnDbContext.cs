@@ -68,6 +68,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         {
             entity.HasKey(e => e.CourtId);
             entity.Property(e => e.Status).HasConversion<string>();
+            entity.HasIndex(e => e.Name).IsUnique();
         });
 
         modelBuilder.Entity<CourtSchedule>(entity =>
@@ -166,10 +167,17 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Audit>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.UserAccount)
-                .WithMany()
-                .HasForeignKey(e => e.AccountId)
-                .IsRequired(false);
+
+            entity.Property(e => e.ActorType).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Action).HasMaxLength(20);
+            entity.Property(e => e.EntityName).HasMaxLength(100);
+            entity.Property(e => e.EntityId).HasMaxLength(100);
+            entity.Property(e => e.OldValue).HasColumnType("jsonb");
+            entity.Property(e => e.NewValue).HasColumnType("jsonb");
+
+            entity.HasIndex(e => new { e.EntityName, e.EntityId });
+            entity.HasIndex(e => e.ActorId);
+            entity.HasIndex(e => e.CreatedAt);
         });
 
         modelBuilder.Entity<VerificationCode>(entity =>

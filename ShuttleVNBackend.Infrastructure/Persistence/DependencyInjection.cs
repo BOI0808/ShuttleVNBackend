@@ -2,11 +2,15 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.User;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
-using ShuttleVNBackend.Application.UseCases.User.Services;
 using ShuttleVNBackend.Application.UseCases.Court.Services;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
+using ShuttleVNBackend.Application.UseCases.System;
+using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Infrastructure.Persistence.Interceptors;
 using ShuttleVNBackend.Infrastructure.Persistence.Repositories;
+using ShuttleVNBackend.Infrastructure.User;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence;
 
@@ -16,9 +20,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<ShuttleVnDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection")));
+        services.AddDbContext<ShuttleVnDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+        });
+
+        services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ShuttleVnDbContext>());
 
@@ -26,8 +34,12 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+        services.AddScoped<IAuditRepository, AuditRepository>();
+        services.AddScoped<IPricingRuleRepository, PricingRuleRepository>();
         services.AddScoped<IVerificationCodeRepository, VerificationCodeRepository>();
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         services.AddScoped<AppAuthService>();
         services.AddScoped<AccountService>();
@@ -35,7 +47,12 @@ public static class DependencyInjection
         services.AddScoped<EmployeeService>();
         services.AddScoped<ProfileService>();
         services.AddScoped<CourtService>();
+        services.AddScoped<CourtScheduleService>();
+        services.AddScoped<PricingRuleService>();
+        services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
+
+        services.AddScoped<AuditInterceptor>();
 
         return services;
     }

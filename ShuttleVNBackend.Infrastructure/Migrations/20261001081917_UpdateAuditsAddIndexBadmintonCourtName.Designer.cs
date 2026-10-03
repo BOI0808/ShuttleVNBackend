@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ShuttleVNBackend.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using ShuttleVNBackend.Infrastructure.Persistence;
 namespace ShuttleVNBackend.Infrastructure.Migrations
 {
     [DbContext(typeof(ShuttleVnDbContext))]
-    partial class ShuttleVnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001081917_UpdateAuditsAddIndexBadmintonCourtName")]
+    partial class UpdateAuditsAddIndexBadmintonCourtName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -291,7 +294,6 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("ActorType")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
@@ -309,9 +311,11 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("NewValue")
+                        .IsRequired()
                         .HasColumnType("jsonb");
 
                     b.Property<string>("OldValue")
+                        .IsRequired()
                         .HasColumnType("jsonb");
 
                     b.HasKey("Id");

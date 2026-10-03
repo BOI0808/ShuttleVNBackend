@@ -44,6 +44,12 @@ public class AuthController(
             new(ClaimTypes.Role, role),
             new("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant())
         };
+        
+        if (account.Employee is not null)
+            claims.Add(new Claim("EmployeeId", account.Employee.EmployeeId.ToString()));
+        // Yes I did include the Customer table
+        else if (account.Customer is not null)
+            claims.Add(new Claim("CustomerId", account.Customer.CustomerId.ToString()));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(

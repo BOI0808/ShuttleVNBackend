@@ -15,14 +15,8 @@ public class CourtsController(CourtService courtService) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> ListCourts(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] CourtStatus? status = null,
-        [FromQuery] string? search = null,
-        CancellationToken ct = default)
-        => Ok(ApiResponseFactory.Success(
-            await courtService.GetCourtsAsync(new PageRequest(pageNumber, pageSize), status, search, ct)));
+    public async Task<IActionResult> ListCourts(CancellationToken ct = default)
+        => Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]

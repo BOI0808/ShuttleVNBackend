@@ -9,9 +9,10 @@ public record CourtGridSource(BadmintonCourt Court, IReadOnlyList<Booking> Booki
 
 public interface ICourtRepository
 {
-    Task<PagedResult<BadmintonCourt>> GetAllAsync(PageRequest page, CourtStatus? status, string? search, CancellationToken ct = default);
+    Task<List<BadmintonCourt>> GetAllAsync(CancellationToken ct = default);
     Task<BadmintonCourt?> GetByIdAsync(int courtId, CancellationToken ct = default);
     Task<IReadOnlyList<CourtGridSource>> GetAllForGridAsync(DateOnly date, int isoDayOfWeek, CancellationToken ct = default);
+    Task<List<CourtSchedule>?> GetSchedulesAsync(int courtId, CancellationToken ct = default);
     Task<HashSet<int>> GetCourtIdsInUseAsync(DateOnly date, TimeOnly time, CancellationToken ct = default);
-    Task<int> CountUpcomingBookingsAsync(int courtId, DateOnly fromDate, CancellationToken ct = default);
+    Task<bool> NameExistsAsync(string name, int? excludeCourtId, CancellationToken ct = default);
 }

@@ -10,38 +10,31 @@ namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories;
 
 public class CourtRepository(ShuttleVnDbContext dbContext) : ICourtRepository
 {
-    public async Task<PagedResult<BadmintonCourt>> GetAllAsync(
-        PageRequest page, CourtStatus? status, string? search, CancellationToken ct = default)
+    public async Task<List<BadmintonCourt>> GetAllAsync(CancellationToken ct = default)
     {
-        var query = dbContext.BadmintonCourts.AsNoTracking();
-
-        if (status is { } s)
-            query = query.Where(c => c.Status == s);
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var pattern = $"%{search.Trim()}%";
-            query = query.Where(c => EF.Functions.ILike(c.Name, pattern));
-        }
-
-        var totalCount = await query.CountAsync(ct);
-        var items = await query
-            .OrderBy(c => c.CourtId)
-            .Skip((page.PageNumber - 1) * page.PageSize)
-            .Take(page.PageSize)
+        return await dbContext.BadmintonCourts
+            .AsNoTracking()
+            .OrderBy(bc => bc.Name)
             .ToListAsync(ct);
-
-        return new PagedResult<BadmintonCourt>
-        {
-            Items = items,
-            PageNumber = page.PageNumber,
-            PageSize = page.PageSize,
-            TotalCount = totalCount
-        };
     }
 
     public async Task<BadmintonCourt?> GetByIdAsync(int courtId, CancellationToken ct = default)
         => await dbContext.BadmintonCourts.FirstOrDefaultAsync(c => c.CourtId == courtId, ct);
+
+    public async Task<bool> NameExistsAsync(string name, int? excludeCourtId, CancellationToken ct = default)
+    {
+        return await dbContext.BadmintonCourts.AnyAsync(bc =>
+            EF.Functions.ILike(bc.Name, name) &&
+            (excludeCourtId == null || bc.CourtId != excludeCourtId), ct);
+    }
+
+    public async Task<List<CourtSchedule>?> GetSchedulesAsync(int courtId, CancellationToken ct = default)
+    {
+        return await dbContext.CourtSchedules
+            .Where(s => s.CourtId == courtId)
+            .OrderBy(s => s.DayOfWeek)
+            .ToListAsync(ct);
+    }
 
     public async Task<IReadOnlyList<CourtGridSource>> GetAllForGridAsync(
         DateOnly date, int isoDayOfWeek, CancellationToken ct = default)
@@ -74,9 +67,4 @@ public class CourtRepository(ShuttleVnDbContext dbContext) : ICourtRepository
             .ToListAsync(ct);
         return [.. ids];
     }
-
-    public async Task<int> CountUpcomingBookingsAsync(int courtId, DateOnly fromDate, CancellationToken ct = default)
-    => await dbContext.Bookings.CountAsync(b =>
-        b.CourtId == courtId && b.Date >= fromDate
-        && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
 }
