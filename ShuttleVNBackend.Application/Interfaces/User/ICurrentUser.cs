@@ -1,6 +1,6 @@
-﻿using ShuttleVNBackend.Core.Entities.System.Enums;
+using ShuttleVNBackend.Core.Entities.System.Enums;
 
-namespace ShuttleVNBackend.Application.Interfaces.User;
+namespace ShuttleVNBackend.Application.Interfaces.Users;
 
 public interface ICurrentUser
 {

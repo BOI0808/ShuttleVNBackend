@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using ShuttleVNBackend.Api.Options;
-using ShuttleVNBackend.Application.DTOs.User;
+using ShuttleVNBackend.Application.DTOs.Users;
 using ShuttleVNBackend.Application.Exceptions;
-using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Application.UseCases.Users.Services;
 
 namespace ShuttleVNBackend.Api.Extensions;
 

@@ -1,7 +1,7 @@
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
-using ShuttleVNBackend.Core.Entities.Booking.Enums;
+using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Statistics.Services;
 
@@ -73,6 +73,7 @@ public class StatisticsService(
                 hours += minutes / 60;
                 count++;
             }
+
             return new HourlyUsageStatDto(bucketStart.ToString("HH:mm"), Math.Round(hours, 2), count);
         }).ToList();
 

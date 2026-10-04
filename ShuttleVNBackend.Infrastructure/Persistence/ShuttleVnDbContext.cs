@@ -1,10 +1,10 @@
-﻿using EFCore.ComplexIndexes.PostgreSQL;
+using EFCore.ComplexIndexes.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
-using ShuttleVNBackend.Core.Entities.Booking;
-using ShuttleVNBackend.Core.Entities.Court;
+using ShuttleVNBackend.Core.Entities.Bookings;
+using ShuttleVNBackend.Core.Entities.Courts;
 using ShuttleVNBackend.Core.Entities.System;
-using ShuttleVNBackend.Core.Entities.User;
+using ShuttleVNBackend.Core.Entities.Users;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence;
 
@@ -25,6 +25,16 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Audit> Audits => Set<Audit>();
     public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
+
+    public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
+    {
+        await Set<T>().AddAsync(entity, ct);
+    }
+
+    public new void Remove<T>(T entity) where T : class
+    {
+        Set<T>().Remove(entity);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,7 +88,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasOne<BadmintonCourt>()
                 .WithMany(c => c.CourtSchedules)
                 .HasForeignKey(e => e.CourtId);
-            
+
             entity.HasExclusionConstraint(ex => ex
                 .WithEquality(e => e.CourtId)
                 .WithEquality(e => e.DayOfWeek)
@@ -94,7 +104,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasOne<BadmintonCourt>()
                 .WithMany(c => c.PricingRules)
                 .HasForeignKey(e => e.CourtId);
-            
+
             entity.HasExclusionConstraint(ex => ex
                 .WithEquality(e => e.CourtId)
                 .WithEquality(e => e.DayOfWeek)
@@ -116,7 +126,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasOne(e => e.Court)
                 .WithMany()
                 .HasForeignKey(e => e.CourtId);
-            
+
             // BR-08
             entity.HasExclusionConstraint(ex => ex
                 .WithEquality(e => e.CourtId)
@@ -180,15 +190,6 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasIndex(e => e.CreatedAt);
         });
 
-        modelBuilder.Entity<VerificationCode>(entity =>
-        {
-            entity.HasKey(e => new { e.Email, e.Type });
-        });
+        modelBuilder.Entity<VerificationCode>(entity => { entity.HasKey(e => new { e.Email, e.Type }); });
     }
-
-    public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
-        => await Set<T>().AddAsync(entity, ct);
-
-    public new void Remove<T>(T entity) where T : class
-        => Set<T>().Remove(entity);
 }
