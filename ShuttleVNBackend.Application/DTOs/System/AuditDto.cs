@@ -16,13 +16,13 @@ public record AuditDto
     public string? NewValue { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    public static AuditDto FromEntity(Audit audit, string actorName = "")
+    public static AuditDto FromEntity(Audit audit, Guid? actorId, string actorName = "")
     {
         return new AuditDto
         {
             Id = audit.Id,
             ActorType = audit.ActorType,
-            ActorId = audit.ActorId,
+            ActorId = actorId,
             ActorName = actorName,
             Action = audit.Action,
             EntityName = audit.EntityName,
