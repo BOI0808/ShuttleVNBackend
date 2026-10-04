@@ -2,6 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
+using ShuttleVNBackend.Application.Interfaces.Repositories.System;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;

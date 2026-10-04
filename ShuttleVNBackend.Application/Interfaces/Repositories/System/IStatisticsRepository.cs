@@ -1,7 +1,7 @@
 using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Courts;
 
-namespace ShuttleVNBackend.Application.Interfaces.Repositories;
+namespace ShuttleVNBackend.Application.Interfaces.Repositories.System;
 
 public interface IStatisticsRepository
 {

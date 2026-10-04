@@ -1,6 +1,7 @@
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.System;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Statistics.Services;
