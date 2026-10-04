@@ -1,4 +1,4 @@
-namespace ShuttleVNBackend.Application.Interfaces.Repositories;
+namespace ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 
 public interface IBookingRepository
 {

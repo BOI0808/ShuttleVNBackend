@@ -2,6 +2,8 @@ using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
 using ShuttleVNBackend.Core.Entities.Courts;
 using ShuttleVNBackend.Core.Entities.Courts.Enums;
 

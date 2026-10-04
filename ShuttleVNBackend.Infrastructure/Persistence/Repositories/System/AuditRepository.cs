@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Application.Common;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.System;
 using ShuttleVNBackend.Core.Entities.System;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.System;
@@ -26,7 +26,7 @@ public class AuditRepository(ShuttleVnDbContext dbContext) : IAuditRepository
         };
     }
 
-    public async Task<PagedResult<Audit>> FilterAsync(
+    public async Task<PagedResult<Audit>> SearchAsync(
         Expression<Func<Audit, bool>> filters,
         PageRequest page,
         CancellationToken ct = default)

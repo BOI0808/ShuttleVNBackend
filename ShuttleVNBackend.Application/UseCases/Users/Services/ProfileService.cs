@@ -1,6 +1,7 @@
 using ShuttleVNBackend.Application.DTOs.Users;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 using ShuttleVNBackend.Core.Entities.Users;
 using ShuttleVNBackend.Core.Entities.Users.Enums;
 

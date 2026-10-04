@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;

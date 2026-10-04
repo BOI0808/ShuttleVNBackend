@@ -1,7 +1,7 @@
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Core.Entities.Users;
 
-namespace ShuttleVNBackend.Application.Interfaces.Repositories;
+namespace ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 
 public interface IEmployeeRepository
 {

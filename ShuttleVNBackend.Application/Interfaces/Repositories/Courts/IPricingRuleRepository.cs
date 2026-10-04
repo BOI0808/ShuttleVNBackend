@@ -1,6 +1,6 @@
 using ShuttleVNBackend.Core.Entities.Courts;
 
-namespace ShuttleVNBackend.Application.Interfaces.Repositories;
+namespace ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
 
 public interface IPricingRuleRepository
 {
