@@ -41,7 +41,7 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
             if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
                 continue;
             if (entry.Metadata.FindPrimaryKey() is null) continue;
-            if (entry.Metadata.ClrType.IsDefined(typeof(NoAuditAttribute), true)) continue;
+            if (entry.Entity is Audit || entry.Metadata.ClrType.IsDefined(typeof(NoAuditAttribute), true)) continue;
 
             var props = entry.Properties
                 .Where(p => !p.Metadata.PropertyInfo?.IsDefined(typeof(NoAuditAttribute), true) ?? true)

@@ -1,7 +1,9 @@
-﻿using ShuttleVNBackend.Core.Entities.System.Enums;
+﻿using ShuttleVNBackend.Core.Attributes;
+using ShuttleVNBackend.Core.Entities.System.Enums;
 
 namespace ShuttleVNBackend.Core.Entities.System;
 
+[NoAudit]
 public class Audit
 {
     public int Id { get; set; }

@@ -24,21 +24,25 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                 table: "Audits",
                 newName: "IX_Audits_ActorId");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "OldValue",
-                table: "Audits",
-                type: "jsonb",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""Audits"" 
+                ALTER COLUMN ""OldValue"" TYPE jsonb 
+                USING CASE 
+                    WHEN ""OldValue"" IS NULL OR ""OldValue"" = '' THEN NULL 
+                    WHEN ""OldValue"" ~ '^\s*[\{\[]' THEN ""OldValue""::jsonb 
+                    ELSE to_jsonb(""OldValue"") 
+                END;
+            ");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "NewValue",
-                table: "Audits",
-                type: "jsonb",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""Audits"" 
+                ALTER COLUMN ""NewValue"" TYPE jsonb 
+                USING CASE 
+                    WHEN ""NewValue"" IS NULL OR ""NewValue"" = '' THEN NULL 
+                    WHEN ""NewValue"" ~ '^\s*[\{\[]' THEN ""NewValue""::jsonb 
+                    ELSE to_jsonb(""NewValue"") 
+                END;
+            ");
 
             migrationBuilder.AlterColumn<string>(
                 name: "EntityName",
