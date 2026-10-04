@@ -184,10 +184,18 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.EntityId).HasMaxLength(100);
             entity.Property(e => e.OldValue).HasColumnType("jsonb");
             entity.Property(e => e.NewValue).HasColumnType("jsonb");
+            entity.HasOne(a => a.Employee).WithMany().HasForeignKey(a => a.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(a => a.Customer).WithMany().HasForeignKey(a => a.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => new { e.EntityName, e.EntityId });
-            entity.HasIndex(e => e.ActorId);
             entity.HasIndex(e => e.CreatedAt);
+            
+            entity.HasIndex(a => a.EmployeeId);
+            entity.HasIndex(a => a.CustomerId);
+            entity.ToTable(t => t.HasCheckConstraint("ck_audit_one_actor",
+                "\"EmployeeId\" IS NULL OR \"CustomerId\" IS NULL"));
         });
 
         modelBuilder.Entity<VerificationCode>(entity => { entity.HasKey(e => new { e.Email, e.Type }); });

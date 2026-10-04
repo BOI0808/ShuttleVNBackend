@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Core.Attributes;
 using ShuttleVNBackend.Core.Entities.System;
+using ShuttleVNBackend.Core.Entities.System.Enums;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Interceptors;
 
@@ -107,7 +108,8 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
         var logs = _pending.Select(p => new Audit
         {
             ActorType = currentUser.ActorType,
-            ActorId = currentUser.ActorId,
+            EmployeeId = currentUser.ActorType == ActorType.Employee ? currentUser.ActorId : null,
+            CustomerId = currentUser.ActorType == ActorType.Customer ? currentUser.ActorId : null,
             Action = p.Action,
             EntityName = p.EntityName,
             EntityId = p.EntityId ?? KeyOf(p.EntryForKey!),
