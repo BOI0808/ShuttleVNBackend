@@ -31,21 +31,6 @@ public class AuditRepository(ShuttleVnDbContext dbContext) : IAuditRepository
         PageRequest page,
         CancellationToken ct = default)
     {
-        var query = dbContext.Audits
-            .Where(filters)
-            .OrderBy(x => x.CreatedAt);
-        var totalCount = await query.CountAsync(ct);
-        var items = await query
-            .Skip((page.PageNumber - 1) * page.PageSize)
-            .Take(page.PageSize)
-            .ToListAsync(ct);
-
-        return new PagedResult<Audit>
-        {
-            Items = items,
-            PageNumber = page.PageNumber,
-            PageSize = page.PageSize,
-            TotalCount = totalCount
-        };
+        throw new NotImplementedException();
     }
 }
