@@ -2,15 +2,19 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
-using ShuttleVNBackend.Application.Interfaces.User;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
+using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
-using ShuttleVNBackend.Application.UseCases.Court.Services;
+using ShuttleVNBackend.Application.UseCases.Courts.Services;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
 using ShuttleVNBackend.Application.UseCases.System;
-using ShuttleVNBackend.Application.UseCases.User.Services;
+using ShuttleVNBackend.Application.UseCases.Users.Services;
 using ShuttleVNBackend.Infrastructure.Persistence.Interceptors;
-using ShuttleVNBackend.Infrastructure.Persistence.Repositories;
-using ShuttleVNBackend.Infrastructure.User;
+using ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;
+using ShuttleVNBackend.Infrastructure.Persistence.Repositories.Courts;
+using ShuttleVNBackend.Infrastructure.Persistence.Repositories.System;
+using ShuttleVNBackend.Infrastructure.Persistence.Repositories.Users;
+using ShuttleVNBackend.Infrastructure.Users;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence;
 

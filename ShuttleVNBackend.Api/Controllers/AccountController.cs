@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.Common;
-using ShuttleVNBackend.Application.DTOs.User;
-using ShuttleVNBackend.Application.UseCases.User.Services;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Application.DTOs.Users;
+using ShuttleVNBackend.Application.UseCases.Users.Services;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
 

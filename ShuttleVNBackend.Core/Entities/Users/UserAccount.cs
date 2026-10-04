@@ -1,0 +1,17 @@
+using ShuttleVNBackend.Core.Entities.Users.Enums;
+
+namespace ShuttleVNBackend.Core.Entities.Users;
+
+public class UserAccount
+{
+    public Guid AccountId { get; set; }
+    public string LoginEmail { get; set; } = null!;
+    public string PasswordHash { get; set; } = "";
+    public AccountType AccountType { get; set; }
+    public AccountStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    public virtual Customer? Customer { get; set; }
+    public virtual Employee? Employee { get; set; }
+}

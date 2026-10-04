@@ -1,15 +1,15 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
-using ShuttleVNBackend.Api.DTOs.User;
+using ShuttleVNBackend.Api.DTOs.Users;
 using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
-using ShuttleVNBackend.Application.UseCases.User.Services;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Application.UseCases.Users.Services;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -44,7 +44,7 @@ public class AuthController(
             new(ClaimTypes.Role, role),
             new("IsAdmin", (account.Employee?.IsAdmin ?? false).ToString().ToLowerInvariant())
         };
-        
+
         if (account.Employee is not null)
             claims.Add(new Claim("EmployeeId", account.Employee.EmployeeId.ToString()));
         // Yes I did include the Customer table

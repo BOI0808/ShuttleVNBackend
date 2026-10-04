@@ -7,17 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ShuttleVNBackend.Core\ShuttleVNBackend.Core.csproj" />
+        <ProjectReference Include="..\ShuttleVNBackend.Core\ShuttleVNBackend.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.12" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.12"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Interfaces\Repositories\Docs\" />
-      <Folder Include="UseCases\Authentication\Docs\" />
-      <Folder Include="UseCases\User\Docs\" />
+        <Folder Include="UseCases\Authentication\Docs\"/>
+        <Folder Include="UseCases\Users\Docs\" />
     </ItemGroup>
 
 </Project>

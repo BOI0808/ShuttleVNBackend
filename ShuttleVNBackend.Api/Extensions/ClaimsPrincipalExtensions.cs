@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Api.Extensions;
 

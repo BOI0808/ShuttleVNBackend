@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
-using ShuttleVNBackend.Api.DTOs.User;
+using ShuttleVNBackend.Api.DTOs.Users;
 using ShuttleVNBackend.Application.Common;
-using ShuttleVNBackend.Application.DTOs.User;
-using ShuttleVNBackend.Application.UseCases.User.Services;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Application.DTOs.Users;
+using ShuttleVNBackend.Application.UseCases.Users.Services;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -54,7 +54,7 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
         return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.UpdateEmployee(id, dto))));
     }
 
-    [HttpPost("{id:guid}/lock")]                    
+    [HttpPost("{id:guid}/lock")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> LockEmployee([FromRoute] Guid id)
     {

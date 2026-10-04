@@ -1,4 +1,4 @@
-﻿using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Application.DTOs.Authentication;
 

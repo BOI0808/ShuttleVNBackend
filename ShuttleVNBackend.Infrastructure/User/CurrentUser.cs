@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using ShuttleVNBackend.Application.Interfaces.User;
+using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Core.Entities.System.Enums;
 
-namespace ShuttleVNBackend.Infrastructure.User;
+namespace ShuttleVNBackend.Infrastructure.Users;
 
 public class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 {

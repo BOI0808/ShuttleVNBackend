@@ -15,5 +15,7 @@ public class StatisticsController(StatisticsService statisticsService) : Control
         [FromQuery] DateOnly? fromDate,
         [FromQuery] DateOnly? toDate,
         CancellationToken ct = default)
-        => Ok(ApiResponseFactory.Success(await statisticsService.GetCourtUsageAsync(fromDate, toDate, ct)));
+    {
+        return Ok(ApiResponseFactory.Success(await statisticsService.GetCourtUsageAsync(fromDate, toDate, ct)));
+    }
 }
