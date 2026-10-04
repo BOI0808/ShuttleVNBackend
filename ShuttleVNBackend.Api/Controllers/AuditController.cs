@@ -13,15 +13,7 @@ namespace ShuttleVNBackend.Api.Controllers;
 public class AuditController(AuditService auditService): ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAudits([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
-    {
-        var page = new PageRequest(pageNumber, pageSize);
-        var pagedResult = await auditService.GetAllAsync(page);
-        return Ok(ApiResponseFactory.Success(pagedResult));
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> SearchAudit([FromQuery] SearchAuditDto dto)
+    public async Task<IActionResult> GetAudits([FromQuery] SearchAuditDto dto)
     {
         var pagedResult = await auditService.SearchAsync(dto);
         return Ok(ApiResponseFactory.Success(pagedResult));
