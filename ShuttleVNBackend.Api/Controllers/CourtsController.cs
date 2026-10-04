@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.Extensions;
-using ShuttleVNBackend.Application.Common;
-using ShuttleVNBackend.Application.DTOs.Court;
-using ShuttleVNBackend.Application.UseCases.Court.Services;
-using ShuttleVNBackend.Core.Entities.Court.Enums;
+using ShuttleVNBackend.Application.DTOs.Courts;
+using ShuttleVNBackend.Application.UseCases.Courts.Services;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -16,7 +14,9 @@ public class CourtsController(CourtService courtService) : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> ListCourts(CancellationToken ct = default)
-        => Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
+    {
+        return Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
+    }
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
@@ -31,7 +31,9 @@ public class CourtsController(CourtService courtService) : ControllerBase
     [HttpGet("grid")]
     [AllowAnonymous]
     public async Task<IActionResult> GetCourtGrid([FromQuery] DateOnly? date, CancellationToken ct = default)
-        => Ok(ApiResponseFactory.Success(await courtService.GetCourtGridAsync(date, ct)));
+    {
+        return Ok(ApiResponseFactory.Success(await courtService.GetCourtGridAsync(date, ct)));
+    }
 
     [HttpPatch("{id:int}/status")]
     [Authorize(Policy = "StaffOnly")]

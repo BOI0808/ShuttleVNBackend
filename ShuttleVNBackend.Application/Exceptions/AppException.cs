@@ -2,17 +2,17 @@
 
 namespace ShuttleVNBackend.Application.Exceptions;
 
-public class AppException: Exception
+public class AppException : Exception
 {
-    public int StatusCode { get; }
-    public string Code { get; }
-    
-    protected AppException(string message, int statusCode, string code) 
+    protected AppException(string message, int statusCode, string code)
         : base(message)
     {
         StatusCode = statusCode;
         Code = code;
     }
+
+    public int StatusCode { get; }
+    public string Code { get; }
 }
 
 public class NotFoundException(string message = "Resource not found")

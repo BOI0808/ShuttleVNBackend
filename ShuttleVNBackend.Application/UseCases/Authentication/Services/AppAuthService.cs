@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
-using ShuttleVNBackend.Core.Entities.User;
-using ShuttleVNBackend.Core.Entities.User.Enums;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
+using ShuttleVNBackend.Core.Entities.Users;
+using ShuttleVNBackend.Core.Entities.Users.Enums;
 using ValidationException = ShuttleVNBackend.Application.Exceptions.ValidationException;
 
 namespace ShuttleVNBackend.Application.UseCases.Authentication.Services;
@@ -16,7 +17,7 @@ public class AppAuthService(
     IUnitOfWork unitOfWork)
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
-    
+
     public async Task<UserAccount> VerifyLogin(LoginDto dto)
     {
         var errors = new Dictionary<string, string[]>();
@@ -45,24 +46,23 @@ public class AppAuthService(
 
         if (!await IsValidVerificationCode(dto.Email, dto.Code, CodeType.ResetPassword))
             throw new ValidationException("Invalid or expired verification code");
-        
+
         account.PasswordHash = _hasher.HashPassword(account, dto.Password);
         await unitOfWork.SaveChangesAsync();
         return account;
-
     }
-    
+
     public async Task<string> IssueCode(string email, CodeType type)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email is required", nameof(email));
-        
+
         var existingCode = await verificationCodeRepository.GetActiveAsync(email, type);
         if (existingCode is not null && !existingCode.IsUsed)
             throw new InvalidOperationException("Already having an active code");
-        
+
         await verificationCodeRepository.DeleteExistingAsync(email, type);
-        
+
         var plainCode = GenerateCode();
         var code = new VerificationCode
         {
@@ -75,7 +75,7 @@ public class AppAuthService(
         };
         await unitOfWork.AddAsync(code);
         await unitOfWork.SaveChangesAsync();
-        
+
         return plainCode;
     }
 
@@ -87,7 +87,7 @@ public class AppAuthService(
             existingCode.IsUsed ||
             existingCode.ExpiresAt < now)
             return false;
-        
+
         var hashedCode = HashCode(code);
         // plain string comparison exits early on the first mismatched character, which leaks tiny timing differences
         var match = CryptographicOperations.FixedTimeEquals(
@@ -105,7 +105,7 @@ public class AppAuthService(
         await unitOfWork.SaveChangesAsync();
         return true;
     }
-    
+
     private bool IsValidPassword(UserAccount account, string password)
     {
         return _hasher.VerifyHashedPassword(
@@ -113,7 +113,7 @@ public class AppAuthService(
             account.PasswordHash,
             password) == PasswordVerificationResult.Success;
     }
-    
+
     private static string GenerateCode()
     {
         var number = RandomNumberGenerator.GetInt32(0, 1_000_000);

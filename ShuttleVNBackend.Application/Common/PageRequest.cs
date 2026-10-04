@@ -2,6 +2,12 @@
 
 public record PageRequest
 {
+    public PageRequest(int pageNumber, int pageSize)
+    {
+        PageNumber = pageNumber;
+        PageSize = pageSize;
+    }
+
     public int PageNumber
     {
         get;
@@ -13,10 +19,4 @@ public record PageRequest
         get;
         private init => field = Math.Max(1, value);
     } = 20;
-
-    public PageRequest(int pageNumber, int pageSize)
-    {
-        PageNumber = pageNumber;
-        PageSize = pageSize;
-    }
 }
