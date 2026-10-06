@@ -74,9 +74,11 @@ public class PricingRuleService(
         return rule;
     }
 
-    public async Task DeletePricingRuleAsync(int pricingRuleId, CancellationToken ct = default)
+    public async Task DeletePricingRuleAsync(int courtId, int pricingRuleId, CancellationToken ct = default)
     {
         var rule = await GetRuleOrThrowAsync(pricingRuleId, ct);
+        if (rule.CourtId != courtId)
+            throw new InvalidOperationException($"PricingRule with id {pricingRuleId} does not belong to court {courtId}.");
 
         unitOfWork.Remove(rule);
         await unitOfWork.SaveChangesAsync(ct);
