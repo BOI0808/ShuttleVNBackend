@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.Common;
 using ShuttleVNBackend.Api.DTOs.Users;
 using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Authentication;
@@ -21,7 +22,8 @@ public class AuthController(
 {
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<dynamic>>> Register([FromBody] RegisterDto dto)
+    public async Task<ActionResult<ApiResponse<dynamic>>> Register(
+        [FromBody] RegisterDto dto)
     {
         var account = await accountService.Register(dto);
         return Created("", ApiResponseFactory.Success(new
@@ -32,7 +34,8 @@ public class AuthController(
 
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> Login([FromBody] LoginDto dto)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> Login(
+        [FromBody] LoginDto dto)
     {
         var account = await appAuthService.VerifyLogin(dto);
 
@@ -70,16 +73,18 @@ public class AuthController(
 
     [HttpPost("issue-code")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<string>>> IssueCode([FromBody] CodeRequestDto dto)
+    public async Task<ActionResult<ApiResponse<string>>> IssueCode(
+        [FromBody] CodeRequestDto dto)
     {
         var code = await appAuthService.IssueCode(dto.Email, dto.Type);
-        // return for testing. Implement EmailService later
+        // TODO: Implement EmailService
         return Ok(ApiResponseFactory.Success(code));
     }
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<dynamic>>> ResetPassword([FromBody] ResetPasswordDto dto)
+    public async Task<ActionResult<ApiResponse<dynamic>>> ResetPassword(
+        [FromBody] ResetPasswordDto dto)
     {
         await appAuthService.ResetPassword(dto);
         return Ok(ApiResponseFactory.Success(new

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.Common;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
-using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Api.Controllers;

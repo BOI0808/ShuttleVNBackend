@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.Common;
+using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.System;
 using ShuttleVNBackend.Application.UseCases.System;
-using ShuttleVNBackend.Application.DTOs.Users;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -13,7 +14,8 @@ namespace ShuttleVNBackend.Api.Controllers;
 public class AuditController(AuditService auditService): ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<PagedResult<AuditDto>>>> GetAudits([FromQuery] SearchAuditDto dto)
+    public async Task<ActionResult<ApiResponse<PagedResult<AuditDto>>>> GetAudits(
+        [FromQuery] SearchAuditDto dto)
     {
         var pagedResult = await auditService.SearchAsync(dto);
         return Ok(ApiResponseFactory.Success(pagedResult));

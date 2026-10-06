@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
+using ShuttleVNBackend.Api.DTOs.Common;
 using ShuttleVNBackend.Api.DTOs.Users;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Users;
 using ShuttleVNBackend.Application.UseCases.Users.Services;
 using ShuttleVNBackend.Core.Entities.Users.Enums;
-using ShuttleVNBackend.Application.DTOs.Courts;
-using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -17,7 +16,9 @@ namespace ShuttleVNBackend.Api.Controllers;
 public class EmployeesController(EmployeeService employeeService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<PagedResult<AccountDto>>>> ListEmployees([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<ApiResponse<PagedResult<AccountDto>>>> ListEmployees(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
     {
         var result = await employeeService.GetAllEmployeeAccounts(new PageRequest(pageNumber, pageSize));
         var mapped = new PagedResult<AccountDto>
@@ -31,7 +32,8 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> GetEmployeeAccount([FromRoute] Guid id)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> GetEmployeeAccount(
+        [FromRoute] Guid id)
     {
         var account = await employeeService.GetEmployeeAccount(id);
         if (account is null) return NotFound(new ProblemDetails { Title = "Resource not found" });
@@ -40,7 +42,8 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> CreateEmployee([FromBody] CreateEmployeeDto dto)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> CreateEmployee(
+        [FromBody] CreateEmployeeDto dto)
     {
         var created = await employeeService.CreateEmployee(dto);
         return CreatedAtAction(
@@ -51,14 +54,16 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> UpdateEmployee([FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> UpdateEmployee(
+        [FromRoute] Guid id, [FromBody] CustomerProfileDto dto)
     {
         return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(await employeeService.UpdateEmployee(id, dto))));
     }
 
     [HttpPost("{id:guid}/lock")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> LockEmployee([FromRoute] Guid id)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> LockEmployee(
+        [FromRoute] Guid id)
     {
         return Ok(ApiResponseFactory.Success(
             AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Disabled))));
@@ -66,7 +71,8 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 
     [HttpPost("{id:guid}/unlock")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<AccountDto>>> UnlockEmployee([FromRoute] Guid id)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> UnlockEmployee(
+        [FromRoute] Guid id)
     {
         return Ok(ApiResponseFactory.Success(
             AccountDto.FromEntity(await employeeService.SetEmployeeAccountStatus(id, AccountStatus.Active))));
@@ -74,7 +80,8 @@ public class EmployeesController(EmployeeService employeeService) : ControllerBa
 
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<object>>> DeleteEmployee([FromRoute] Guid id)
+    public async Task<ActionResult<ApiResponse<object>>> DeleteEmployee(
+        [FromRoute] Guid id)
     {
         await employeeService.DeleteEmployee(id);
         return NoContent();
