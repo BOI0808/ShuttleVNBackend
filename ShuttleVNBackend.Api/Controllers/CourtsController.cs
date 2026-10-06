@@ -4,6 +4,7 @@ using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.UseCases.Courts.Services;
+using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -13,14 +14,14 @@ public class CourtsController(CourtService courtService) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> ListCourts(CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> ListCourts(CancellationToken ct = default)
     {
         return Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
     }
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetCourt([FromRoute] int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<BadmintonCourt>>> GetCourt([FromRoute] int id, CancellationToken ct = default)
     {
         var court = await courtService.GetCourtByIdAsync(id, ct);
         return court is null
@@ -30,14 +31,14 @@ public class CourtsController(CourtService courtService) : ControllerBase
 
     [HttpGet("grid")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetCourtGrid([FromQuery] DateOnly? date, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> GetCourtGrid([FromQuery] DateOnly? date, CancellationToken ct = default)
     {
         return Ok(ApiResponseFactory.Success(await courtService.GetCourtGridAsync(date, ct)));
     }
 
     [HttpPatch("{id:int}/status")]
     [Authorize(Policy = "StaffOnly")]
-    public async Task<IActionResult> UpdateCourtStatus(
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateCourtStatus(
         [FromRoute] int id, [FromBody] UpdateCourtStatusDto dto, CancellationToken ct = default)
     {
         var actorId = User.GetAccountId();

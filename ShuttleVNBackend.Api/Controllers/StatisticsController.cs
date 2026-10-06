@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
+using ShuttleVNBackend.Application.DTOs.Courts;
+using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -11,7 +13,7 @@ namespace ShuttleVNBackend.Api.Controllers;
 public class StatisticsController(StatisticsService statisticsService) : ControllerBase
 {
     [HttpGet("court-usage")]
-    public async Task<IActionResult> GetCourtUsage(
+    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> GetCourtUsage(
         [FromQuery] DateOnly? fromDate,
         [FromQuery] DateOnly? toDate,
         CancellationToken ct = default)

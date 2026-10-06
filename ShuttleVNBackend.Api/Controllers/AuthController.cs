@@ -21,7 +21,7 @@ public class AuthController(
 {
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    public async Task<ActionResult<ApiResponse<dynamic>>> Register([FromBody] RegisterDto dto)
     {
         var account = await accountService.Register(dto);
         return Created("", ApiResponseFactory.Success(new
@@ -32,7 +32,7 @@ public class AuthController(
 
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    public async Task<ActionResult<ApiResponse<AccountDto>>> Login([FromBody] LoginDto dto)
     {
         var account = await appAuthService.VerifyLogin(dto);
 
@@ -62,7 +62,7 @@ public class AuthController(
 
     [HttpPost("logout")]
     [Authorize]
-    public async Task<IActionResult> Logout()
+    public async Task<ActionResult<ApiResponse<object>>> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
@@ -70,7 +70,7 @@ public class AuthController(
 
     [HttpPost("issue-code")]
     [AllowAnonymous]
-    public async Task<IActionResult> IssueCode([FromBody] CodeRequestDto dto)
+    public async Task<ActionResult<ApiResponse<string>>> IssueCode([FromBody] CodeRequestDto dto)
     {
         var code = await appAuthService.IssueCode(dto.Email, dto.Type);
         // return for testing. Implement EmailService later
@@ -79,7 +79,7 @@ public class AuthController(
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    public async Task<ActionResult<ApiResponse<dynamic>>> ResetPassword([FromBody] ResetPasswordDto dto)
     {
         await appAuthService.ResetPassword(dto);
         return Ok(ApiResponseFactory.Success(new
@@ -90,7 +90,7 @@ public class AuthController(
 
     [HttpGet("me")]
     [Authorize]
-    public async Task<IActionResult> GetMe()
+    public async Task<ActionResult<ApiResponse<AccountDto>>> GetMe()
     {
         var account = await accountService.GetAccountById(User.GetAccountId());
         return Ok(ApiResponseFactory.Success(AccountDto.FromEntity(account)));
