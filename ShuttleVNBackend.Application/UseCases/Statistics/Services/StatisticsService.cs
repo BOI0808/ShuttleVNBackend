@@ -46,7 +46,7 @@ public class StatisticsService(
             var bookedHours = used.Sum(b => (b.EndTime - b.StartTime).TotalHours);
 
             return new CourtUsageStatDto(
-                c.CourtId, c.Name, c.Status.ToString().ToUpperInvariant(),
+                c.CourtId, c.Name, c.Status.ToString(),
                 Math.Round(availableHours, 2), (int)Math.Round(availableHours * 2),
                 Math.Round(bookedHours, 2), (int)Math.Round(bookedHours * 2),
                 used.Count,

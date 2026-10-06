@@ -14,7 +14,7 @@ public record CourtDto(
     public static CourtDto FromEntity(BadmintonCourt c, bool isInUse)
     {
         return new CourtDto(
-            c.CourtId, c.Name, c.Description, c.Status.ToString().ToUpperInvariant(),
+            c.CourtId, c.Name, c.Description, c.Status.ToString(),
             isInUse, c.CreatedAt, c.UpdatedAt);
     }
 }
