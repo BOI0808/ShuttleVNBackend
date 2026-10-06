@@ -20,7 +20,9 @@ public class PricingRuleService(
     }
 
     public async Task<PricingRule> CreatePricingRuleAsync(
-        int courtId, CreatePricingRuleDto request, CancellationToken ct = default)
+        int courtId,
+        CreatePricingRuleDto request,
+        CancellationToken ct = default)
     {
         Validate(request.DayOfWeek, request.StartTime, request.EndTime, request.PricePerHour);
 
@@ -44,13 +46,23 @@ public class PricingRuleService(
     }
 
     public async Task<PricingRule> UpdatePricingRuleAsync(
-        int pricingRuleId, UpdatePricingRuleDto request, CancellationToken ct = default)
+        int courtId,
+        int pricingRuleId,
+        UpdatePricingRuleDto request,
+        CancellationToken ct = default)
     {
         Validate(request.DayOfWeek, request.StartTime, request.EndTime, request.PricePerHour);
 
         var rule = await GetRuleOrThrowAsync(pricingRuleId, ct);
-        await EnsureNoOverlapAsync(rule.CourtId, request.DayOfWeek, request.StartTime, request.EndTime, pricingRuleId,
-            ct);
+        if (rule.CourtId != courtId)
+            throw new InvalidOperationException($"PricingRule with id {pricingRuleId} does not belong to court {courtId}.");
+
+        await EnsureNoOverlapAsync(
+            rule.CourtId,
+            request.DayOfWeek,
+            request.StartTime,
+            request.EndTime,
+            pricingRuleId, ct);
 
         rule.DayOfWeek = request.DayOfWeek;
         rule.StartTime = request.StartTime;
@@ -83,7 +95,12 @@ public class PricingRuleService(
     }
 
     private async Task EnsureNoOverlapAsync(
-        int courtId, int dayOfWeek, TimeOnly start, TimeOnly end, int? excludeRuleId, CancellationToken ct)
+        int courtId,
+        int dayOfWeek,
+        TimeOnly start,
+        TimeOnly end,
+        int? excludeRuleId,
+        CancellationToken ct)
     {
         var sameDay = await pricingRuleRepository.GetByCourtAsync(courtId, dayOfWeek, ct);
         // There HAS to be at least 1 rule for every day of week
