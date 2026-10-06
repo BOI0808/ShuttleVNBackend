@@ -39,7 +39,29 @@ public class CourtsController(CourtService courtService) : ControllerBase
         [FromQuery] DateOnly? date,
         CancellationToken ct = default)
     {
-        return Ok(ApiResponseFactory.Success(await courtService.GetCourtGridAsync(date, ct)));
+        var courtGrid = await courtService.GetCourtGridAsync(date, ct);
+        return Ok(ApiResponseFactory.Success(courtGrid));
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "StaffOnly")]
+    public async Task<ActionResult<ApiResponse<BadmintonCourt>>> CreateCourt(
+        [FromBody] CreateCourtDto dto,
+        CancellationToken ct = default)
+    {
+        var court = await courtService.CreateCourtAsync(dto, ct);
+        return Ok(ApiResponseFactory.Success(court));
+    }
+
+    [HttpPatch("{id:int}")]
+    [Authorize(Policy = "StaffOnly")]
+    public async Task<ActionResult<ApiResponse<BadmintonCourt>>> UpdateCourt(
+        [FromRoute] int id,
+        [FromBody] UpdateCourtDto dto,
+        CancellationToken ct = default)
+    {
+        var court = await courtService.UpdateCourtAsync(id, dto, ct);
+        return Ok(ApiResponseFactory.Success(court));
     }
 
     [HttpPatch("{id:int}/status")]
