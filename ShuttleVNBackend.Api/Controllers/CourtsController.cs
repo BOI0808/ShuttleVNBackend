@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.DTOs.Common;
 using ShuttleVNBackend.Api.Extensions;
+using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.UseCases.Courts.Services;
 using ShuttleVNBackend.Core.Entities.Courts;
@@ -15,7 +16,7 @@ public class CourtsController(CourtService courtService) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> ListCourts(
+    public async Task<ActionResult<ApiResponse<PagedResult<BadmintonCourt>>>> ListCourts(
         CancellationToken ct = default)
     {
         return Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
@@ -35,7 +36,7 @@ public class CourtsController(CourtService courtService) : ControllerBase
 
     [HttpGet("grid")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> GetCourtGrid(
+    public async Task<ActionResult<ApiResponse<CourtGridResponseDto>>> GetCourtGrid(
         [FromQuery] DateOnly? date,
         CancellationToken ct = default)
     {
