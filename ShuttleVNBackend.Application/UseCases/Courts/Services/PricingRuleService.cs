@@ -1,6 +1,5 @@
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.Exceptions;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
 using ShuttleVNBackend.Core.Entities.Courts;
 
@@ -8,7 +7,7 @@ namespace ShuttleVNBackend.Application.UseCases.Courts.Services;
 
 public class PricingRuleService(
     IPricingRuleRepository pricingRuleRepository,
-    IUnitOfWork unitOfWork,
+    ICourtRepository courtRepository,
     TimeProvider clock)
 {
     public async Task<IReadOnlyList<PricingRule>> GetPricingRulesAsync(int courtId, CancellationToken ct = default)
@@ -19,108 +18,65 @@ public class PricingRuleService(
             : rules.OrderBy(r => r.DayOfWeek).ThenBy(r => r.StartTime).ToList();
     }
 
-    public async Task<PricingRule> CreatePricingRuleAsync(
+    public async Task<IReadOnlyList<PricingRule>> SavePricingRulesAsync(
         int courtId,
-        CreatePricingRuleDto request,
+        int dayOfWeek,
+        SavePricingRuleDto request,
         CancellationToken ct = default)
-    {
-        Validate(request.DayOfWeek, request.StartTime, request.EndTime, request.PricePerHour);
-
-        await EnsureNoOverlapAsync(courtId, request.DayOfWeek, request.StartTime, request.EndTime, null, ct);
-
-        var now = clock.GetUtcNow().UtcDateTime;
-        var rule = new PricingRule
-        {
-            CourtId = courtId,
-            DayOfWeek = request.DayOfWeek,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            PricePerHour = request.PricePerHour,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        await unitOfWork.AddAsync(rule, ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return rule;
-    }
-
-    public async Task<PricingRule> UpdatePricingRuleAsync(
-        int courtId,
-        int pricingRuleId,
-        UpdatePricingRuleDto request,
-        CancellationToken ct = default)
-    {
-        Validate(request.DayOfWeek, request.StartTime, request.EndTime, request.PricePerHour);
-
-        var rule = await GetRuleOrThrowAsync(pricingRuleId, ct);
-        if (rule.CourtId != courtId)
-            throw new InvalidOperationException($"PricingRule with id {pricingRuleId} does not belong to court {courtId}.");
-
-        await EnsureNoOverlapAsync(
-            rule.CourtId,
-            request.DayOfWeek,
-            request.StartTime,
-            request.EndTime,
-            pricingRuleId, ct);
-
-        rule.DayOfWeek = request.DayOfWeek;
-        rule.StartTime = request.StartTime;
-        rule.EndTime = request.EndTime;
-        rule.PricePerHour = request.PricePerHour;
-        rule.UpdatedAt = clock.GetUtcNow().UtcDateTime;
-
-        await unitOfWork.SaveChangesAsync(ct);
-        return rule;
-    }
-
-    public async Task DeletePricingRuleAsync(int courtId, int pricingRuleId, CancellationToken ct = default)
-    {
-        var rule = await GetRuleOrThrowAsync(pricingRuleId, ct);
-        if (rule.CourtId != courtId)
-            throw new InvalidOperationException($"PricingRule with id {pricingRuleId} does not belong to court {courtId}.");
-
-        unitOfWork.Remove(rule);
-        await unitOfWork.SaveChangesAsync(ct);
-    }
-
-    // ---------------------------------------------------------------
-
-    private static void Validate(int dayOfWeek, TimeOnly start, TimeOnly end, decimal price)
     {
         var errors = new Dictionary<string, string[]>();
         CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);
-        CourtValidation.ValidateTimeRange(start, end, "EndTime", errors);
-        if (price <= 0)
-            errors["PricePerHour"] = ["PricePerHour must be greater than 0."];
-        CourtValidation.ThrowIfAny(errors);
-    }
 
-    private async Task EnsureNoOverlapAsync(
-        int courtId,
-        int dayOfWeek,
-        TimeOnly start,
-        TimeOnly end,
-        int? excludeRuleId,
-        CancellationToken ct)
-    {
-        var sameDay = await pricingRuleRepository.GetByCourtAsync(courtId, dayOfWeek, ct);
-        // There HAS to be at least 1 rule for every day of week
-        if (sameDay is null)
+        if (await courtRepository.GetByIdAsync(courtId, ct) is null)
             throw new NotFoundException($"Court with id {courtId} not found.");
 
-        var clash = sameDay.FirstOrDefault(r =>
-            r.PricingRuleId != excludeRuleId &&
-            start < r.EndTime && end > r.StartTime);
+        var schedules = await courtRepository.GetSchedulesAsync(courtId, ct);
+        if (schedules is null)
+            throw new InvalidOperationException($"Court {courtId} is missing schedule records.");
+        
+        var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
+        if (schedule is null)
+            throw new InvalidOperationException($"Court {courtId} has no schedule for day {dayOfWeek}.");
+        
+        ValidateRules(request.PricingRules, schedule, errors);
+        CourtValidation.ThrowIfAny(errors);
 
-        if (clash is not null)
-            throw new ConflictException(
-                $"Pricing rule overlaps with existing rule {clash.PricingRuleId} ({clash.StartTime}-{clash.EndTime}).");
+        var now = clock.GetUtcNow().UtcDateTime;
+        var rules = request.PricingRules
+            .OrderBy(r => r.StartTime)
+            .Select(r => new PricingRule
+            {
+                CourtId = courtId,
+                DayOfWeek = dayOfWeek,
+                StartTime = r.StartTime,
+                PricePerHour = r.PricePerHour,
+                CreatedAt = now,
+                UpdatedAt = now
+            })
+            .ToList();
+
+        return await pricingRuleRepository.ReplaceDayAsync(courtId, dayOfWeek, rules, ct);
     }
 
-    private async Task<PricingRule> GetRuleOrThrowAsync(int pricingRuleId, CancellationToken ct)
+    private static void ValidateRules(
+        IReadOnlyCollection<SavePricingRuleItemDto> rules,
+        CourtSchedule schedule,
+        Dictionary<string, string[]> errors)
     {
-        return await pricingRuleRepository.GetByIdAsync(pricingRuleId, ct)
-               ?? throw new NotFoundException($"PricingRule with id {pricingRuleId} not found.");
+        if (rules.Count == 0)
+        {
+            errors["PricingRules"] = ["At least one pricing rule is required."];
+            return;
+        }
+
+        var ordered = rules.OrderBy(r => r.StartTime).ToList();
+        if (ordered[0].StartTime != schedule.OpenTime)
+            errors["PricingRules"] = [$"The first pricing rule must start at {schedule.OpenTime}."];
+        else if (ordered.Any(r => r.StartTime < schedule.OpenTime || r.StartTime >= schedule.CloseTime))
+            errors["PricingRules"] = [$"Pricing rule start times must be within {schedule.OpenTime}-{schedule.CloseTime}."];
+        else if (ordered.Select(r => r.StartTime).Distinct().Count() != ordered.Count)
+            errors["PricingRules"] = ["Pricing rule start times must be unique."];
+        if (ordered.Any(r => r.PricePerHour <= 0))
+            errors["PricePerHour"] = ["PricePerHour must be greater than 0."];
     }
 }

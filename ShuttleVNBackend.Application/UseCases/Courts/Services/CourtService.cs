@@ -138,20 +138,23 @@ public class CourtService(
 
     private static decimal ResolvePricePerHour(IEnumerable<PricingRule> rules, TimeOnly start, TimeOnly end)
     {
+        var orderedRules = rules.OrderBy(r => r.StartTime).ToList();
         decimal total = 0;
         var covered = 0;
-        foreach (var r in rules)
-        {
-            if (start >= r.EndTime || end <= r.StartTime)
-                continue;
 
-            var from = start > r.StartTime ? start : r.StartTime;
-            var to = end < r.EndTime ? end : r.EndTime;
+        for (var index = 0; index < orderedRules.Count; index++)
+        {
+            var rule = orderedRules[index];
+            var ruleEnd = index + 1 < orderedRules.Count ? orderedRules[index + 1].StartTime : TimeOnly.MaxValue;
+            var from = start > rule.StartTime ? start : rule.StartTime;
+            var to = end < ruleEnd ? end : ruleEnd;
             if (from >= to)
+            {
                 continue;
+            }
 
             var minutes = (int)(to - from).TotalMinutes;
-            total += r.PricePerHour * minutes;
+            total += rule.PricePerHour * minutes;
             covered += minutes;
         }
 
@@ -208,7 +211,6 @@ public class CourtService(
             {
                 DayOfWeek = day,
                 StartTime = request.DefaultOpenTime,
-                EndTime = request.DefaultCloseTime,
                 PricePerHour = request.DefaultPricePerHour,
                 CreatedAt = now,
                 UpdatedAt = now
