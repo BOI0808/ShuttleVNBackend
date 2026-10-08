@@ -4,32 +4,11 @@ using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
+using ShuttleVNBackend.Application.UseCases.Courts.Helpers;
 using ShuttleVNBackend.Core.Entities.Courts;
 using ShuttleVNBackend.Core.Entities.Courts.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Courts.Services;
-
-internal static class CourtValidation
-{
-    public static void ThrowIfAny(Dictionary<string, string[]> errors)
-    {
-        if (errors.Count > 0)
-            throw new ValidationException(errors: errors);
-    }
-
-    public static void ValidateDayOfWeek(int dayOfWeek, Dictionary<string, string[]> errors)
-    {
-        if (dayOfWeek is < 1 or > 7)
-            errors["DayOfWeek"] = ["DayOfWeek must be between 1 and 7."];
-    }
-
-    public static void ValidateTimeRange(
-        TimeOnly start, TimeOnly end, string endField, Dictionary<string, string[]> errors)
-    {
-        if (start >= end)
-            errors[endField] = [$"{endField} must be after the start time."];
-    }
-}
 
 public class CourtService(
     ICourtRepository courtRepository,
