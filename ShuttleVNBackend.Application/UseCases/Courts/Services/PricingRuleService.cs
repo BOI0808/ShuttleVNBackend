@@ -27,12 +27,9 @@ public class PricingRuleService(
         var errors = new Dictionary<string, string[]>();
         CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);
 
-        if (await courtRepository.GetByIdAsync(courtId, ct) is null)
-            throw new NotFoundException($"Court with id {courtId} not found.");
-
         var schedules = await courtRepository.GetSchedulesAsync(courtId, ct);
         if (schedules is null)
-            throw new InvalidOperationException($"Court {courtId} is missing schedule records.");
+            throw new InvalidOperationException($"Court with id {courtId} not found.");
         
         var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
         if (schedule is null)
@@ -59,7 +56,7 @@ public class PricingRuleService(
     }
 
     private static void ValidateRules(
-        IReadOnlyCollection<SavePricingRuleItemDto> rules,
+        List<SavePricingRuleItemDto> rules,
         CourtSchedule schedule,
         Dictionary<string, string[]> errors)
     {
