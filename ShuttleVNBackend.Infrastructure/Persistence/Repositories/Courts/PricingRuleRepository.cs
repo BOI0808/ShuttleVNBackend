@@ -28,15 +28,13 @@ public class PricingRuleRepository(ShuttleVnDbContext dbContext) : IPricingRuleR
         IReadOnlyCollection<PricingRule> pricingRules,
         CancellationToken ct = default)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
         var oldRules = await dbContext.PricingRules
             .Where(r => r.CourtId == courtId && r.DayOfWeek == dayOfWeek)
             .ToListAsync(ct);
 
         dbContext.PricingRules.RemoveRange(oldRules);
-        await dbContext.PricingRules.AddRangeAsync(pricingRules, ct);
+        dbContext.PricingRules.AddRange(pricingRules);
         await dbContext.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
 
         return pricingRules.OrderBy(r => r.StartTime).ToList();
     }
