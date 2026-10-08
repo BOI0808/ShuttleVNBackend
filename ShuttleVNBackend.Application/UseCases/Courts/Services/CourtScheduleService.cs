@@ -22,7 +22,10 @@ public class CourtScheduleService(
     }
 
     public async Task<CourtSchedule> UpdateScheduleAsync(
-        int courtId, int dayOfWeek, UpdateCourtScheduleDto request, CancellationToken ct = default)
+        int courtId,
+        int dayOfWeek,
+        UpdateCourtScheduleDto request,
+        CancellationToken ct = default)
     {
         var errors = new Dictionary<string, string[]>();
         CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);

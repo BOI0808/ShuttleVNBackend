@@ -60,7 +60,9 @@ public class CourtService(
     }
 
     public async Task<UpdateCourtStatusResultDto> UpdateCourtStatusAsync(
-        int courtId, UpdateCourtStatusDto dto, Guid? actorAccountId, CancellationToken ct = default)
+        int courtId,
+        UpdateCourtStatusDto dto,
+        CancellationToken ct = default)
     {
         if (!Enum.IsDefined(dto.Status))
             throw new ValidationException(errors: new Dictionary<string, string[]>

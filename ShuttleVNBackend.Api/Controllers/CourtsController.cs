@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.DTOs.Common;
-using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.UseCases.Courts.Services;
 using ShuttleVNBackend.Core.Entities.Courts;
@@ -71,7 +70,6 @@ public class CourtsController(CourtService courtService) : ControllerBase
         [FromBody] UpdateCourtStatusDto dto,
         CancellationToken ct = default)
     {
-        var actorId = User.GetAccountId();
-        return Ok(ApiResponseFactory.Success(await courtService.UpdateCourtStatusAsync(id, dto, actorId, ct)));
+        return Ok(ApiResponseFactory.Success(await courtService.UpdateCourtStatusAsync(id, dto, ct)));
     }
 }
