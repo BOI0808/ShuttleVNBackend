@@ -85,6 +85,11 @@ public class EmployeeService(
     {
         var account = await employeeRepository.GetByIdAsync(employeeId) ??
                       throw new NotFoundException("Employee not found");
+        if (account.Employee is null)
+            throw new InvalidOperationException("Employee profile is missing for this account.");
+        if (account.Employee.IsAdmin)
+            throw new ConflictException("Cannot change the status of an administrator account");
+        
         account.Status = status;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();

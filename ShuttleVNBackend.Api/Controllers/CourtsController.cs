@@ -14,7 +14,7 @@ public class CourtsController(CourtService courtService) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> ListCourts(
+    public async Task<ActionResult<ApiResponse<PagedResult<BadmintonCourt>>>> ListCourts(
         CancellationToken ct = default)
     {
         return Ok(ApiResponseFactory.Success(await courtService.GetCourtsAsync(ct)));
@@ -34,7 +34,7 @@ public class CourtsController(CourtService courtService) : ControllerBase
 
     [HttpGet("grid")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> GetCourtGrid(
+    public async Task<ActionResult<ApiResponse<CourtGridResponseDto>>> GetCourtGrid(
         [FromQuery] DateOnly? date,
         CancellationToken ct = default)
     {
