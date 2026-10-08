@@ -12,8 +12,8 @@ using ShuttleVNBackend.Infrastructure.Persistence;
 namespace ShuttleVNBackend.Infrastructure.Migrations
 {
     [DbContext(typeof(ShuttleVnDbContext))]
-    [Migration("20261008082122_RemoveEndTimePricingRule")]
-    partial class RemoveEndTimePricingRule
+    [Migration("20261008150143_DropPricingRuleEndTime")]
+    partial class DropPricingRuleEndTime
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
