@@ -9,12 +9,12 @@ using ShuttleVNBackend.Core.Entities.Courts;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("api/courts")]
+[Route("api/courts/{id:int}/pricing-rules")]
 public class PricingRuleController(PricingRuleService pricingRuleService) : ControllerBase
 {
-    [HttpGet("{id:int}/pricing-rules")]
+    [HttpGet("")]
     [Authorize(Policy = "StaffOnly")]
-    public async Task<ActionResult<ApiResponse<List<PricingRule>>>> GetPricingRules(
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<PricingRule>>>> GetPricingRules(
         [FromRoute] int id,
         CancellationToken ct = default)
     {
@@ -22,37 +22,15 @@ public class PricingRuleController(PricingRuleService pricingRuleService) : Cont
         return Ok(ApiResponseFactory.Success(pricingRules));
     }
 
-    [HttpPost("{id:int}/pricing-rules")]
+    [HttpPut("{dayOfWeek:int}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<PricingRule>>> CreatePricingRule(
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<PricingRule>>>> UpsertPricingRule(
         [FromRoute] int id,
-        [FromBody] CreatePricingRuleDto dto,
+        [FromRoute] int dayOfWeek,
+        [FromBody] SavePricingRuleDto dto,
         CancellationToken ct = default)
     {
-        var pricingRule = await pricingRuleService.CreatePricingRuleAsync(id, dto, ct);
-        return Ok(ApiResponseFactory.Success(pricingRule));
-    }
-
-    [HttpPut("{id:int}/pricing-rules/{pricingRuleId:int}")]
-    [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<PricingRule>>> UpdatePricingRule(
-        [FromRoute] int id,
-        [FromRoute] int pricingRuleId,
-        [FromBody] UpdatePricingRuleDto dto,
-        CancellationToken ct = default)
-    {
-        var pricingRule = await pricingRuleService.UpdatePricingRuleAsync(id, pricingRuleId, dto, ct);
-        return Ok(ApiResponseFactory.Success(pricingRule));
-    }
-    
-    [HttpDelete("{id:int}/pricing-rules/{pricingRuleId:int}")]
-    [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<dynamic>>> DeletePricingRule(
-        [FromRoute] int id,
-        [FromRoute] int pricingRuleId,
-        CancellationToken ct = default)
-    {
-        await pricingRuleService.DeletePricingRuleAsync(id, pricingRuleId, ct);
-        return NotFound();
+        var pricingRules = await pricingRuleService.SavePricingRulesAsync(id, dayOfWeek, dto, ct);
+        return Ok(ApiResponseFactory.Success(pricingRules));
     }
 }

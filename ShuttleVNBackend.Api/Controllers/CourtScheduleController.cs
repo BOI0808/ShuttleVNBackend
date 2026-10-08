@@ -9,10 +9,10 @@ using ShuttleVNBackend.Core.Entities.Courts;
 namespace ShuttleVNBackend.Api.Controllers;
 
 [ApiController]
-[Route("api/courts")]
+[Route("api/courts/{id:int}/schedules")]
 public class CourtScheduleController(CourtScheduleService scheduleService) : ControllerBase
 {
-    [HttpGet("{id:int}/schedules")]
+    [HttpGet("")]
     [Authorize(Policy = "StaffOnly")]
     public async Task<ActionResult<ApiResponse<List<CourtSchedule>>>> GetCourtSchedules(
         [FromRoute] int id,
@@ -22,7 +22,7 @@ public class CourtScheduleController(CourtScheduleService scheduleService) : Con
         return Ok(ApiResponseFactory.Success(schedules));
     }
 
-    [HttpPut("{id:int}/schedules/{dayOfWeek:int}")]
+    [HttpPut("{dayOfWeek:int}")]
     [Authorize(Policy = "StaffOnly")]
     public async Task<ActionResult<ApiResponse<CourtSchedule>>> UpdateCourtSchedule(
         [FromRoute] int id,

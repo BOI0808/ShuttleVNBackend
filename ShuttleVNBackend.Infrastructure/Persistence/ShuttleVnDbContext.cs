@@ -36,6 +36,11 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         Set<T>().Remove(entity);
     }
 
+    public void RemoveRange<T>(IEnumerable<T> entities) where T : class
+    {
+        Set<T>().RemoveRange(entities);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -104,12 +109,6 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.HasOne<BadmintonCourt>()
                 .WithMany(c => c.PricingRules)
                 .HasForeignKey(e => e.CourtId);
-
-            entity.HasExclusionConstraint(ex => ex
-                .WithEquality(e => e.CourtId)
-                .WithEquality(e => e.DayOfWeek)
-                .WithExpression("tsrange(DATE '2000-01-01' + \"StartTime\", DATE '2000-01-01' + \"EndTime\")", "&&")
-                .HasName("ex_pricing_rules_no_overlap"));
         });
 
         modelBuilder.Entity<Booking>(entity =>

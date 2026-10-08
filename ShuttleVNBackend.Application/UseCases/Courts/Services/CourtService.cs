@@ -4,32 +4,11 @@ using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
+using ShuttleVNBackend.Application.UseCases.Courts.Helpers;
 using ShuttleVNBackend.Core.Entities.Courts;
 using ShuttleVNBackend.Core.Entities.Courts.Enums;
 
 namespace ShuttleVNBackend.Application.UseCases.Courts.Services;
-
-internal static class CourtValidation
-{
-    public static void ThrowIfAny(Dictionary<string, string[]> errors)
-    {
-        if (errors.Count > 0)
-            throw new ValidationException(errors: errors);
-    }
-
-    public static void ValidateDayOfWeek(int dayOfWeek, Dictionary<string, string[]> errors)
-    {
-        if (dayOfWeek is < 1 or > 7)
-            errors["DayOfWeek"] = ["DayOfWeek must be between 1 and 7."];
-    }
-
-    public static void ValidateTimeRange(
-        TimeOnly start, TimeOnly end, string endField, Dictionary<string, string[]> errors)
-    {
-        if (start >= end)
-            errors[endField] = [$"{endField} must be after the start time."];
-    }
-}
 
 public class CourtService(
     ICourtRepository courtRepository,
@@ -81,7 +60,9 @@ public class CourtService(
     }
 
     public async Task<UpdateCourtStatusResultDto> UpdateCourtStatusAsync(
-        int courtId, UpdateCourtStatusDto dto, Guid? actorAccountId, CancellationToken ct = default)
+        int courtId,
+        UpdateCourtStatusDto dto,
+        CancellationToken ct = default)
     {
         if (!Enum.IsDefined(dto.Status))
             throw new ValidationException(errors: new Dictionary<string, string[]>
@@ -138,20 +119,23 @@ public class CourtService(
 
     private static decimal ResolvePricePerHour(IEnumerable<PricingRule> rules, TimeOnly start, TimeOnly end)
     {
+        var orderedRules = rules.OrderBy(r => r.StartTime).ToList();
         decimal total = 0;
         var covered = 0;
-        foreach (var r in rules)
-        {
-            if (start >= r.EndTime || end <= r.StartTime)
-                continue;
 
-            var from = start > r.StartTime ? start : r.StartTime;
-            var to = end < r.EndTime ? end : r.EndTime;
+        for (var index = 0; index < orderedRules.Count; index++)
+        {
+            var rule = orderedRules[index];
+            var ruleEnd = index + 1 < orderedRules.Count ? orderedRules[index + 1].StartTime : TimeOnly.MaxValue;
+            var from = start > rule.StartTime ? start : rule.StartTime;
+            var to = end < ruleEnd ? end : ruleEnd;
             if (from >= to)
+            {
                 continue;
+            }
 
             var minutes = (int)(to - from).TotalMinutes;
-            total += r.PricePerHour * minutes;
+            total += rule.PricePerHour * minutes;
             covered += minutes;
         }
 
@@ -208,7 +192,6 @@ public class CourtService(
             {
                 DayOfWeek = day,
                 StartTime = request.DefaultOpenTime,
-                EndTime = request.DefaultCloseTime,
                 PricePerHour = request.DefaultPricePerHour,
                 CreatedAt = now,
                 UpdatedAt = now

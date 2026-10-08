@@ -2,12 +2,14 @@ using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
+using ShuttleVNBackend.Application.UseCases.Courts.Helpers;
 using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Application.UseCases.Courts.Services;
 
 public class CourtScheduleService(
     ICourtRepository courtRepository,
+    IPricingRuleRepository pricingRuleRepository,
     IUnitOfWork unitOfWork,
     TimeProvider clock)
 {
@@ -20,7 +22,10 @@ public class CourtScheduleService(
     }
 
     public async Task<CourtSchedule> UpdateScheduleAsync(
-        int courtId, int dayOfWeek, UpdateCourtScheduleDto request, CancellationToken ct = default)
+        int courtId,
+        int dayOfWeek,
+        UpdateCourtScheduleDto request,
+        CancellationToken ct = default)
     {
         var errors = new Dictionary<string, string[]>();
         CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);
@@ -34,10 +39,23 @@ public class CourtScheduleService(
 
         var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek)
                        ?? throw new NotFoundException($"Schedule for day {dayOfWeek} of court {courtId} not found.");
+        
+        var now = clock.GetUtcNow().UtcDateTime;
+        var changed = schedule.IsAvailable != request.IsAvailable
+                      || schedule.OpenTime != request.OpenTime
+                      || schedule.CloseTime != request.CloseTime;
+        
         schedule.OpenTime = request.OpenTime;
         schedule.CloseTime = request.CloseTime;
         schedule.IsAvailable = request.IsAvailable;
-        schedule.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+        schedule.UpdatedAt = now;
+
+        if (changed)
+        {
+            var rules = await pricingRuleRepository.GetByCourtAsync(courtId, dayOfWeek, ct);
+            var removed = PricingRuleNormalizer.Normalize(rules, request.OpenTime, request.CloseTime, now);
+            unitOfWork.RemoveRange(removed);
+        }
 
         await unitOfWork.SaveChangesAsync(ct);
         return schedule;

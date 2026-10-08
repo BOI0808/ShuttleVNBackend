@@ -6,7 +6,6 @@ public class PricingRule
     public int CourtId { get; set; }
     public int DayOfWeek { get; set; }
     public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
     public decimal PricePerHour { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
