@@ -1,4 +1,4 @@
-﻿# Thiết Kế Dữ Liệu — Hệ Thống Đặt Sân
+# Thiết Kế Dữ Liệu — Hệ Thống Đặt Sân
 
 ## Mục lục
 
