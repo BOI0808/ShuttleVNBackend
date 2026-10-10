@@ -1,7 +1,9 @@
+using ShuttleVNBackend.Core.Attributes;
 using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Core.Entities.Users;
 
+[NoAudit]
 public class VerificationCode
 {
     public string Email { get; set; } = null!;
