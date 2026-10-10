@@ -5,9 +5,10 @@ namespace ShuttleVNBackend.Core.Entities.Courts;
 public class BadmintonCourt
 {
     public int CourtId { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
     public string Description { get; set; } = string.Empty;
     public CourtStatus Status { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

@@ -9,6 +9,7 @@ public class UserAccount
     public string PasswordHash { get; set; } = "";
     public AccountType AccountType { get; set; }
     public AccountStatus Status { get; set; }
+    public int FailedLoginAttempts { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
