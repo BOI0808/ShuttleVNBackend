@@ -75,11 +75,40 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.HasAnnotation("CustomExclusion:Constraints", "[{\"parts\":[{\"path\":\"CourtId\",\"op\":\"=\"},{\"path\":\"Date\",\"op\":\"=\"},{\"expr\":\"tsrange(\\u0022Date\\u0022 \\u002B \\u0022StartTime\\u0022, \\u0022Date\\u0022 \\u002B \\u0022EndTime\\u0022)\",\"op\":\"\\u0026\\u0026\"}],\"filter\":\"\\u0022Status\\u0022 \\u003C\\u003E \\u0027Cancelled\\u0027\",\"name\":\"ex_bookings_no_overlap\"}]");
                 });
 
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.BookingPriceSegment", b =>
+                {
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SegmentNo")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PricePerHour")
+                        .HasPrecision(18)
+                        .HasColumnType("numeric(18,0)");
+
+                    b.Property<TimeOnly>("PriceStartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly>("SegmentEndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly>("SegmentStartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("BookingId", "SegmentNo");
+
+                    b.ToTable("BookingPriceSegments");
+                });
+
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.BookingStatusHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("ActorType")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("BookingId")
                         .HasColumnType("uuid");
@@ -87,7 +116,10 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.Property<DateTime>("ChangedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ChangedByEmployee")
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("EmployeeId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("NewStatus")
@@ -105,7 +137,9 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
 
                     b.HasIndex("BookingId");
 
-                    b.HasIndex("ChangedByEmployee");
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("BookingStatusHistories");
                 });
@@ -117,6 +151,21 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("CancellationActorType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByCustomer")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CancelledByEmployee")
                         .HasColumnType("uuid");
 
                     b.Property<string>("InvoiceCode")
@@ -136,8 +185,29 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("PaidByEmployee")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PaymentMethod")
                         .HasColumnType("text");
+
+                    b.Property<decimal?>("RefundAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("RefundMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RefundReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RefundedByEmployee")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReplacesInvoiceId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -161,6 +231,19 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.InvoiceDailyCounter", b =>
+                {
+                    b.Property<DateOnly>("IssueDate")
+                        .HasColumnType("date");
+
+                    b.Property<long>("LastNumber")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("IssueDate");
+
+                    b.ToTable("InvoiceDailyCounters");
+                });
+
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Courts.BadmintonCourt", b =>
                 {
                     b.Property<int>("CourtId")
@@ -172,12 +255,14 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -271,11 +356,11 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
 
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.System.Audit", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -326,6 +411,110 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("ck_audit_one_actor", "\"EmployeeId\" IS NULL OR \"CustomerId\" IS NULL");
                         });
+                });
+
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.System.IdempotencyRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorScope")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponseBody")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ResponseStatus")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorScope", "RequestKey")
+                        .IsUnique();
+
+                    b.ToTable("IdempotencyRequests");
+                });
+
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.System.Notification", b =>
+                {
+                    b.Property<Guid>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("EventKey")
+                        .IsUnique();
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Users.Customer", b =>
@@ -420,6 +609,9 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("LoginEmail")
                         .IsRequired()
                         .HasColumnType("text");
@@ -488,6 +680,17 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.BookingPriceSegment", b =>
+                {
+                    b.HasOne("ShuttleVNBackend.Core.Entities.Bookings.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.BookingStatusHistory", b =>
                 {
                     b.HasOne("ShuttleVNBackend.Core.Entities.Bookings.Booking", "Booking")
@@ -496,11 +699,17 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShuttleVNBackend.Core.Entities.Users.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId");
+
                     b.HasOne("ShuttleVNBackend.Core.Entities.Users.Employee", "Employee")
                         .WithMany()
-                        .HasForeignKey("ChangedByEmployee");
+                        .HasForeignKey("EmployeeId");
 
                     b.Navigation("Booking");
+
+                    b.Navigation("Customer");
 
                     b.Navigation("Employee");
                 });
