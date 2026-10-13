@@ -196,11 +196,11 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
                 .WithMany()
                 .HasForeignKey(e => e.BookingId);
 
-            entity.HasOne(e => e.Employee)
+            entity.HasOne(e => e.IssueEmployee)
                 .WithMany()
                 .HasForeignKey(e => e.IssuedByEmployee);
 
-            entity.HasOne<Employee>()
+            entity.HasOne(e => e.PaidEmployee)
                 .WithMany()
                 .HasForeignKey(e => e.PaidByEmployee)
                 .IsRequired(false)
