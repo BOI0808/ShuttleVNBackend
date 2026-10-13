@@ -200,7 +200,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
                 .WithMany()
                 .HasForeignKey(e => e.IssuedByEmployee);
 
-            entity.HasOne(e => e.PaidEmployee)
+            entity.HasOne<Employee>()
                 .WithMany()
                 .HasForeignKey(e => e.PaidByEmployee)
                 .IsRequired(false)

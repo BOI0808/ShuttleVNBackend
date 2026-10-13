@@ -19,5 +19,4 @@ public class Invoice
 
     public virtual Booking Booking { get; set; } = null!;
     public virtual Employee Employee { get; set; } = null!;
-    public virtual Employee? PaidEmployee { get; set; }
 }
