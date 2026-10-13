@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
+using ShuttleVNBackend.Application.Common;
+using ShuttleVNBackend.Application.DTOs.Bookings;
+using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;
 
@@ -20,5 +22,83 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .FromSqlInterpolated($"""SELECT * FROM "Bookings" WHERE "BookingId" = {bookingId} FOR UPDATE""")
             .ToListAsync(ct);
         return rows.FirstOrDefault();
+    }
+
+        public async Task<PagedResult<BookingRow>> GetPendingAsync(PageRequest page, CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings.AsNoTracking()
+            .Where(b => b.Status == BookingStatus.Pending);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await ProjectRows(query
+                .OrderBy(b => b.CreatedAt).ThenBy(b => b.BookingId)
+                .Skip((page.PageNumber - 1) * page.PageSize)
+                .Take(page.PageSize))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        return await ProjectRows(dbContext.Bookings.AsNoTracking().Where(b => b.BookingId == bookingId))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<BookingInvoiceDto?> GetValidInvoiceAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        return await dbContext.Invoices.AsNoTracking()
+            .Where(i => i.BookingId == bookingId
+                        && (i.Status == InvoiceStatus.Unpaid || i.Status == InvoiceStatus.Paid))
+            .Select(i => new BookingInvoiceDto(i.InvoiceCode, i.Status, i.PaymentMethod, i.PaidAt))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<List<BookingStatusHistoryDto>> GetStatusHistoryAsync(Guid bookingId,
+        CancellationToken ct = default)
+    {
+        return await dbContext.BookingStatusHistories.AsNoTracking()
+            .Where(h => h.BookingId == bookingId)
+            .OrderBy(h => h.ChangedAt).ThenBy(h => h.Id)
+            .Select(h => new BookingStatusHistoryDto(
+                h.OldStatus,
+                h.NewStatus,
+                h.ActorType,
+                h.Employee != null ? h.Employee.FullName
+                : h.Customer != null ? h.Customer.FullName
+                : null,
+                h.ChangedAt,
+                h.Reason))
+            .ToListAsync(ct);
+    }
+
+    private IQueryable<BookingRow> ProjectRows(IQueryable<Booking> source)
+    {
+        return source.Select(b => new BookingRow(
+            b.BookingId,
+            b.BookingCode,
+            b.CustomerId,
+            b.Customer.FullName,
+            b.Customer.Phone,
+            b.Customer.Email,
+            b.CourtId,
+            b.Court.Name,
+            b.Date,
+            b.StartTime,
+            b.EndTime,
+            b.Status,
+            b.TotalCost,
+            dbContext.Invoices
+                .Where(i => i.BookingId == b.BookingId
+                            && (i.Status == InvoiceStatus.Unpaid || i.Status == InvoiceStatus.Paid))
+                .Select(i => (InvoiceStatus?)i.Status)
+                .FirstOrDefault(),
+            b.CreatedAt));
     }
 }
