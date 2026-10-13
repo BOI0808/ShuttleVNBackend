@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
+using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;
@@ -12,5 +12,13 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         return await dbContext.Bookings.CountAsync(b =>
             b.CourtId == courtId && b.Date >= fromDate
                                  && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
+    }
+
+    public async Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        var rows = await dbContext.Bookings
+            .FromSqlInterpolated($"""SELECT * FROM "Bookings" WHERE "BookingId" = {bookingId} FOR UPDATE""")
+            .ToListAsync(ct);
+        return rows.FirstOrDefault();
     }
 }
