@@ -18,7 +18,7 @@ public class AppAuthService(
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
 
-    public async Task<UserAccount> VerifyLogin(LoginDto dto)
+    public async Task<UserAccount> VerifyLogin(LoginDto dto, CancellationToken ct = default)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -29,13 +29,43 @@ public class AppAuthService(
         if (errors.Count > 0)
             throw new ValidationException(errors: errors);
 
-        var account = await accountRepository.GetByEmailAsync(dto.Email);
-        if (account is null || !IsValidPassword(account, dto.Password))
-            throw new ValidationException("Invalid email or password");
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var account = await accountRepository.GetByEmailAsync(email, ct);
+        if (account is null)
+            throw new UnauthorizedException("Invalid email or password");
 
-        return account.Status is AccountStatus.Disabled
-            ? throw new UnauthorizedException("This account is disabled. Please contact support.")
-            : account;
+        if (account.Status is AccountStatus.Disabled)
+            throw new UnauthorizedException("This account is disabled. Please contact support.");
+
+        var passwordResult = _hasher.VerifyHashedPassword(account, account.PasswordHash, dto.Password);
+        if (passwordResult == PasswordVerificationResult.Failed)
+        {
+            if (account.AccountType is AccountType.Customer)
+            {
+                account.FailedLoginAttempts++;
+                if (account.FailedLoginAttempts >= 5)
+                {
+                    account.FailedLoginAttempts = 5;
+                    account.Status = AccountStatus.Disabled;
+                }
+
+                account.UpdatedAt = DateTime.UtcNow;
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+
+            throw new UnauthorizedException("Invalid email or password");
+        }
+
+        if (account.Customer is null && account.Employee is null)
+            throw new UnauthorizedException("Invalid account profile");
+
+        account.FailedLoginAttempts = 0;
+        account.UpdatedAt = DateTime.UtcNow;
+        if (passwordResult == PasswordVerificationResult.SuccessRehashNeeded)
+            account.PasswordHash = _hasher.HashPassword(account, dto.Password);
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return account;
     }
 
     public async Task<UserAccount> ResetPassword(ResetPasswordDto dto)
