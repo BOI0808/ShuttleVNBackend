@@ -199,7 +199,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
             entity.HasIndex(e => new { e.EntityName, e.EntityId });
             entity.HasIndex(e => e.CreatedAt);
-            
+
             entity.HasIndex(a => a.EmployeeId);
             entity.HasIndex(a => a.CustomerId);
             entity.ToTable(t => t.HasCheckConstraint("ck_audit_one_actor",

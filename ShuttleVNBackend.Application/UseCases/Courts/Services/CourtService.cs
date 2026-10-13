@@ -66,7 +66,7 @@ public class CourtService(
     {
         if (!Enum.IsDefined(dto.Status))
             throw new ValidationException(errors: new Dictionary<string, string[]>
-                { ["Status"] = ["Invalid court status"] });
+            { ["Status"] = ["Invalid court status"] });
 
         var court = await courtRepository.GetByIdAsync(courtId, ct)
                     ?? throw new NotFoundException("Court not found");

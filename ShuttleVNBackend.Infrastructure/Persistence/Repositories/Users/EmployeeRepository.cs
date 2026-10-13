@@ -23,7 +23,10 @@ public class EmployeeRepository(ShuttleVnDbContext dbContext) : IEmployeeReposit
 
         return new PagedResult<UserAccount>
         {
-            Items = items, PageNumber = page.PageNumber, PageSize = page.PageSize, TotalCount = totalCount
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
         };
     }
 
