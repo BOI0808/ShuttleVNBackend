@@ -17,19 +17,19 @@ Căn cứ: SRS 1.7 và Use Case 1.5. Mã BR tham chiếu SRS.
 
 ## 1. Quy ước chung
 
-| Nội dung | Quy ước |
-| --- | --- |
-| Khóa | Giữ UUID cho tài khoản, hồ sơ, đặt sân, hóa đơn; số nguyên cho sân/lịch/giá hiện hành. |
-| Trường bắt buộc | Trường không ghi `NULL` là `NOT NULL`. FK đến dữ liệu lịch sử dùng `ON DELETE RESTRICT`, không cascade xóa giao dịch. Ngoại lệ: FK hồ sơ → UserAccount dùng `ON DELETE SET NULL` để hard-delete tài khoản và giữ hồ sơ. |
-| Thời điểm | `DateTime UTC` → PostgreSQL `timestamptz`; ứng dụng ghi/đọc UTC. Không dùng giờ địa phương để lưu `createdAt`, `paidAt`, thời điểm nhật ký hoặc hết hạn mã. |
-| Ngày và giờ sử dụng | `DateOnly` → `date`; `TimeOnly` → `time without time zone`, diễn giải theo giờ Việt Nam. `date + startTime/endTime` là giờ địa phương của lượt sử dụng; chuyển sang UTC khi so với đồng hồ máy chủ. |
-| Ngày trong tuần | ISO-8601: 1 = Thứ Hai, …, 7 = Chủ Nhật. |
-| Đơn vị tiền | VND. Đơn giá, tổng tiền và tiền hoàn dùng `Decimal(18,0)` → `numeric(18,0)`; kiểm tra đầu vào nguyên đồng trước khi lưu, không để DB tự làm tròn đầu vào sai. Tính các phần bằng decimal đủ độ chính xác, cộng rồi làm tròn tổng một lần theo BR-04. |
-| Giờ mở và giờ đặt | Không qua nửa đêm; giờ mở/đóng, bắt đầu/kết thúc ở phút 00 hoặc 30, giây bằng 0. Mốc giá chính xác đến phút; SRS không bắt buộc mốc giá ở phút 00/30. |
-| Email | Trim và chuyển chữ thường; kiểm tra định dạng, không gộp alias/dấu chấm/phần sau dấu cộng. Lưu giá trị chuẩn hóa để so sánh duy nhất. |
-| Số điện thoại | Chuỗi; bỏ dấu cách/dấu gạch ngang, cho phép `+` đầu chuỗi, từ 8–15 chữ số. Không UNIQUE, không dùng để tự gộp hồ sơ. |
-| Cập nhật đồng thời | Giao dịch, khóa bản ghi và kiểm tra lại dữ liệu gốc/trạng thái theo BR-21. |
-| Enum | Tên nghiệp vụ/API viết hoa; giữ cách lưu tên PascalCase của bản gốc trong DB. Ví dụ `CONFIRMED` ↔ `Confirmed`, `PAID` ↔ `Paid`. SQL minh họa dùng giá trị DB PascalCase và tên bảng/cột có dấu ngoặc kép. |
+| Nội dung            | Quy ước                                                                                                                                                                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Khóa                | Giữ UUID cho tài khoản, hồ sơ, đặt sân, hóa đơn; số nguyên cho sân/lịch/giá hiện hành.                                                                                                                                                               |
+| Trường bắt buộc     | Trường không ghi `NULL` là `NOT NULL`. FK đến dữ liệu lịch sử dùng `ON DELETE RESTRICT`, không cascade xóa giao dịch. Ngoại lệ: FK hồ sơ → UserAccount dùng `ON DELETE SET NULL` để hard-delete tài khoản và giữ hồ sơ.                              |
+| Thời điểm           | `DateTime UTC` → PostgreSQL `timestamptz`; ứng dụng ghi/đọc UTC. Không dùng giờ địa phương để lưu `createdAt`, `paidAt`, thời điểm nhật ký hoặc hết hạn mã.                                                                                          |
+| Ngày và giờ sử dụng | `DateOnly` → `date`; `TimeOnly` → `time without time zone`, diễn giải theo giờ Việt Nam. `date + startTime/endTime` là giờ địa phương của lượt sử dụng; chuyển sang UTC khi so với đồng hồ máy chủ.                                                  |
+| Ngày trong tuần     | ISO-8601: 1 = Thứ Hai, …, 7 = Chủ Nhật.                                                                                                                                                                                                              |
+| Đơn vị tiền         | VND. Đơn giá, tổng tiền và tiền hoàn dùng `Decimal(18,0)` → `numeric(18,0)`; kiểm tra đầu vào nguyên đồng trước khi lưu, không để DB tự làm tròn đầu vào sai. Tính các phần bằng decimal đủ độ chính xác, cộng rồi làm tròn tổng một lần theo BR-04. |
+| Giờ mở và giờ đặt   | Không qua nửa đêm; giờ mở/đóng, bắt đầu/kết thúc ở phút 00 hoặc 30, giây bằng 0. Mốc giá chính xác đến phút; SRS không bắt buộc mốc giá ở phút 00/30.                                                                                                |
+| Email               | Trim và chuyển chữ thường; kiểm tra định dạng, không gộp alias/dấu chấm/phần sau dấu cộng. Lưu giá trị chuẩn hóa để so sánh duy nhất.                                                                                                                |
+| Số điện thoại       | Chuỗi; bỏ dấu cách/dấu gạch ngang, cho phép `+` đầu chuỗi, từ 8–15 chữ số. Không UNIQUE, không dùng để tự gộp hồ sơ.                                                                                                                                 |
+| Cập nhật đồng thời  | Giao dịch, khóa bản ghi và kiểm tra lại dữ liệu gốc/trạng thái theo BR-21.                                                                                                                                                                           |
+| Enum                | Tên nghiệp vụ/API viết hoa; giữ cách lưu tên PascalCase của bản gốc trong DB. Ví dụ `CONFIRMED` ↔ `Confirmed`, `PAID` ↔ `Paid`. SQL minh họa dùng giá trị DB PascalCase và tên bảng/cột có dấu ngoặc kép.                                            |
 
 SQL mẫu; ràng buộc liên bảng triển khai theo mục 7.
 
@@ -93,14 +93,14 @@ Khóa tài khoản nhân viên cập nhật DISABLED; xóa tài khoản là hard
 
 **VerificationCode** — Mã xác minh hiện tại theo email và mục đích
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| email | string | PK thành phần; email chuẩn hóa |
-| type | Enum[CodeType] | PK thành phần; mục đích xác minh |
-| codeHash | string | Băm mã 6 chữ số |
-| attempt | int | Số lần nhập sai, 0–5 |
-| isUsed | bool | Đã tiêu thụ trong giao dịch thành công |
-| expiresAt | DateTime UTC | Hết hạn sau 10 phút |
+| Field     | Type           | Ghi chú                                |
+| --------- | -------------- | -------------------------------------- |
+| email     | string         | PK thành phần; email chuẩn hóa         |
+| type      | Enum[CodeType] | PK thành phần; mục đích xác minh       |
+| codeHash  | string         | Băm mã 6 chữ số                        |
+| attempt   | int            | Số lần nhập sai, 0–5                   |
+| isUsed    | bool           | Đã tiêu thụ trong giao dịch thành công |
+| expiresAt | DateTime UTC   | Hết hạn sau 10 phút                    |
 
 Mỗi `(email, type)` giữ một mã. Gửi lại thay mã cũ, đặt attempt = 0 và isUsed = false. Chỉ nhận mã đúng, còn hạn, chưa dùng và attempt < 5. Khóa bản ghi khi kiểm tra/tiêu thụ mã; lưu nghiệp vụ và đánh dấu isUsed cùng giao dịch, lỗi thì hoàn tác. Vô hiệu mã bằng cách đặt expiresAt về thời điểm hiện tại.
 
@@ -159,40 +159,40 @@ CodeType giữ các giá trị số cũ; thêm mục đích mới ở cuối enu
 
 **BadmintonCourt**
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| courtId | int | PK |
-| name | string, NULL | NULL chỉ khi DELETED; tên chưa xóa trim, bắt buộc, duy nhất không phân biệt hoa/thường |
-| description | string | |
-| status | Enum[CourtStatus] | |
-| deletedAt | DateTime UTC, NULL | Mốc xóa; xác định ngày xóa theo giờ Việt Nam khi thống kê |
-| createdAt | DateTime UTC | |
-| updatedAt | DateTime UTC | |
+| Field       | Type               | Ghi chú                                                                                |
+| ----------- | ------------------ | -------------------------------------------------------------------------------------- |
+| courtId     | int                | PK                                                                                     |
+| name        | string, NULL       | NULL chỉ khi DELETED; tên chưa xóa trim, bắt buộc, duy nhất không phân biệt hoa/thường |
+| description | string             |                                                                                        |
+| status      | Enum[CourtStatus]  |                                                                                        |
+| deletedAt   | DateTime UTC, NULL | Mốc xóa; xác định ngày xóa theo giờ Việt Nam khi thống kê                              |
+| createdAt   | DateTime UTC       |                                                                                        |
+| updatedAt   | DateTime UTC       |                                                                                        |
 
 **CourtSchedule** — Một lịch hiện hành mỗi sân/ngày trong tuần
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| scheduleId | int | PK |
-| courtId | int | FK → BadmintonCourt.courtId |
-| dayOfWeek | int | 1–7 |
-| openTime | TimeOnly | Phút 00/30, giây 0 |
-| closeTime | TimeOnly | Phút 00/30, giây 0; openTime < closeTime |
-| isAvailable | bool | false cho ngày nghỉ; vẫn giữ giờ và bảng giá |
-| createdAt | DateTime UTC | |
-| updatedAt | DateTime UTC | |
+| Field       | Type         | Ghi chú                                      |
+| ----------- | ------------ | -------------------------------------------- |
+| scheduleId  | int          | PK                                           |
+| courtId     | int          | FK → BadmintonCourt.courtId                  |
+| dayOfWeek   | int          | 1–7                                          |
+| openTime    | TimeOnly     | Phút 00/30, giây 0                           |
+| closeTime   | TimeOnly     | Phút 00/30, giây 0; openTime < closeTime     |
+| isAvailable | bool         | false cho ngày nghỉ; vẫn giữ giờ và bảng giá |
+| createdAt   | DateTime UTC |                                              |
+| updatedAt   | DateTime UTC |                                              |
 
 **PricingRule** — Các mốc giá hiện hành
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| pricingRuleId | int | PK |
-| courtId | int | FK → BadmintonCourt.courtId |
-| dayOfWeek | int | 1–7; FK ghép `(courtId, dayOfWeek)` → CourtSchedule |
-| startTime | TimeOnly | Mốc bắt đầu; chính xác đến phút, giây 0 |
-| pricePerHour | Decimal(18,0) | Nguyên đồng VND, > 0 |
-| createdAt | DateTime UTC | |
-| updatedAt | DateTime UTC | |
+| Field         | Type          | Ghi chú                                             |
+| ------------- | ------------- | --------------------------------------------------- |
+| pricingRuleId | int           | PK                                                  |
+| courtId       | int           | FK → BadmintonCourt.courtId                         |
+| dayOfWeek     | int           | 1–7; FK ghép `(courtId, dayOfWeek)` → CourtSchedule |
+| startTime     | TimeOnly      | Mốc bắt đầu; chính xác đến phút, giây 0             |
+| pricePerHour  | Decimal(18,0) | Nguyên đồng VND, > 0                                |
+| createdAt     | DateTime UTC  |                                                     |
+| updatedAt     | DateTime UTC  |                                                     |
 
 Không thêm `endTime` vào PricingRule. Khi thay toàn bộ bảng giá, khóa lịch tương ứng, kiểm tra lại lịch/giá hiện hành, thay danh sách mốc và ghi Audit trong cùng giao dịch. Khóa dòng lịch bảo vệ cả cấu hình lịch/giá của ngày đó.
 
@@ -232,8 +232,8 @@ Không dùng exclusion constraint trên các khoảng CourtSchedule: mỗi ngày
 
 - Kiểm tra một sân đủ 7 lịch, mỗi bảng giá không rỗng, mốc đầu bằng giờ mở, các mốc thuộc `[openTime, closeTime)` tại cuối giao dịch; UNIQUE chỉ bảo đảm tối đa một lịch/ngày.
 
-| Enum | Values |
-| --- | --- |
+| Enum        | Values                                       |
+| ----------- | -------------------------------------------- |
 | CourtStatus | `ACTIVE`, `MAINTENANCE`, `CLOSED`, `DELETED` |
 
 ## 4. Đặt sân và lịch sử
@@ -252,30 +252,30 @@ Không dùng exclusion constraint trên các khoảng CourtSchedule: mỗi ngày
 
 **Booking**
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| bookingId | uuid | PK |
-| bookingCode | string | UNIQUE; DS-{chữ và số}, đuôi ít nhất 5 ký tự |
-| customerId | uuid | FK → Customer; bắt buộc, không đổi chủ hồ sơ khi đổi lịch |
-| courtId | int | FK → BadmintonCourt |
-| date | DateOnly | Ngày sử dụng theo Việt Nam |
-| startTime | TimeOnly | Phút 00/30, giây 0 |
-| endTime | TimeOnly | Phút 00/30, giây 0; > startTime, tối thiểu 30 phút |
-| status | Enum[BookingStatus] | |
-| totalCost | Decimal(18,0) | Tổng giá đã làm tròn một lần, > 0; snapshot |
-| createdAt | DateTime UTC | Thời điểm tạo thực tế, trước giờ bắt đầu lượt sử dụng |
-| updatedAt | DateTime UTC | |
+| Field       | Type                | Ghi chú                                                   |
+| ----------- | ------------------- | --------------------------------------------------------- |
+| bookingId   | uuid                | PK                                                        |
+| bookingCode | string              | UNIQUE; DS-{chữ và số}, đuôi ít nhất 5 ký tự              |
+| customerId  | uuid                | FK → Customer; bắt buộc, không đổi chủ hồ sơ khi đổi lịch |
+| courtId     | int                 | FK → BadmintonCourt                                       |
+| date        | DateOnly            | Ngày sử dụng theo Việt Nam                                |
+| startTime   | TimeOnly            | Phút 00/30, giây 0                                        |
+| endTime     | TimeOnly            | Phút 00/30, giây 0; > startTime, tối thiểu 30 phút        |
+| status      | Enum[BookingStatus] |                                                           |
+| totalCost   | Decimal(18,0)       | Tổng giá đã làm tròn một lần, > 0; snapshot               |
+| createdAt   | DateTime UTC        | Thời điểm tạo thực tế, trước giờ bắt đầu lượt sử dụng     |
+| updatedAt   | DateTime UTC        |                                                           |
 
 **BookingPriceSegment** — Chi tiết giá đã áp dụng, snapshot theo đơn
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| bookingId | uuid | PK thành phần, FK → Booking |
-| segmentNo | int | PK thành phần; thứ tự phần tính tiền |
-| priceStartTime | TimeOnly | Snapshot mốc giá nguồn, không FK tới bảng giá có thể bị thay |
-| segmentStartTime | TimeOnly | Bắt đầu phần thời gian thực chịu giá |
-| segmentEndTime | TimeOnly | Kết thúc phần thời gian thực chịu giá |
-| pricePerHour | Decimal(18,0) | Snapshot đơn giá, > 0 |
+| Field            | Type          | Ghi chú                                                      |
+| ---------------- | ------------- | ------------------------------------------------------------ |
+| bookingId        | uuid          | PK thành phần, FK → Booking                                  |
+| segmentNo        | int           | PK thành phần; thứ tự phần tính tiền                         |
+| priceStartTime   | TimeOnly      | Snapshot mốc giá nguồn, không FK tới bảng giá có thể bị thay |
+| segmentStartTime | TimeOnly      | Bắt đầu phần thời gian thực chịu giá                         |
+| segmentEndTime   | TimeOnly      | Kết thúc phần thời gian thực chịu giá                        |
+| pricePerHour     | Decimal(18,0) | Snapshot đơn giá, > 0                                        |
 
 Mỗi phần lưu độc lập mốc giá và đơn giá đã áp dụng từ PricingRule hiện hành tại lúc tạo/đổi lịch. Các phần phủ liên tục đúng khoảng đặt, không chồng/thiếu; tổng tiền = làm tròn một lần tổng `số phút × pricePerHour / 60`. Không làm tròn từng phần. Không FK tới PricingRule hiện hành vì danh sách mốc có thể bị thay; không cần bảng phiên bản giá để giữ giá đã áp dụng trên đơn.
 
@@ -283,17 +283,17 @@ Tạo lưu Booking và các segment trong cùng giao dịch. Đổi lịch thay 
 
 **BookingStatusHistory**
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| id | uuid | PK |
-| bookingId | uuid | FK → Booking |
-| oldStatus | Enum[BookingStatus], NULL | NULL duy nhất ở sự kiện tạo đơn |
-| newStatus | Enum[BookingStatus] | |
-| actorType | Enum[ActorType] | SYSTEM, EMPLOYEE, CUSTOMER |
-| employeeId | uuid, NULL | FK → Employee, có khi actorType = EMPLOYEE |
-| customerId | uuid, NULL | FK → Customer, có khi actorType = CUSTOMER |
-| changedAt | DateTime UTC | Thời điểm thực ghi nhận |
-| reason | string | Lý do/ngữ cảnh chuyển trạng thái; chốt ngày có lý do tự động rõ ràng |
+| Field      | Type                      | Ghi chú                                                              |
+| ---------- | ------------------------- | -------------------------------------------------------------------- |
+| id         | uuid                      | PK                                                                   |
+| bookingId  | uuid                      | FK → Booking                                                         |
+| oldStatus  | Enum[BookingStatus], NULL | NULL duy nhất ở sự kiện tạo đơn                                      |
+| newStatus  | Enum[BookingStatus]       |                                                                      |
+| actorType  | Enum[ActorType]           | SYSTEM, EMPLOYEE, CUSTOMER                                           |
+| employeeId | uuid, NULL                | FK → Employee, có khi actorType = EMPLOYEE                           |
+| customerId | uuid, NULL                | FK → Customer, có khi actorType = CUSTOMER                           |
+| changedAt  | DateTime UTC              | Thời điểm thực ghi nhận                                              |
+| reason     | string                    | Lý do/ngữ cảnh chuyển trạng thái; chốt ngày có lý do tự động rõ ràng |
 
 CHECK tác nhân: SYSTEM có cả hai mã NULL; EMPLOYEE chỉ có employeeId; CUSTOMER chỉ có customerId. Khách xác minh đặt nhanh được ghi CUSTOMER với hồ sơ gắn đơn, không đồng nghĩa có phiên đăng nhập. Nhân viên tạo thay khách ghi EMPLOYEE. Ghi nhận thủ công và chốt tự động phân biệt bằng actorType/reason/thời điểm. Không ghi `oldStatus = newStatus` vào bảng chuyển trạng thái; đổi lịch giữ nguyên trạng thái được ghi vào Audit cùng các giá trị trước/sau, không tạo chuyển trạng thái giả.
 
@@ -332,8 +332,8 @@ ALTER TABLE "BookingStatusHistory" ADD CONSTRAINT "CK_BookingHistory_Actor"
 
 Mốc tương lai, giờ kết thúc đã qua, giờ mở cửa, chuyển trạng thái hợp lệ và quyền tác nhân kiểm tra dưới khóa giao dịch bằng đồng hồ máy chủ; không đưa `now()` vào CHECK để giả bảo đảm quy tắc thay đổi theo thời gian. Exclusion constraint là lớp chống trùng cuối cùng, không thay kiểm tra khả dụng hoặc quyền.
 
-| Enum | Values |
-| --- | --- |
+| Enum          | Values                                           |
+| ------------- | ------------------------------------------------ |
 | BookingStatus | `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED` |
 
 ## 5. Hóa đơn và hoàn tiền
@@ -350,39 +350,39 @@ Mốc tương lai, giờ kết thúc đã qua, giờ mở cửa, chuyển trạn
 
 **Invoice**
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| invoiceId | uuid | PK |
-| invoiceCode | string | UNIQUE; HD-{yyyyMMdd}-{số thứ tự} |
-| bookingId | uuid | FK → Booking |
-| totalCost | Decimal(18,0) | Bằng giá đã lưu của Booking tại lần lập; không nhập tổng tùy ý |
-| status | Enum[InvoiceStatus] | |
-| issuedByEmployee | uuid | FK → Employee; nhân viên/QTV khởi tạo thao tác lập |
-| issuedAt | DateTime UTC | Thời điểm lập thực tế |
-| paidByEmployee | uuid, NULL | FK → Employee; người ghi nhận thu đủ |
-| paidAt | DateTime UTC, NULL | Thời điểm thực thu do nhân viên xác nhận |
-| paymentMethod | Enum[PaymentMethod], NULL | CASH hoặc BANK |
-| cancelledByEmployee | uuid, NULL | FK → Employee; NULL nếu hệ thống chốt tự động |
-| cancelledAt | DateTime UTC, NULL | Thời điểm ghi hủy |
-| cancellationActorType | Enum[ActorType], NULL | SYSTEM, EMPLOYEE hoặc CUSTOMER; đúng tác nhân hủy đơn/hóa đơn |
-| cancelledByCustomer | uuid, NULL | FK → Customer; khách tự hủy/đổi đơn chưa thu |
-| cancellationReason | string, NULL | Bắt buộc khi CANCELLED |
-| refundedByEmployee | uuid, NULL | FK → Employee; người xác nhận đã hoàn tiền |
-| refundedAt | DateTime UTC, NULL | Thời điểm thực hoàn |
-| refundMethod | Enum[PaymentMethod], NULL | CASH hoặc BANK |
-| refundAmount | Decimal(18,0), NULL | Nếu hoàn: bằng toàn bộ totalCost hóa đơn cũ |
-| refundReason | string, NULL | Bắt buộc khi có hoàn tiền |
-| replacesInvoiceId | uuid, NULL | FK → Invoice.invoiceId, UNIQUE khi có; hóa đơn cũ bị thay thế |
-| note | string | Ghi chú lúc lập; bất biến cùng nội dung hóa đơn |
+| Field                 | Type                      | Ghi chú                                                        |
+| --------------------- | ------------------------- | -------------------------------------------------------------- |
+| invoiceId             | uuid                      | PK                                                             |
+| invoiceCode           | string                    | UNIQUE; HD-{yyyyMMdd}-{số thứ tự}                              |
+| bookingId             | uuid                      | FK → Booking                                                   |
+| totalCost             | Decimal(18,0)             | Bằng giá đã lưu của Booking tại lần lập; không nhập tổng tùy ý |
+| status                | Enum[InvoiceStatus]       |                                                                |
+| issuedByEmployee      | uuid                      | FK → Employee; nhân viên/QTV khởi tạo thao tác lập             |
+| issuedAt              | DateTime UTC              | Thời điểm lập thực tế                                          |
+| paidByEmployee        | uuid, NULL                | FK → Employee; người ghi nhận thu đủ                           |
+| paidAt                | DateTime UTC, NULL        | Thời điểm thực thu do nhân viên xác nhận                       |
+| paymentMethod         | Enum[PaymentMethod], NULL | CASH hoặc BANK                                                 |
+| cancelledByEmployee   | uuid, NULL                | FK → Employee; NULL nếu hệ thống chốt tự động                  |
+| cancelledAt           | DateTime UTC, NULL        | Thời điểm ghi hủy                                              |
+| cancellationActorType | Enum[ActorType], NULL     | SYSTEM, EMPLOYEE hoặc CUSTOMER; đúng tác nhân hủy đơn/hóa đơn  |
+| cancelledByCustomer   | uuid, NULL                | FK → Customer; khách tự hủy/đổi đơn chưa thu                   |
+| cancellationReason    | string, NULL              | Bắt buộc khi CANCELLED                                         |
+| refundedByEmployee    | uuid, NULL                | FK → Employee; người xác nhận đã hoàn tiền                     |
+| refundedAt            | DateTime UTC, NULL        | Thời điểm thực hoàn                                            |
+| refundMethod          | Enum[PaymentMethod], NULL | CASH hoặc BANK                                                 |
+| refundAmount          | Decimal(18,0), NULL       | Nếu hoàn: bằng toàn bộ totalCost hóa đơn cũ                    |
+| refundReason          | string, NULL              | Bắt buộc khi có hoàn tiền                                      |
+| replacesInvoiceId     | uuid, NULL                | FK → Invoice.invoiceId, UNIQUE khi có; hóa đơn cũ bị thay thế  |
+| note                  | string                    | Ghi chú lúc lập; bất biến cùng nội dung hóa đơn                |
 
 Không có updatedAt bắt buộc riêng: các mốc nghiệp vụ và Audit lưu dấu thay đổi. Không xóa thông tin thu cũ khi hủy hóa đơn đã thanh toán. Actor hủy riêng được lưu để không gán nhầm nhân viên khi khách tự hủy hoặc hệ thống chốt; người thực hiện hoàn tiền vẫn phải là nhân viên.
 
 **InvoiceDailyCounter** — Bộ đếm cấp mã hóa đơn theo ngày
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| issueDate | DateOnly | PK, ngày lập theo Việt Nam |
-| lastNumber | bigint | Số lớn nhất đã cấp cho hóa đơn đã lưu, > 0 |
+| Field      | Type     | Ghi chú                                    |
+| ---------- | -------- | ------------------------------------------ |
+| issueDate  | DateOnly | PK, ngày lập theo Việt Nam                 |
+| lastNumber | bigint   | Số lớn nhất đã cấp cho hóa đơn đã lưu, > 0 |
 
 Cấp số bằng thao tác tăng nguyên tử có khóa dòng/UPSERT RETURNING trong cùng giao dịch lập hóa đơn. UNIQUE invoiceCode bảo vệ cuối; không tính số mới bằng `COUNT + 1` hoặc `MAX + 1` không có khóa. Hủy hóa đơn không giảm bộ đếm. SRS không bắt buộc số thứ tự liên tục không có khoảng trống; mã đã lập/hủy không được tái sử dụng.
 
@@ -402,24 +402,24 @@ ALTER TABLE "Invoice" ADD CONSTRAINT "CK_Invoice_Amount"
 
 Các CHECK bổ sung phải kiểm tra nhóm thông tin đầy đủ, không chỉ từng trường riêng lẻ:
 
-| Trạng thái/nhóm thông tin | Ràng buộc |
-| --- | --- |
-| UNPAID | paidAt/paymentMethod/paidByEmployee, toàn bộ thông tin hủy và hoàn đều NULL. |
-| PAID | paidAt/paymentMethod/paidByEmployee đầy đủ; thông tin hủy và hoàn đều NULL. |
-| CANCELLED chưa từng thu | Nhóm thu và hoàn đều NULL; nhóm hủy đầy đủ, đúng tác nhân. |
-| CANCELLED đã thu | Giữ đầy đủ nhóm thu; nhóm hủy và hoàn đầy đủ; refundAmount = totalCost, người hoàn là Employee. |
-| Nhóm hủy | cancelledAt, cancellationActorType, cancellationReason không rỗng bắt buộc khi CANCELLED, NULL ở trạng thái khác. SYSTEM không mã người; EMPLOYEE chỉ cancelledByEmployee; CUSTOMER chỉ cancelledByCustomer. |
-| Nhóm hoàn | Hoặc cả nhóm NULL, hoặc refundedAt/refundMethod/refundAmount/refundedByEmployee/refundReason đầy đủ, reason không rỗng. |
-| Chuỗi thay thế | Hóa đơn cũ phải CANCELLED và cùng bookingId; mỗi hóa đơn cũ chỉ được thay một lần; không chu trình. |
+| Trạng thái/nhóm thông tin | Ràng buộc                                                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| UNPAID                    | paidAt/paymentMethod/paidByEmployee, toàn bộ thông tin hủy và hoàn đều NULL.                                                                                                                                 |
+| PAID                      | paidAt/paymentMethod/paidByEmployee đầy đủ; thông tin hủy và hoàn đều NULL.                                                                                                                                  |
+| CANCELLED chưa từng thu   | Nhóm thu và hoàn đều NULL; nhóm hủy đầy đủ, đúng tác nhân.                                                                                                                                                   |
+| CANCELLED đã thu          | Giữ đầy đủ nhóm thu; nhóm hủy và hoàn đầy đủ; refundAmount = totalCost, người hoàn là Employee.                                                                                                              |
+| Nhóm hủy                  | cancelledAt, cancellationActorType, cancellationReason không rỗng bắt buộc khi CANCELLED, NULL ở trạng thái khác. SYSTEM không mã người; EMPLOYEE chỉ cancelledByEmployee; CUSTOMER chỉ cancelledByCustomer. |
+| Nhóm hoàn                 | Hoặc cả nhóm NULL, hoặc refundedAt/refundMethod/refundAmount/refundedByEmployee/refundReason đầy đủ, reason không rỗng.                                                                                      |
+| Chuỗi thay thế            | Hóa đơn cũ phải CANCELLED và cùng bookingId; mỗi hóa đơn cũ chỉ được thay một lần; không chu trình.                                                                                                          |
 
 Phải kiểm tra các mốc thực thu/hoàn không ở tương lai theo đồng hồ xử lý; paidAt có thể trước issuedAt nếu ghi nhận sau việc đã thu, nên không đặt CHECK `paidAt >= issuedAt`. cancelledAt là thời điểm ghi hủy, không trước issuedAt. Khi có hoàn tiền, paidAt ≤ refundedAt ≤ cancelledAt. Hoàn tiền được xác nhận trước khi ghi hủy; không ghi nhận tiền đã hoàn nếu thao tác đổi/hủy chưa kiểm tra điều kiện, giá và dữ liệu hiện tại.
 
 Chỉ mục hợp lệ bảo đảm **tối đa một**, không bảo đảm **đúng một** hay tổng hóa đơn bằng Booking: dùng constraint trigger cuối giao dịch. Hủy cũ trước rồi tạo mới trong cùng giao dịch; không cho commit một đơn đang hiệu lực thiếu hóa đơn. Tổng hóa đơn CANCELLED lịch sử không cần bằng giá Booking hiện tại sau đổi lịch.
 
-| Enum | Values |
-| --- | --- |
+| Enum          | Values                        |
+| ------------- | ----------------------------- |
 | InvoiceStatus | `UNPAID`, `PAID`, `CANCELLED` |
-| PaymentMethod | `BANK`, `CASH` |
+| PaymentMethod | `BANK`, `CASH`                |
 
 ## 6. Nhật ký, chống gửi lặp và thông báo
 
@@ -452,18 +452,18 @@ INDEX `(createdAt, id)`, `(actorType, createdAt)`, `(employeeId, createdAt)`, `(
 
 Nguồn: BR-21, UC-07–UC-10, UC-15–UC-18, UC-20–UC-22, UC-29, UC-44.
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| id | uuid | PK |
-| actorScope | string | Phạm vi người thao tác do máy chủ xác định |
-| requestKey | string | Mã yêu cầu gửi lặp |
-| operation | string | Tạo/đổi/xác nhận/hủy/thu/hoàn/chốt… |
-| requestHash | string | Hash nội dung nghiệp vụ chuẩn hóa, gồm loại thao tác, bản ghi và dữ liệu gốc/báo giá liên quan |
-| bookingId | uuid, NULL | FK → Booking khi kết quả liên quan đặt sân |
-| invoiceId | uuid, NULL | FK → Invoice khi có |
-| responseStatus | int | Mã kết quả đã lưu |
-| responseBody | JsonB | Kết quả đủ trả lại, không bí mật và chỉ chứa dữ liệu người thao tác được xem |
-| createdAt | DateTime UTC | |
+| Field          | Type         | Ghi chú                                                                                        |
+| -------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| id             | uuid         | PK                                                                                             |
+| actorScope     | string       | Phạm vi người thao tác do máy chủ xác định                                                     |
+| requestKey     | string       | Mã yêu cầu gửi lặp                                                                             |
+| operation      | string       | Tạo/đổi/xác nhận/hủy/thu/hoàn/chốt…                                                            |
+| requestHash    | string       | Hash nội dung nghiệp vụ chuẩn hóa, gồm loại thao tác, bản ghi và dữ liệu gốc/báo giá liên quan |
+| bookingId      | uuid, NULL   | FK → Booking khi kết quả liên quan đặt sân                                                     |
+| invoiceId      | uuid, NULL   | FK → Invoice khi có                                                                            |
+| responseStatus | int          | Mã kết quả đã lưu                                                                              |
+| responseBody   | JsonB        | Kết quả đủ trả lại, không bí mật và chỉ chứa dữ liệu người thao tác được xem                   |
+| createdAt      | DateTime UTC |                                                                                                |
 
 UNIQUE `(actorScope, requestKey)`. Loại thao tác nằm trong hash, nên dùng cùng mã cho thao tác khác bị từ chối. Lưu kết quả thành công cùng giao dịch nghiệp vụ, giữ suốt vòng đời bản ghi; không dùng TTL ngắn làm mất bảo vệ lặp. Không lưu mật khẩu/mã xác minh/mã phiên trong requestHash đầu vào hoặc responseBody.
 
@@ -475,49 +475,49 @@ Sau kiểm tra quyền hiện tại: cùng mã/cùng hash trả kết quả cũ;
 
 Nguồn: BR-28, UC-07–UC-10, UC-15–UC-18, UC-20–UC-21, UC-44, NFR-09.
 
-| Field | Type | Ghi chú |
-| --- | --- | --- |
-| notificationId | uuid | PK |
-| eventKey | string | UNIQUE; định danh một sự kiện đã lưu và loại thông báo |
-| customerId | uuid | FK → Customer, người nhận |
-| recipientEmail | string | Snapshot email nhận tại sự kiện |
-| bookingId | uuid | FK → Booking |
-| eventType | string | Tạo đơn, đổi lịch, đổi trạng thái… |
-| payload | JsonB | Nội dung sự kiện để gửi, không chứa bí mật |
-| status | string | Trạng thái kỹ thuật: PENDING, PROCESSING, SENT, FAILED |
-| attemptCount | int | Số lần thử gửi, >= 0 |
-| lastError | string, NULL | Lỗi đã loại bí mật |
-| nextAttemptAt | DateTime UTC, NULL | Lịch thử lại |
-| lockedUntil | DateTime UTC, NULL | Hết hạn giữ việc gửi; cho phép chạy bù khi worker gián đoạn |
-| sentAt | DateTime UTC, NULL | |
-| createdAt | DateTime UTC | |
+| Field          | Type               | Ghi chú                                                     |
+| -------------- | ------------------ | ----------------------------------------------------------- |
+| notificationId | uuid               | PK                                                          |
+| eventKey       | string             | UNIQUE; định danh một sự kiện đã lưu và loại thông báo      |
+| customerId     | uuid               | FK → Customer, người nhận                                   |
+| recipientEmail | string             | Snapshot email nhận tại sự kiện                             |
+| bookingId      | uuid               | FK → Booking                                                |
+| eventType      | string             | Tạo đơn, đổi lịch, đổi trạng thái…                          |
+| payload        | JsonB              | Nội dung sự kiện để gửi, không chứa bí mật                  |
+| status         | string             | Trạng thái kỹ thuật: PENDING, PROCESSING, SENT, FAILED      |
+| attemptCount   | int                | Số lần thử gửi, >= 0                                        |
+| lastError      | string, NULL       | Lỗi đã loại bí mật                                          |
+| nextAttemptAt  | DateTime UTC, NULL | Lịch thử lại                                                |
+| lockedUntil    | DateTime UTC, NULL | Hết hạn giữ việc gửi; cho phép chạy bù khi worker gián đoạn |
+| sentAt         | DateTime UTC, NULL |                                                             |
+| createdAt      | DateTime UTC       |                                                             |
 
 Notification được lưu cùng giao dịch tạo/đổi đơn; chỉ gửi email sau commit. UNIQUE eventKey chống tạo lại thông báo cùng sự kiện; retry chỉ gửi lại thông báo, không tạo lại Booking/Invoice. Worker nhận việc nguyên tử và khôi phục PROCESSING quá hạn; lỗi email giữ kết quả nghiệp vụ đã lưu. Có thể gửi email lặp nếu nhà cung cấp đã nhận nhưng worker mất kết quả; dùng khóa sự kiện chống lặp phía nhà cung cấp khi có hỗ trợ, không giả định UNIQUE trong DB bảo đảm email chỉ gửi đúng một lần.
 
 Không đưa mã xác minh vào bảng thông báo nghiệp vụ này; việc gửi mã theo mục 2.2. AI chỉ đọc dữ liệu công khai và không tạo thông báo/đơn/hóa đơn hay đọc hồ sơ khách. SRS không yêu cầu lưu hội thoại AI nên không thêm bảng hội thoại.
 
-| Enum | Values |
-| --- | --- |
+| Enum      | Values                           |
+| --------- | -------------------------------- |
 | ActorType | `SYSTEM`, `EMPLOYEE`, `CUSTOMER` |
 
 ## 7. Toàn vẹn dữ liệu và giao dịch
 
 ### 7.1 Phân chia trách nhiệm
 
-| Quy tắc | Cơ chế bảo đảm |
-| --- | --- |
+| Quy tắc                                                                 | Cơ chế bảo đảm                                                                                                                                                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Duy nhất email, tên sân, mã đơn/hóa đơn, lịch/ngày, mốc giá, mã gửi lặp | UNIQUE/partial UNIQUE index ở DB; chuẩn hóa đầu vào phía máy chủ. Không mặc định email nhân viên và email khách phải duy nhất chung nếu SRS không yêu cầu; loginEmail luôn duy nhất toàn bộ tài khoản. |
-| Không trùng lượt chưa hủy | Exclusion constraint Booking ở DB, kiểm tra sớm trong service để trả lỗi dễ hiểu. |
-| Đúng một hồ sơ cho mỗi tài khoản tồn tại, đúng loại và đồng bộ email | Constraint trigger và khóa tài khoản/hồ sơ liên quan; mỗi UserAccount tồn tại phải có đúng một hồ sơ. Hồ sơ có accountId NULL sau hard-delete là hợp lệ, không là lỗi mồ côi. |
-| Đúng 7 lịch/sân và bảng giá phủ giờ mở | Deferred constraint trigger trên sân/lịch/giá; khóa dòng sân/lịch khi tạo hoặc thay cấu hình. Kiểm tra toàn bộ bảng giá hiện hành, không tạo phiên bản giá lịch sử. |
-| Đúng một hóa đơn hợp lệ và số tiền khớp đơn | Partial UNIQUE + deferred constraint trigger trên Booking/Invoice; khóa Booking khi thay/thu/hủy hóa đơn. Trigger kiểm tra cả khi sửa hóa đơn mà không sửa Booking. |
-| Chuỗi hóa đơn thay thế cùng đơn, bản cũ đã hủy và không chu trình | FK + UNIQUE replacesInvoiceId + trigger kiểm tra liên bảng và bảo vệ nội dung bất biến. |
-| Snapshot giá | FK Booking + kiểm tra tập segment và tổng tiền tại cuối giao dịch; không tính lại khi xác nhận/Hoàn thành. |
-| Lịch sử trạng thái đúng đơn và tác nhân | CHECK nhóm mã tác nhân + kiểm tra CUSTOMER là chủ hồ sơ của đơn; sự kiện tạo có oldStatus NULL, các sự kiện sau phải có trạng thái cũ/mới khác nhau và đúng chuyển trạng thái SRS 3.1. |
-| Hai yêu cầu sửa cùng bản ghi | Giao dịch, khóa bản ghi, đối chiếu dữ liệu gốc mà yêu cầu dựa trên và kiểm tra lại trạng thái; nếu đã thay đổi thì từ chối/yêu cầu tải lại. |
-| Trạng thái/quyền/mốc 1 giờ/sử dụng thực tế | Service kiểm tra lại dưới khóa giao dịch bằng đồng hồ máy chủ, theo thứ tự SRS 3.2; không cho API ghi trực tiếp trạng thái để bỏ qua quy tắc. |
-| Chống gửi lặp và tác vụ chạy bù | UNIQUE IdempotencyRequest + lưu cùng giao dịch, khóa và kiểm tra trạng thái; nhật ký chỉ ghi cho thay đổi thật. |
-| Nhật ký bất biến, không xóa lịch sử | Quyền DB/trigger chặn sửa/xóa; FK RESTRICT cho dữ liệu lịch sử; FK accountId SET NULL khi hard-delete tài khoản theo SRS. |
+| Không trùng lượt chưa hủy                                               | Exclusion constraint Booking ở DB, kiểm tra sớm trong service để trả lỗi dễ hiểu.                                                                                                                      |
+| Đúng một hồ sơ cho mỗi tài khoản tồn tại, đúng loại và đồng bộ email    | Constraint trigger và khóa tài khoản/hồ sơ liên quan; mỗi UserAccount tồn tại phải có đúng một hồ sơ. Hồ sơ có accountId NULL sau hard-delete là hợp lệ, không là lỗi mồ côi.                          |
+| Đúng 7 lịch/sân và bảng giá phủ giờ mở                                  | Deferred constraint trigger trên sân/lịch/giá; khóa dòng sân/lịch khi tạo hoặc thay cấu hình. Kiểm tra toàn bộ bảng giá hiện hành, không tạo phiên bản giá lịch sử.                                    |
+| Đúng một hóa đơn hợp lệ và số tiền khớp đơn                             | Partial UNIQUE + deferred constraint trigger trên Booking/Invoice; khóa Booking khi thay/thu/hủy hóa đơn. Trigger kiểm tra cả khi sửa hóa đơn mà không sửa Booking.                                    |
+| Chuỗi hóa đơn thay thế cùng đơn, bản cũ đã hủy và không chu trình       | FK + UNIQUE replacesInvoiceId + trigger kiểm tra liên bảng và bảo vệ nội dung bất biến.                                                                                                                |
+| Snapshot giá                                                            | FK Booking + kiểm tra tập segment và tổng tiền tại cuối giao dịch; không tính lại khi xác nhận/Hoàn thành.                                                                                             |
+| Lịch sử trạng thái đúng đơn và tác nhân                                 | CHECK nhóm mã tác nhân + kiểm tra CUSTOMER là chủ hồ sơ của đơn; sự kiện tạo có oldStatus NULL, các sự kiện sau phải có trạng thái cũ/mới khác nhau và đúng chuyển trạng thái SRS 3.1.                 |
+| Hai yêu cầu sửa cùng bản ghi                                            | Giao dịch, khóa bản ghi, đối chiếu dữ liệu gốc mà yêu cầu dựa trên và kiểm tra lại trạng thái; nếu đã thay đổi thì từ chối/yêu cầu tải lại.                                                            |
+| Trạng thái/quyền/mốc 1 giờ/sử dụng thực tế                              | Service kiểm tra lại dưới khóa giao dịch bằng đồng hồ máy chủ, theo thứ tự SRS 3.2; không cho API ghi trực tiếp trạng thái để bỏ qua quy tắc.                                                          |
+| Chống gửi lặp và tác vụ chạy bù                                         | UNIQUE IdempotencyRequest + lưu cùng giao dịch, khóa và kiểm tra trạng thái; nhật ký chỉ ghi cho thay đổi thật.                                                                                        |
+| Nhật ký bất biến, không xóa lịch sử                                     | Quyền DB/trigger chặn sửa/xóa; FK RESTRICT cho dữ liệu lịch sử; FK accountId SET NULL khi hard-delete tài khoản theo SRS.                                                                              |
 
 Các constraint trigger phải được triển khai trong migration; tài liệu không coi một khóa ngoại hoặc đoạn SQL mẫu là đã thay cho trigger. Kiểm tra liên bảng cần khóa các dòng chung liên quan để tránh hai giao dịch cùng vượt kiểm tra. Mỗi enum chỉ nhận các giá trị đã liệt kê bằng enum DB hoặc CHECK thích hợp.
 
@@ -542,15 +542,15 @@ Thu/hoàn tiền ngoài hệ thống không thể hoàn tác bằng transaction 
 
 ### 8.1 Chỉ mục phục vụ truy vấn
 
-| Dữ liệu | Chỉ mục gợi ý |
-| --- | --- |
-| Lưới sân/ngày và lọc hệ thống | Booking `(date, courtId, startTime, bookingId)`, `(status, createdAt, bookingId)` |
-| Lịch sử khách | Booking `(customerId, date DESC, startTime DESC, createdAt DESC, bookingId)` |
-| Lịch sử trạng thái | BookingStatusHistory `(bookingId, changedAt, id)` |
-| Chốt ngày chạy bù | Partial index Booking `(date, bookingId)` WHERE status IN ('Pending', 'Confirmed') |
-| Tìm khách | Customer `(phone)`; email đã có UNIQUE; tìm họ tên kiểu chứa có thể dùng chỉ mục phù hợp khi triển khai |
-| Hóa đơn và doanh thu | Invoice `(status, issuedAt, invoiceId)`, `(bookingId, issuedAt, invoiceId)`, partial `(paidAt, invoiceId)` WHERE status = 'Paid' |
-| Email chờ gửi lại | Notification `(status, nextAttemptAt, notificationId)` |
+| Dữ liệu                       | Chỉ mục gợi ý                                                                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Lưới sân/ngày và lọc hệ thống | Booking `(date, courtId, startTime, bookingId)`, `(status, createdAt, bookingId)`                                                |
+| Lịch sử khách                 | Booking `(customerId, date DESC, startTime DESC, createdAt DESC, bookingId)`                                                     |
+| Lịch sử trạng thái            | BookingStatusHistory `(bookingId, changedAt, id)`                                                                                |
+| Chốt ngày chạy bù             | Partial index Booking `(date, bookingId)` WHERE status IN ('Pending', 'Confirmed')                                               |
+| Tìm khách                     | Customer `(phone)`; email đã có UNIQUE; tìm họ tên kiểu chứa có thể dùng chỉ mục phù hợp khi triển khai                          |
+| Hóa đơn và doanh thu          | Invoice `(status, issuedAt, invoiceId)`, `(bookingId, issuedAt, invoiceId)`, partial `(paidAt, invoiceId)` WHERE status = 'Paid' |
+| Email chờ gửi lại             | Notification `(status, nextAttemptAt, notificationId)`                                                                           |
 
 Các chỉ mục gợi ý không thay đổi chức năng hoặc ràng buộc nghiệp vụ. Danh sách phân trang mặc định 20, tối đa 100, trang từ 1; tiêu chí cuối luôn có mã bản ghi để ổn định thứ tự.
 
