@@ -9,6 +9,7 @@ using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.Courts.Services;
+using ShuttleVNBackend.Application.UseCases.Bookings.Services;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
 using ShuttleVNBackend.Application.UseCases.System;
 using ShuttleVNBackend.Application.UseCases.Users.Services;
@@ -58,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<PricingRuleService>();
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
+        services.AddScoped<BookingRequestService>();
 
         services.AddScoped<AuditInterceptor>();
 
