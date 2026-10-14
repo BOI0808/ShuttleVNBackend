@@ -1,5 +1,8 @@
+using ShuttleVNBackend.Core.Attributes;
+
 namespace ShuttleVNBackend.Core.Entities.Bookings;
 
+[NoAudit]
 public class BookingPriceSegment
 {
     public Guid BookingId { get; set; }

@@ -20,4 +20,6 @@ public class Booking
 
     public virtual Customer Customer { get; set; } = null!;
     public virtual BadmintonCourt Court { get; set; } = null!;
+    public virtual ICollection<BookingPriceSegment> PriceSegments { get; set; } = [];
+    public virtual ICollection<Invoice> Invoices { get; set; } = [];
 }
