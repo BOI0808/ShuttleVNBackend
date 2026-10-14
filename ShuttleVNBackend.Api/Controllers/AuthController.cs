@@ -35,11 +35,14 @@ public class AuthController(
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<AccountDto>>> Login(
-        [FromBody] LoginDto dto)
+        [FromBody] LoginDto dto,
+        CancellationToken ct)
     {
-        var account = await appAuthService.VerifyLogin(dto);
+        var account = await appAuthService.VerifyLogin(dto, ct);
 
-        var role = account.AccountType == AccountType.Customer ? "Customer" : "Employee";
+        var role = account.AccountType == AccountType.Customer
+            ? "Customer"
+            : account.Employee?.IsAdmin == true ? "Admin" : "Employee";
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, account.AccountId.ToString()),

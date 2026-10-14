@@ -26,6 +26,10 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<InvoiceDailyCounter> InvoiceDailyCounters => Set<InvoiceDailyCounter>();
     public DbSet<Audit> Audits => Set<Audit>();
     public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
+    public DbSet<BookingPriceSegment> BookingPriceSegments => Set<BookingPriceSegment>();
+    public DbSet<InvoiceDailyCounter> InvoiceDailyCounters => Set<InvoiceDailyCounter>();
+    public DbSet<IdempotencyRequest> IdempotencyRequests => Set<IdempotencyRequest>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
     {
@@ -164,7 +168,12 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
             entity.HasOne(e => e.Employee)
                 .WithMany()
-                .HasForeignKey(e => e.ChangedByEmployee)
+                .HasForeignKey(e => e.EmployeeId)
+                .IsRequired(false);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
                 .IsRequired(false);
 
             entity.HasOne(e => e.Customer)
@@ -240,7 +249,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
             entity.HasIndex(e => new { e.EntityName, e.EntityId });
             entity.HasIndex(e => e.CreatedAt);
-            
+
             entity.HasIndex(a => a.EmployeeId);
             entity.HasIndex(a => a.CustomerId);
             entity.ToTable(t => t.HasCheckConstraint("ck_audit_one_actor",
@@ -248,5 +257,27 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         });
 
         modelBuilder.Entity<VerificationCode>(entity => { entity.HasKey(e => new { e.Email, e.Type }); });
+
+        modelBuilder.Entity<BookingPriceSegment>(entity =>
+        {
+            entity.HasKey(e => new { e.BookingId, e.SegmentNo });
+            entity.Property(e => e.PricePerHour).HasPrecision(18, 0);
+        });
+
+        modelBuilder.Entity<InvoiceDailyCounter>(entity => entity.HasKey(e => e.IssueDate));
+
+        modelBuilder.Entity<IdempotencyRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.ActorScope, e.RequestKey }).IsUnique();
+            entity.Property(e => e.ResponseBody).HasColumnType("jsonb");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationId);
+            entity.HasIndex(e => e.EventKey).IsUnique();
+            entity.Property(e => e.Payload).HasColumnType("jsonb");
+        });
     }
 }

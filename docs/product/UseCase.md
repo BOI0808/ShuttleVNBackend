@@ -1,8 +1,6 @@
 # Mô hình Usecase
 
-**Hệ thống đặt sân cầu lông**
-
-**Version 1.4**
+**Hệ thống đặt sân cầu lông** · Version 1.5
 
 **Sinh viên thực hiện:**
 
@@ -14,10 +12,11 @@
 | Ngày | Phiên bản | Mô tả | Tác giả |
 | --- | --- | --- | --- |
 | 09/10/2026 | 1.0 | Khởi tạo mô hình Use-case từ SRS phiên bản 1.2 | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| 10/10/2026 | 1.1 | Đồng bộ SRS 1.3: bỏ tạo đơn cho lượt đã diễn ra | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| 10/10/2026 | 1.2 | Đồng bộ SRS 1.4: trạng thái tài khoản, hard-delete và phạm vi phiên | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| 10/10/2026 | 1.3 | Đồng bộ SRS 1.5: bỏ lịch mở kế hoạch/tỷ lệ lấp đầy; rút gọn tài liệu | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| 10/10/2026 | 1.4 | Rà soát với SRS 1.5, thiết kế dữ liệu 1.5 và template: đủ các mục đặc tả theo template; bảng danh sách use-case theo 3 cột của template; UC-10 ghi nhật ký (không ghi chuyển trạng thái khi trạng thái không đổi); bổ sung nhật ký, mã chống gửi lặp, email, kiểm tra trùng lịch còn thiếu | Nguyễn Bảo Việt, Đinh Nhật Khôi |
+| 10/10/2026 | 1.1 | Đồng bộ SRS 1.3: bỏ tạo đơn cho lượt đã diễn ra | — |
+| 10/10/2026 | 1.2 | Đồng bộ SRS 1.4: trạng thái tài khoản, hard-delete và phạm vi phiên | — |
+| 10/10/2026 | 1.3 | Đồng bộ SRS 1.5: bỏ lịch mở kế hoạch/tỷ lệ lấp đầy; rút gọn tài liệu | — |
+| 10/10/2026 | 1.4 | Đồng bộ SRS 1.6: bỏ đổi email; Audit tự động, chỉ đọc | — |
+| 10/10/2026 | 1.5 | Đồng bộ SRS 1.7: bỏ reason khỏi Audit | — |
 
 ## Mục lục
 
@@ -34,7 +33,9 @@
 
 ## 1. Sơ đồ Use-case
 
-Sơ đồ chia theo phân hệ để dễ đọc. Quản trị viên (QTV) kế thừa mọi use-case của Nhân viên.
+Sơ đồ chia theo phân hệ. QTV kế thừa use-case của Nhân viên. UC-25 đã loại bỏ; giữ các mã còn lại.
+
+Email không được đổi. Mọi bước ghi nhật ký do hệ thống tự thực hiện; toàn bộ Audit bất biến. Audit không có trường reason. Nhân viên/QTV không có chức năng nhập hoặc sửa trực tiếp Audit; tác nhân trong log vẫn là người thực hiện nghiệp vụ.
 
 ### 1.1 Phân hệ khách hàng
 
@@ -81,7 +82,6 @@ flowchart LR
     QTV -->|"kế thừa"| NV
 
     subgraph SYS2["Phân hệ nhân viên"]
-        UC02(["UC-02 Xác minh email"])
         UC09(["UC-09 Hủy đặt sân"])
         UC10(["UC-10 Đổi lịch đặt sân"])
         UC14(["UC-14 Xem yêu cầu đặt sân chờ xác nhận"])
@@ -95,7 +95,6 @@ flowchart LR
         UC22(["UC-22 Ghi nhận hoàn tiền"])
         UC23(["UC-23 Cập nhật trạng thái sân"])
         UC24(["UC-24 Quản lý hồ sơ khách hàng"])
-        UC25(["UC-25 Đổi email khách hàng"])
         UC26(["UC-26 Tạo tài khoản khách hàng"])
         UC27(["UC-27 Khóa/Mở khóa/Xóa tài khoản"])
         UC28(["UC-28 Xem hóa đơn"])
@@ -104,12 +103,11 @@ flowchart LR
         UC44(["UC-44 Chốt đơn qua ngày sử dụng"])
     end
 
-    NV --- UC09 & UC10 & UC14 & UC15 & UC16 & UC18 & UC19 & UC20 & UC21 & UC22 & UC23 & UC24 & UC25 & UC26 & UC27 & UC28 & UC29 & UC30
+    NV --- UC09 & UC10 & UC14 & UC15 & UC16 & UC18 & UC19 & UC20 & UC21 & UC22 & UC23 & UC24 & UC26 & UC27 & UC28 & UC29 & UC30
     HT --- UC44
 
     UC15 -.->|"«include»"| UC17
     UC18 -.->|"«include»"| UC17
-    UC25 -.->|"«include»"| UC02
     UC22 -.->|"«extend»"| UC09
     UC22 -.->|"«extend»"| UC10
     UC22 -.->|"«extend»"| UC21
@@ -124,7 +122,6 @@ flowchart LR
     QTV(["Quản trị viên"]):::actor
 
     subgraph SYS3["Phân hệ quản trị viên"]
-        UC02(["UC-02 Xác minh email"])
         UC03(["UC-03 Đăng nhập"])
         UC27(["UC-27 Khóa/Mở khóa/Xóa tài khoản"])
         UC31(["UC-31 Thêm sân"])
@@ -144,7 +141,6 @@ flowchart LR
 
     QTV --- UC03 & UC27 & UC31 & UC32 & UC33 & UC34 & UC35 & UC36 & UC37 & UC38 & UC39 & UC40 & UC41 & UC42 & UC43
 
-    UC37 -.->|"«include»"| UC02
     UC39 -.->|"«include»"| UC27
 
     classDef actor fill:#ffffff,stroke:#333333,stroke-width:2px
@@ -168,52 +164,51 @@ flowchart LR
 
 ## 3. Danh sách các Use-case
 
-| STT | Tên Use-case | Ý nghĩa/Ghi chú |
-| --- | --- | --- |
-| 1 | UC-01 Đăng ký tài khoản | Actor: Khách vãng lai. Tự đăng ký tài khoản, liên kết hồ sơ Khách hàng. |
-| 2 | UC-02 Xác minh email | Actor: theo use-case gọi đến. Xác minh quyền dùng email bằng mã 6 chữ số. |
-| 3 | UC-03 Đăng nhập | Actor: Khách thành viên, Nhân viên, QTV. Đăng nhập bằng email và mật khẩu. |
-| 4 | UC-04 Quên mật khẩu | Actor: Khách thành viên. Đặt lại mật khẩu sau khi xác minh email. |
-| 5 | UC-05 Xem danh sách sân | Actor: Khách vãng lai, Khách thành viên, Nhân viên. Xem tên, mô tả, trạng thái sân. |
-| 6 | UC-06 Xem lưới sân và đơn giá | Actor: Khách vãng lai, Khách thành viên, Nhân viên. Xem tình trạng slot theo ngày và đơn giá theo khung giờ. |
-| 7 | UC-07 Đặt sân | Actor: Khách thành viên. Tạo đặt sân ở trạng thái Chờ xác nhận. |
-| 8 | UC-08 Đặt nhanh | Actor: Khách vãng lai. Đặt sân không cần tài khoản, có xác minh email. |
-| 9 | UC-09 Hủy đặt sân | Actor: Khách thành viên, Nhân viên. Hủy đơn theo yêu cầu khách (nhân viên làm thay được). |
-| 10 | UC-10 Đổi lịch đặt sân | Actor: Khách thành viên, Nhân viên. Đổi sân/ngày/giờ của đơn. |
-| 11 | UC-11 Xem lịch sử đặt sân | Actor: Khách thành viên. Xem danh sách và chi tiết đơn của mình. |
-| 12 | UC-12 Xem và cập nhật hồ sơ cá nhân | Actor: Khách thành viên. Xem hồ sơ; chỉ sửa họ tên, số điện thoại. |
-| 13 | UC-13 Trò chuyện với trợ lý AI | Actor: Khách vãng lai, Khách thành viên. Tư vấn dựa trên dữ liệu công khai. |
-| 14 | UC-14 Xem yêu cầu đặt sân chờ xác nhận | Actor: Nhân viên. Xem danh sách và chi tiết đơn Chờ xác nhận. |
-| 15 | UC-15 Xác nhận đặt sân | Actor: Nhân viên. Chuyển Chờ xác nhận → Đã xác nhận và lập hóa đơn. |
-| 16 | UC-16 Từ chối yêu cầu đặt sân | Actor: Nhân viên. Hủy đơn Chờ xác nhận kèm lý do. |
-| 17 | UC-17 Lập hóa đơn | Actor: Nhân viên. Tạo hóa đơn cho đơn trong cùng giao dịch. |
-| 18 | UC-18 Ghi nhận lượt sử dụng | Actor: Nhân viên. Chuyển đơn đã tồn tại sang Hoàn thành sau khi khách đã sử dụng và lượt đã kết thúc. |
-| 19 | UC-19 Xem lịch đặt sân theo ngày | Actor: Nhân viên. Xem lưới đặt sân theo ngày, gồm slot trống. |
-| 20 | UC-20 Tạo đặt sân thay khách | Actor: Nhân viên. Tạo đơn Chờ xác nhận tại quầy/hotline. |
-| 21 | UC-21 Hủy đặt sân do sự cố vận hành | Actor: Nhân viên. Hủy đơn vì sân không phục vụ được, kể cả quá mốc 1 giờ. |
-| 22 | UC-22 Ghi nhận hoàn tiền | Actor: Nhân viên. Ghi nhận hoàn toàn bộ tiền đã thu (hoàn ngoài hệ thống). |
-| 23 | UC-23 Cập nhật trạng thái sân | Actor: Nhân viên. Đổi giữa Hoạt động, Bảo trì, Đóng. |
-| 24 | UC-24 Quản lý hồ sơ khách hàng | Actor: Nhân viên. Xem, tìm, cập nhật hồ sơ khách và các đặt sân của khách. |
-| 25 | UC-25 Đổi email khách hàng | Actor: Nhân viên. Đổi email hồ sơ và email đăng nhập, không gộp hồ sơ. |
-| 26 | UC-26 Tạo tài khoản khách hàng | Actor: Nhân viên. Tạo tài khoản khách, tái sử dụng hồ sơ nếu có. |
-| 27 | UC-27 Khóa/Mở khóa/Xóa tài khoản | Actor: Nhân viên, QTV. Khóa/mở khóa (nhân viên: tài khoản khách); QTV được hard-delete tài khoản, giữ hồ sơ lịch sử. |
-| 28 | UC-28 Xem hóa đơn | Actor: Nhân viên. Xem, lọc, tìm hóa đơn và chuỗi hóa đơn thay thế. |
-| 29 | UC-29 Thu tiền hóa đơn | Actor: Nhân viên. Ghi nhận thu đủ tiền hóa đơn Chưa thanh toán. |
-| 30 | UC-30 Tra cứu nhanh | Actor: Nhân viên. Tìm khách và đặt sân theo số điện thoại, email, mã đặt sân. |
-| 31 | UC-31 Thêm sân | Actor: QTV. Tạo sân cùng 7 lịch và 7 mốc giá mặc định. |
-| 32 | UC-32 Sửa thông tin sân | Actor: QTV. Sửa tên, mô tả sân chưa xóa. |
-| 33 | UC-33 Xóa mềm sân | Actor: QTV. Chuyển sân sang Đã xóa, giải phóng tên. |
-| 34 | UC-34 Cấu hình giờ mở cửa | Actor: QTV. Sửa giờ mở/đóng, khả dụng theo ngày trong tuần. |
-| 35 | UC-35 Cấu hình bảng giá | Actor: QTV. Sửa bảng mốc giá theo sân và ngày trong tuần. |
-| 36 | UC-36 Thêm nhân viên và tài khoản nội bộ | Actor: QTV. Tạo hồ sơ Nhân viên và tài khoản đăng nhập. |
-| 37 | UC-37 Cập nhật nhân viên và tài khoản | Actor: QTV. Sửa họ tên, số điện thoại, email nhân viên. |
-| 38 | UC-38 Thay quyền Nhân viên ↔ QTV | Actor: QTV. Đổi quyền trên hồ sơ Nhân viên. |
-| 39 | UC-39 Xóa tài khoản nhân viên | Actor: QTV. Hard-delete tài khoản nhân viên, giữ hồ sơ và liên kết lịch sử. |
-| 40 | UC-40 Xem đặt sân toàn hệ thống | Actor: QTV. Lọc và xem mọi đặt sân kèm lịch sử trạng thái. |
-| 41 | UC-41 Thống kê doanh thu | Actor: QTV. Doanh thu theo khoảng thời gian, theo ngày/tháng. |
-| 42 | UC-42 Thống kê đặt sân | Actor: QTV. Lượt/giờ đặt và lượt/giờ Hoàn thành. |
-| 43 | UC-43 Xem nhật ký hoạt động | Actor: QTV. Xem và lọc nhật ký chỉ đọc. |
-| 44 | UC-44 Chốt đơn qua ngày sử dụng | Actor: Hệ thống. Tự chốt đơn quá ngày lúc 00:00 giờ Việt Nam. |
+| STT | Tên Use-case | Actor | Ý nghĩa/Ghi chú |
+| --- | --- | --- | --- |
+| 1 | UC-01 Đăng ký tài khoản | Khách vãng lai | Tự đăng ký tài khoản, liên kết hồ sơ Khách hàng. |
+| 2 | UC-02 Xác minh email | Actor của use-case gọi đến | Xác minh quyền dùng email bằng mã 6 chữ số. |
+| 3 | UC-03 Đăng nhập | Khách thành viên, Nhân viên, QTV | Đăng nhập bằng email và mật khẩu. |
+| 4 | UC-04 Quên mật khẩu | Khách thành viên | Đặt lại mật khẩu sau khi xác minh email. |
+| 5 | UC-05 Xem danh sách sân | Khách vãng lai, Khách thành viên, Nhân viên | Xem tên, mô tả, trạng thái sân. |
+| 6 | UC-06 Xem lưới sân và đơn giá | Khách vãng lai, Khách thành viên, Nhân viên | Xem tình trạng slot theo ngày và đơn giá theo khung giờ. |
+| 7 | UC-07 Đặt sân | Khách thành viên | Tạo đặt sân ở trạng thái Chờ xác nhận. |
+| 8 | UC-08 Đặt nhanh | Khách vãng lai | Đặt sân không cần tài khoản, có xác minh email. |
+| 9 | UC-09 Hủy đặt sân | Khách thành viên, Nhân viên | Hủy đơn theo yêu cầu khách (nhân viên làm thay được). |
+| 10 | UC-10 Đổi lịch đặt sân | Khách thành viên, Nhân viên | Đổi sân/ngày/giờ của đơn. |
+| 11 | UC-11 Xem lịch sử đặt sân | Khách thành viên | Xem danh sách và chi tiết đơn của mình. |
+| 12 | UC-12 Xem và cập nhật hồ sơ cá nhân | Khách thành viên | Xem hồ sơ; chỉ sửa họ tên, số điện thoại. |
+| 13 | UC-13 Trò chuyện với trợ lý AI | Khách vãng lai, Khách thành viên | Tư vấn dựa trên dữ liệu công khai. |
+| 14 | UC-14 Xem yêu cầu đặt sân chờ xác nhận | Nhân viên | Xem danh sách và chi tiết đơn Chờ xác nhận. |
+| 15 | UC-15 Xác nhận đặt sân | Nhân viên | Chuyển Chờ xác nhận → Đã xác nhận và lập hóa đơn. |
+| 16 | UC-16 Từ chối yêu cầu đặt sân | Nhân viên | Hủy đơn Chờ xác nhận kèm lý do. |
+| 17 | UC-17 Lập hóa đơn | Nhân viên | Tạo hóa đơn cho đơn trong cùng giao dịch. |
+| 18 | UC-18 Ghi nhận lượt sử dụng | Nhân viên | Chuyển đơn đã tồn tại sang Hoàn thành sau khi khách đã sử dụng và lượt đã kết thúc. |
+| 19 | UC-19 Xem lịch đặt sân theo ngày | Nhân viên | Xem lưới đặt sân theo ngày, gồm slot trống. |
+| 20 | UC-20 Tạo đặt sân thay khách | Nhân viên | Tạo đơn Chờ xác nhận tại quầy/hotline. |
+| 21 | UC-21 Hủy đặt sân do sự cố vận hành | Nhân viên | Hủy đơn vì sân không phục vụ được, kể cả quá mốc 1 giờ. |
+| 22 | UC-22 Ghi nhận hoàn tiền | Nhân viên | Ghi nhận hoàn toàn bộ tiền đã thu (hoàn ngoài hệ thống). |
+| 23 | UC-23 Cập nhật trạng thái sân | Nhân viên | Đổi giữa Hoạt động, Bảo trì, Đóng. |
+| 24 | UC-24 Quản lý hồ sơ khách hàng | Nhân viên | Xem, tìm, cập nhật hồ sơ khách và các đặt sân của khách. |
+| 26 | UC-26 Tạo tài khoản khách hàng | Nhân viên | Tạo tài khoản khách, tái sử dụng hồ sơ nếu có. |
+| 27 | UC-27 Khóa/Mở khóa/Xóa tài khoản | Nhân viên, QTV | Khóa/mở khóa (nhân viên: tài khoản khách); QTV được hard-delete tài khoản, giữ hồ sơ lịch sử. |
+| 28 | UC-28 Xem hóa đơn | Nhân viên | Xem, lọc, tìm hóa đơn và chuỗi hóa đơn thay thế. |
+| 29 | UC-29 Thu tiền hóa đơn | Nhân viên | Ghi nhận thu đủ tiền hóa đơn Chưa thanh toán. |
+| 30 | UC-30 Tra cứu nhanh | Nhân viên | Tìm khách và đặt sân theo số điện thoại, email, mã đặt sân. |
+| 31 | UC-31 Thêm sân | QTV | Tạo sân cùng 7 lịch và 7 mốc giá mặc định. |
+| 32 | UC-32 Sửa thông tin sân | QTV | Sửa tên, mô tả sân chưa xóa. |
+| 33 | UC-33 Xóa mềm sân | QTV | Chuyển sân sang Đã xóa, giải phóng tên. |
+| 34 | UC-34 Cấu hình giờ mở cửa | QTV | Sửa giờ mở/đóng, khả dụng theo ngày trong tuần. |
+| 35 | UC-35 Cấu hình bảng giá | QTV | Sửa bảng mốc giá theo sân và ngày trong tuần. |
+| 36 | UC-36 Thêm nhân viên và tài khoản nội bộ | QTV | Tạo hồ sơ Nhân viên và tài khoản đăng nhập. |
+| 37 | UC-37 Cập nhật nhân viên và tài khoản | QTV | Sửa họ tên, số điện thoại, email nhân viên. |
+| 38 | UC-38 Thay quyền Nhân viên ↔ QTV | QTV | Đổi quyền trên hồ sơ Nhân viên. |
+| 39 | UC-39 Xóa tài khoản nhân viên | QTV | Hard-delete tài khoản nhân viên, giữ hồ sơ và liên kết lịch sử. |
+| 40 | UC-40 Xem đặt sân toàn hệ thống | QTV | Lọc và xem mọi đặt sân kèm lịch sử trạng thái. |
+| 41 | UC-41 Thống kê doanh thu | QTV | Doanh thu theo khoảng thời gian, theo ngày/tháng. |
+| 42 | UC-42 Thống kê đặt sân | QTV | Lượt/giờ đặt và lượt/giờ Hoàn thành. |
+| 43 | UC-43 Xem nhật ký hoạt động | QTV | Xem và lọc nhật ký chỉ đọc. |
+| 44 | UC-44 Chốt đơn qua ngày sử dụng | Hệ thống | Tự chốt đơn quá ngày lúc 00:00 giờ Việt Nam. |
 
 Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩnh trên hệ thống, không lập use-case riêng; được nêu trong UC-09.
 
@@ -261,7 +256,7 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Ngày tạo | 09/10/2026 |
 | Ngày cập nhật gần nhất | 10/10/2026 |
 | Actor | Actor của use-case gọi đến |
-| Mô tả | Gửi và kiểm tra mã 6 chữ số để xác minh quyền dùng email, theo mục đích: đăng ký, đặt lại mật khẩu, đặt nhanh, đổi email. |
+| Mô tả | Gửi và kiểm tra mã 6 chữ số để xác minh quyền dùng email, theo mục đích: đăng ký, đặt lại mật khẩu, đặt nhanh. |
 | Tiền điều kiện | Email đúng định dạng; chưa vượt giới hạn gửi mã. |
 | Hậu điều kiện | Mã đúng, còn hạn, đúng email và mục đích được xác nhận cho use-case gọi đến. |
 | Độ ưu tiên | — |
@@ -519,10 +514,7 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Luồng chính | 1. Khách mở thông tin cá nhân.<br>2. Khách sửa họ tên, số điện thoại.<br>3. Hệ thống kiểm tra dữ liệu, lưu và ghi nhật ký. |
 | Luồng thay thế | — |
 | Ngoại lệ | E1. Họ tên chỉ có khoảng trắng hoặc số điện thoại không hợp lệ: từ chối. |
-| Includes | — |
-| Extends | — |
-| Yêu cầu đặc biệt | Email chỉ được xem; muốn đổi email phải thông qua nhân viên (UC-25). |
-| Giả định | — |
+| Yêu cầu đặc biệt | Email chỉ được xem, không được đổi (BR-18). |
 | Ghi chú | Nguồn SRS: KH-21; BR-14, BR-18, BR-26. |
 
 ### 4.13 Đặc tả Use-case “Trò chuyện với trợ lý AI”
@@ -738,9 +730,7 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Actor | Nhân viên |
 | Mô tả | Hủy đơn Chờ xác nhận/Đã xác nhận khi sân không thể phục vụ, kể cả khi đã qua mốc 1 giờ. |
 | Tiền điều kiện | Đơn Chờ xác nhận hoặc Đã xác nhận; có sự cố vận hành; khách chưa sử dụng lượt sân. |
-| Hậu điều kiện | Đơn Đã hủy; hóa đơn được đồng bộ; lý do sự cố được ghi trong lịch sử, nhật ký; khách được thông báo. |
-| Độ ưu tiên | — |
-| Tần suất sử dụng | — |
+| Hậu điều kiện | Đơn Đã hủy; hóa đơn được đồng bộ; lý do sự cố được ghi trong lịch sử; hệ thống tự ghi nhật ký thay đổi; khách được thông báo. |
 | Luồng chính | 1. Nhân viên chọn đơn, nhập lý do sự cố và xác nhận khách chưa sử dụng lượt sân.<br>2. Hệ thống kiểm tra trạng thái đơn.<br>3. Hệ thống trong một giao dịch: chuyển Đã hủy, hủy hóa đơn Chưa thanh toán nếu có, ghi lịch sử, nhật ký.<br>4. Hệ thống thông báo cho khách. |
 | Luồng thay thế | A1. (bước 3) Hóa đơn Đã thanh toán: hoàn toàn bộ khoản đã thu qua UC-22 trước khi hủy hóa đơn. |
 | Ngoại lệ | E1. Không có lý do sự cố: từ chối.<br>E2. Khách đã sử dụng lượt sân: ghi Hoàn thành bằng UC-18, không hủy.<br>E3. Đơn đã ở trạng thái cuối: từ chối. |
@@ -817,38 +807,14 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Độ ưu tiên | — |
 | Tần suất sử dụng | — |
 | Luồng chính | 1. Nhân viên mở danh sách khách, tìm theo họ tên, số điện thoại hoặc email.<br>2. Nhân viên chọn khách để xem hồ sơ và các đặt sân.<br>3. Nhân viên sửa thông tin khách.<br>4. Hệ thống kiểm tra dữ liệu, lưu và ghi nhật ký. |
-| Luồng thay thế | — |
-| Ngoại lệ | E1. Dữ liệu không hợp lệ: nêu trường lỗi.<br>E2. Sửa trực tiếp email: không cho phép, phải dùng UC-25. |
-| Includes | — |
-| Extends | — |
+| Ngoại lệ | E1. Dữ liệu không hợp lệ: nêu trường lỗi.<br>E2. Yêu cầu đổi email: từ chối (BR-18). |
 | Yêu cầu đặc biệt | Số điện thoại không dùng để gộp hồ sơ. Không có chức năng xóa hồ sơ khách đã giao dịch. |
 | Giả định | — |
 | Ghi chú | Nguồn SRS: NV-15, NV-16; BR-15, BR-26. |
 
-### 4.25 Đặc tả Use-case “Đổi email khách hàng”
+### 4.25 UC-25 — Đã loại bỏ
 
-| Mục | Nội dung |
-| --- | --- |
-| Mã Use Case | UC-25 |
-| Tên Use Case | Đổi email khách hàng |
-| Người tạo | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| Người cập nhật gần nhất | Nguyễn Bảo Việt, Đinh Nhật Khôi |
-| Ngày tạo | 09/10/2026 |
-| Ngày cập nhật gần nhất | 10/10/2026 |
-| Actor | Nhân viên |
-| Mô tả | Nhân viên đổi email của khách sau khi kiểm tra danh tính khách và quyền dùng email mới. Khách không tự đổi email. |
-| Tiền điều kiện | Nhân viên đã kiểm tra danh tính khách. |
-| Hậu điều kiện | Email hồ sơ và email đăng nhập (nếu có tài khoản) được đổi sang email mới; giữ mã khách, tài khoản, lịch sử; mã xác minh của email cũ bị vô hiệu; ghi nhật ký. |
-| Độ ưu tiên | — |
-| Tần suất sử dụng | — |
-| Luồng chính | 1. Nhân viên nhập email mới của khách.<br>2. Hệ thống chuẩn hóa email, kiểm tra không trùng hồ sơ hoặc email đăng nhập khác.<br>3. Hệ thống thực hiện UC-02 (mục đích đổi email) để xác minh quyền dùng email mới.<br>4. Hệ thống cập nhật đồng thời email hồ sơ và email đăng nhập, vô hiệu mã xác minh cũ, ghi nhật ký. |
-| Luồng thay thế | A1. (bước 2) Email mới trùng chính email hiện tại: không thay đổi. |
-| Ngoại lệ | E1. Email mới trùng hồ sơ khác: từ chối, không gộp hồ sơ; khách tiếp tục dùng email cũ.<br>E2. Xác minh email mới thất bại: không đổi.<br>E3. Chỉ biết email cũ: không đủ để xác thực quyền sở hữu. |
-| Includes | UC-02 |
-| Extends | — |
-| Yêu cầu đặc biệt | Không gộp hai hồ sơ. |
-| Giả định | — |
-| Ghi chú | Nguồn SRS: NV-16, NV-24; BR-18, BR-26. |
+Không có chức năng đổi email (BR-18).
 
 ### 4.26 Đặc tả Use-case “Tạo tài khoản khách hàng”
 
@@ -1136,16 +1102,11 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Ngày tạo | 09/10/2026 |
 | Ngày cập nhật gần nhất | 10/10/2026 |
 | Actor | QTV |
-| Mô tả | Sửa họ tên, số điện thoại, email của hồ sơ Nhân viên; email đăng nhập đồng bộ theo. |
+| Mô tả | Sửa họ tên, số điện thoại hồ sơ Nhân viên. Email chỉ được xem. |
 | Tiền điều kiện | Hồ sơ Nhân viên tồn tại. |
-| Hậu điều kiện | Hồ sơ cập nhật; nếu đổi email thì email đăng nhập đổi theo, mã xác minh cũ bị vô hiệu; ghi nhật ký. |
-| Độ ưu tiên | — |
-| Tần suất sử dụng | — |
-| Luồng chính | 1. QTV chọn nhân viên và sửa thông tin.<br>2. Hệ thống kiểm tra dữ liệu.<br>3. Nếu đổi email, hệ thống thực hiện UC-02 để xác minh email mới.<br>4. Hệ thống cập nhật hồ sơ và email đăng nhập đồng thời, vô hiệu mã xác minh cũ (nếu đổi email), ghi nhật ký. |
-| Luồng thay thế | — |
-| Ngoại lệ | E1. Email mới trùng hồ sơ/email đăng nhập khác: từ chối.<br>E2. Xác minh email mới thất bại: không đổi.<br>E3. Dữ liệu không hợp lệ: nêu trường lỗi. |
-| Includes | UC-02 (khi đổi email) |
-| Extends | — |
+| Hậu điều kiện | Hồ sơ cập nhật, email giữ nguyên; hệ thống tự ghi nhật ký. |
+| Luồng chính | 1. QTV chọn nhân viên và sửa họ tên, số điện thoại.<br>2. Hệ thống kiểm tra dữ liệu và email không thay đổi.<br>3. Hệ thống cập nhật hồ sơ, tự ghi nhật ký. |
+| Ngoại lệ | E1. Yêu cầu đổi email: từ chối (BR-18).<br>E2. Dữ liệu không hợp lệ: nêu trường lỗi. |
 | Yêu cầu đặc biệt | Không sửa trực tiếp bộ đếm, mật khẩu băm hoặc trạng thái để bỏ qua UC-27; không làm lệch tài khoản/hồ sơ. |
 | Giả định | — |
 | Ghi chú | Nguồn SRS: QT-09, QT-13; BR-18, BR-26, BR-27. |
@@ -1294,10 +1255,7 @@ Ghi chú: yêu cầu NV-23 (hiển thị số hotline) chỉ là thông tin tĩn
 | Luồng chính | 1. QTV mở nhật ký.<br>2. Hệ thống hiển thị thời điểm, tác nhân (hệ thống, nhân viên, khách hàng), thao tác, đối tượng, giá trị trước và sau thay đổi.<br>3. QTV lọc theo thời gian, tác nhân, đối tượng, thao tác. |
 | Luồng thay thế | — |
 | Ngoại lệ | E1. Từ ngày lớn hơn đến ngày: từ chối. |
-| Includes | — |
-| Extends | — |
-| Yêu cầu đặc biệt | Nhật ký chỉ đọc, không sửa/xóa qua ứng dụng; không chứa mật khẩu, mã xác minh, mã phiên hoặc giá trị băm của chúng. Có phân trang. Khoảng ngày gồm cả hai ngày theo giờ Việt Nam. |
-| Giả định | — |
+| Yêu cầu đặc biệt | Nhật ký do hệ thống tự ghi; nhân viên/QTV không được tạo thủ công hoặc sửa/xóa bất kỳ trường nào; không chứa mật khẩu, mã xác minh, mã phiên hoặc giá trị băm của chúng. Có phân trang. |
 | Ghi chú | Nguồn SRS: QT-20, QT-21; BR-14; NFR-06. |
 
 ### 4.44 Đặc tả Use-case “Chốt đơn qua ngày sử dụng”

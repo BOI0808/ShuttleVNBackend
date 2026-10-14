@@ -21,7 +21,7 @@ internal static class PricingRuleNormalizer
             .ToList();
 
         if (active.StartTime == open) return removed;
-        
+
         active.StartTime = open;
         active.UpdatedAt = now;
         return removed;

@@ -31,11 +31,11 @@ public class PricingRuleService(
         var schedules = await courtRepository.GetSchedulesAsync(courtId, ct);
         if (schedules is null)
             throw new InvalidOperationException($"Court with id {courtId} not found.");
-        
+
         var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
         if (schedule is null)
             throw new InvalidOperationException($"Court {courtId} has no schedule for day {dayOfWeek}.");
-        
+
         ValidateRules(request.PricingRules, schedule, errors);
         CourtValidation.ThrowIfAny(errors);
 

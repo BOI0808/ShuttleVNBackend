@@ -5,7 +5,7 @@ using ShuttleVNBackend.Core.Entities.System;
 
 namespace ShuttleVNBackend.Application.UseCases.System;
 
-public class AuditService( IAuditRepository auditRepository)
+public class AuditService(IAuditRepository auditRepository)
 {
     public async Task<PagedResult<Audit>> GetAllAsync(PageRequest page, CancellationToken ct = default)
         => await auditRepository.GetAllAsync(page, ct);

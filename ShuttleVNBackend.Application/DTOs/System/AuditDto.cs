@@ -5,7 +5,7 @@ namespace ShuttleVNBackend.Application.DTOs.System;
 
 public record AuditDto
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public ActorType ActorType { get; set; }
     public Guid? ActorId { get; set; }
     public string ActorName { get; set; } = "";

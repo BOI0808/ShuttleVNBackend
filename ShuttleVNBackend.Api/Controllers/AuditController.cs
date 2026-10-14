@@ -11,7 +11,7 @@ namespace ShuttleVNBackend.Api.Controllers;
 [ApiController]
 [Route("api/audits")]
 [Authorize(Policy = "AdminOnly")]
-public class AuditController(AuditService auditService): ControllerBase
+public class AuditController(AuditService auditService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<ApiResponse<PagedResult<AuditDto>>>> GetAudits(

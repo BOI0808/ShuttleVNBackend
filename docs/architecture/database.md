@@ -1,8 +1,8 @@
 # Thiết kế dữ liệu — Hệ thống đặt sân cầu lông
 
-**Phiên bản 1.5 · 10/10/2026**
+**Phiên bản 1.7 · 10/10/2026**
 
-Căn cứ: SRS 1.5 và Use Case 1.4. Mã BR tham chiếu SRS.
+Căn cứ: SRS 1.7 và Use Case 1.5. Mã BR tham chiếu SRS.
 
 ## Mục lục
 
@@ -40,23 +40,23 @@ SQL mẫu; ràng buộc liên bảng triển khai theo mục 7.
 - **BR-10, BR-11:** Một tài khoản liên kết đúng một hồ sơ Khách hàng hoặc Nhân viên, không cả hai; mỗi hồ sơ tối đa một tài khoản. Nhân viên/QTV không sở hữu đặt sân.
 - **BR-10, BR-11:** Tái sử dụng hồ sơ khách theo email, giữ mã khách và lịch sử, không ghi đè họ tên/điện thoại hồ sơ cũ từ form đặt nhanh/đăng ký. Đăng ký công khai chỉ tạo tài khoản sau xác minh thành công.
 - **BR-12:** Khóa/vô hiệu hóa cùng dùng DISABLED; khóa ở lần sai thứ 5, chỉ người có quyền mở về ACTIVE, không tự mở theo thời gian/đặt lại mật khẩu. Khóa không hủy giao dịch.
-- **BR-18, BR-26, BR-27:** Đổi email đúng quyền, xác minh email mới, đồng bộ email hồ sơ/email đăng nhập, vô hiệu mã xác minh email cũ; không đổi loại tài khoản Khách hàng ↔ Nhân viên.
+- **BR-18, BR-26, BR-27:** Email Customer/Employee và UserAccount.loginEmail bất biến sau khi tạo, kể cả với nhân viên/QTV. Liên kết tài khoản dùng đúng email hồ sơ; không đổi loại tài khoản Khách hàng ↔ Nhân viên.
 - **BR-27:** QTV cấp tài khoản nội bộ và thay quyền Nhân viên ↔ QTV. Bảo vệ QTV Hoạt động cuối trước thao tác quản trị; khóa tự động vẫn áp dụng ở lần sai thứ 5, phục hồi theo quy trình vận hành có dấu vết.
 
 ### 2.2 Entities
 
 **UserAccount** — Tài khoản đăng nhập
 
-| Field               | Type                | Ghi chú                                                       |
-| ------------------- | ------------------- | ------------------------------------------------------------- |
-| accountId           | uuid                | PK                                                            |
-| loginEmail          | string              | Email chuẩn hóa, UNIQUE                                       |
-| passwordHash        | string              | Chỉ lưu băm mật khẩu                                          |
-| accountType         | Enum[AccountType]   | CUSTOMER hoặc EMPLOYEE; không đổi loại sau tạo                |
-| status              | Enum[AccountStatus] | ACTIVE hoặc DISABLED (khóa/vô hiệu hóa)                       |
-| failedLoginAttempts | int                 | 0–5, số lần sai mật khẩu liên tiếp; không gộp sai mã xác minh |
-| createdAt           | DateTime UTC        |                                                               |
-| updatedAt           | DateTime UTC        |                                                               |
+| Field | Type | Ghi chú |
+| --- | --- | --- |
+| accountId | uuid | PK |
+| loginEmail | string | Email chuẩn hóa, UNIQUE; không được đổi |
+| passwordHash | string | Chỉ lưu băm mật khẩu |
+| accountType | Enum[AccountType] | CUSTOMER hoặc EMPLOYEE; không đổi loại sau tạo |
+| status | Enum[AccountStatus] | ACTIVE hoặc DISABLED (khóa/vô hiệu hóa) |
+| failedLoginAttempts | int | 0–5, số lần sai mật khẩu liên tiếp; không gộp sai mã xác minh |
+| createdAt | DateTime UTC | |
+| updatedAt | DateTime UTC | |
 
 Sai mật khẩu 5 lần hoặc khóa thủ công đều chuyển DISABLED. Nhân viên/QTV mở khóa theo quyền, chuyển ACTIVE và reset bộ đếm về 0. Không tự mở theo thời gian hoặc đặt lại mật khẩu.
 
@@ -64,30 +64,30 @@ Không có bảng Session. Mỗi yêu cầu cần đăng nhập kiểm tra tài 
 
 **Employee** — Hồ sơ nhân viên/QTV
 
-| Field      | Type         | Ghi chú                                                                                                                            |
-| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| employeeId | uuid         | PK                                                                                                                                 |
-| accountId  | uuid, NULL   | FK → UserAccount.accountId, UNIQUE khi có; ON DELETE SET NULL. Khi tạo nhân viên phải có tài khoản; NULL sau hard-delete tài khoản |
-| fullName   | string       | Bắt buộc, không chỉ khoảng trắng                                                                                                   |
-| phone      | string       | Theo BR-26; không UNIQUE                                                                                                           |
-| email      | string       | Bắt buộc, chuẩn hóa, UNIQUE, đồng bộ loginEmail                                                                                    |
-| isAdmin    | bool         | Quyền QTV trên hồ sơ Nhân viên                                                                                                     |
-| createdAt  | DateTime UTC |                                                                                                                                    |
-| updatedAt  | DateTime UTC |                                                                                                                                    |
+| Field | Type | Ghi chú |
+| --- | --- | --- |
+| employeeId | uuid | PK |
+| accountId | uuid, NULL | FK → UserAccount.accountId, UNIQUE khi có; ON DELETE SET NULL. Khi tạo nhân viên phải có tài khoản; NULL sau hard-delete tài khoản |
+| fullName | string | Bắt buộc, không chỉ khoảng trắng |
+| phone | string | Theo BR-26; không UNIQUE |
+| email | string | Bắt buộc, chuẩn hóa, UNIQUE, đồng bộ loginEmail; không được đổi |
+| isAdmin | bool | Quyền QTV trên hồ sơ Nhân viên |
+| createdAt | DateTime UTC | |
+| updatedAt | DateTime UTC | |
 
 Khóa tài khoản nhân viên cập nhật DISABLED; xóa tài khoản là hard-delete UserAccount, Employee.accountId thành NULL và giữ hồ sơ cùng mã nhân viên. Hồ sơ không còn tài khoản không có quyền đăng nhập; isAdmin không tự cấp quyền khi không có tài khoản ACTIVE.
 
 **Customer** — Hồ sơ khách hàng
 
-| Field      | Type         | Ghi chú                                                               |
-| ---------- | ------------ | --------------------------------------------------------------------- |
-| customerId | uuid         | PK                                                                    |
-| accountId  | uuid, NULL   | FK → UserAccount.accountId, UNIQUE khi có giá trị, ON DELETE SET NULL |
-| fullName   | string       | Bắt buộc, không chỉ khoảng trắng                                      |
-| phone      | string       | Theo BR-26; không UNIQUE                                              |
-| email      | string       | Chuẩn hóa, UNIQUE kể cả khách chưa có tài khoản                       |
-| createdAt  | DateTime UTC |                                                                       |
-| updatedAt  | DateTime UTC |                                                                       |
+| Field | Type | Ghi chú |
+| --- | --- | --- |
+| customerId | uuid | PK |
+| accountId | uuid, NULL | FK → UserAccount.accountId, UNIQUE khi có giá trị, ON DELETE SET NULL |
+| fullName | string | Bắt buộc, không chỉ khoảng trắng |
+| phone | string | Theo BR-26; không UNIQUE |
+| email | string | Chuẩn hóa, UNIQUE kể cả khách chưa có tài khoản; không được đổi |
+| createdAt | DateTime UTC | |
+| updatedAt | DateTime UTC | |
 
 Đặt nhanh bằng email đã có tài khoản vẫn dùng hồ sơ đó sau xác minh đúng mục đích; không cấp phiên hay quyền xem lịch sử. Không tạo hồ sơ trùng email và không dùng số điện thoại để tự gộp hồ sơ.
 
@@ -130,17 +130,18 @@ ALTER TABLE "VerificationCode" ADD CONSTRAINT "PK_VerificationCode"
   PRIMARY KEY ("email", "type");
 ```
 
+- Chặn UPDATE làm thay đổi UserAccount.loginEmail hoặc Customer/Employee.email ở DB; máy chủ từ chối yêu cầu đổi email theo BR-18.
 - CHECK email đã trim/chữ thường và không rỗng; họ tên không chỉ khoảng trắng; số điện thoại theo BR-26.
 - CHECK `failedLoginAttempts BETWEEN 0 AND 5`; bộ đếm bằng 5 buộc status = Disabled.
 - CHECK status chỉ Active hoặc Disabled; khi mở khóa reset bộ đếm về 0. Khóa thủ công không yêu cầu bộ đếm bằng 5.
 - CHECK `attempt BETWEEN 0 AND 5`; dịch vụ chỉ nhận mã khi attempt < 5, isUsed = false và expiresAt > thời điểm máy chủ.
 - UNIQUE trên hai bảng hồ sơ **không đủ** để bảo đảm một tài khoản chỉ thuộc đúng một loại hồ sơ hoặc đồng bộ email; dùng constraint trigger kiểm tra cuối giao dịch theo mục 7; hồ sơ sau khi hard-delete tài khoản được phép accountId NULL.
 
-| Enum          | Values nghiệp vụ                                                            |
-| ------------- | --------------------------------------------------------------------------- |
-| AccountStatus | `ACTIVE`, `DISABLED`                                                        |
-| AccountType   | `CUSTOMER`, `EMPLOYEE`                                                      |
-| CodeType      | `VERIFY_EMAIL` (đăng ký), `RESET_PASSWORD`, `QUICK_BOOKING`, `CHANGE_EMAIL` |
+| Enum | Values nghiệp vụ |
+| --- | --- |
+| AccountStatus | `ACTIVE`, `DISABLED` |
+| AccountType | `CUSTOMER`, `EMPLOYEE` |
+| CodeType | `VERIFY_EMAIL` (đăng ký), `RESET_PASSWORD`, `QUICK_BOOKING` |
 
 CodeType giữ các giá trị số cũ; thêm mục đích mới ở cuối enum.
 
@@ -426,21 +427,22 @@ Chỉ mục hợp lệ bảo đảm **tối đa một**, không bảo đảm **�
 
 Nguồn: BR-14, BR-15, UC-43, NFR-06.
 
-| Field      | Type            | Ghi chú                                                                    |
-| ---------- | --------------- | -------------------------------------------------------------------------- |
-| id         | bigint          | PK                                                                         |
-| actorType  | Enum[ActorType] |                                                                            |
-| employeeId | uuid, NULL      | FK → Employee                                                              |
-| customerId | uuid, NULL      | FK → Customer                                                              |
-| action     | string          | Loại thao tác: tạo/sửa/xóa mềm/khóa/mở khóa/đổi email/quyền/thu/hoàn/chốt… |
-| entityName | string          | Đối tượng                                                                  |
-| entityId   | string          | Mã đối tượng; hỗ trợ UUID/int/khóa ghép                                    |
-| oldValue   | JsonB, NULL     | Giá trị trước, đã loại bí mật                                              |
-| newValue   | JsonB, NULL     | Giá trị sau, đã loại bí mật                                                |
-| reason     | string, NULL    | Lý do khi nghiệp vụ yêu cầu                                                |
-| createdAt  | DateTime UTC    |                                                                            |
+| Field | Type | Ghi chú |
+| --- | --- | --- |
+| id | bigint | PK |
+| actorType | Enum[ActorType] | |
+| employeeId | uuid, NULL | FK → Employee |
+| customerId | uuid, NULL | FK → Customer |
+| action | string | Loại thao tác: tạo/sửa/xóa mềm/khóa/mở khóa/quyền/thu/hoàn/chốt… |
+| entityName | string | Đối tượng |
+| entityId | string | Mã đối tượng; hỗ trợ UUID/int/khóa ghép |
+| oldValue | JsonB, NULL | Giá trị trước, đã loại bí mật |
+| newValue | JsonB, NULL | Giá trị sau, đã loại bí mật |
+| createdAt | DateTime UTC | |
 
-CHECK tác nhân theo BookingStatusHistory. oldValue/newValue/reason/lỗi không chứa mật khẩu, mã xác minh, mã phiên hoặc hash của chúng. Audit UserAccount/VerificationCode chỉ lấy các trường được phép.
+CHECK tác nhân theo BookingStatusHistory. oldValue/newValue/lỗi không chứa mật khẩu, mã xác minh, mã phiên hoặc hash của chúng. Audit UserAccount/VerificationCode chỉ lấy các trường được phép.
+
+Hệ thống tự tạo Audit trong giao dịch nghiệp vụ. actorType/employeeId/customerId ghi người thực hiện nghiệp vụ; việc hệ thống ghi log không đổi tác nhân thành SYSTEM. Không có trường reason hoặc API tạo/sửa trực tiếp Audit. Toàn bộ bản ghi bất biến với mọi người dùng, kể cả nhân viên/QTV.
 
 Audit bao phủ sân, lịch, giá, hồ sơ khách, hồ sơ/tài khoản nội bộ, đặt sân, hóa đơn và mọi thao tác nêu BR-14. Không tự audit bảng Audit; không cho sửa/xóa Audit và BookingStatusHistory qua ứng dụng. Dùng quyền DB/trigger phù hợp để chặn UPDATE/DELETE các bảng nhật ký bởi tài khoản ứng dụng.
 
@@ -528,7 +530,7 @@ Các constraint trigger phải được triển khai trong migration; tài liệ
 - **Đổi/hủy:** Booking + snapshot giá nếu đổi + hóa đơn hủy/thay thế/thu/hoàn phù hợp + lịch sử chuyển trạng thái nếu có + Audit + Notification + mã gửi lặp. Giữ mã đơn và chủ hồ sơ.
 - **Thu tiền:** khóa cả Booking/Invoice, kiểm tra đã chốt quá ngày, đối chiếu tổng tiền và thông tin thực thu, lưu Invoice + Audit + mã gửi lặp. Không tự đổi trạng thái Booking.
 - **Cấu hình sân/lịch/giá:** sân + 7 lịch khi tạo, hoặc lịch/giá hiện hành bị sửa + Audit; xem trước và xác nhận cấu hình kết quả theo BR-25.
-- **Đổi email/khóa/quyền:** hồ sơ và tài khoản + vô hiệu mã xác minh liên quan khi đổi email + Audit trong cùng giao dịch. Lưu các trường cho phép, không đưa bí mật vào log.
+- **Cập nhật hồ sơ/khóa/quyền:** hồ sơ và tài khoản + Audit tự động trong cùng giao dịch; không thay đổi email. Lưu các trường cho phép, không đưa bí mật vào log.
 
 Tạo/đổi/xác nhận đơn và sửa lịch/trạng thái/xóa sân phải cùng khóa dòng BadmintonCourt liên quan; nếu chuyển sân khóa các sân theo thứ tự courtId ổn định, rồi khóa đơn và các hóa đơn liên quan theo một thứ tự thống nhất. Tất cả đường thao tác phải dùng chung thứ tự khóa để tránh kiểm tra sân còn mở xong thì bị đóng/xóa trước khi lưu, hoặc sửa lịch gây mất khả dụng cho đơn vừa tạo.
 
@@ -562,18 +564,25 @@ Trạng thái thanh toán lấy từ hóa đơn hợp lệ, không lưu riêng t
 
 ### 8.3 Đối chiếu chức năng và dữ liệu
 
-| Use Case                                                              | Dữ liệu hỗ trợ                                                                                                           | Nguồn SRS                         |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| UC-01–UC-04: đăng ký/xác minh/đăng nhập/quên mật khẩu                 | UserAccount, Customer, VerificationCode, Audit                                                                           | BR-11, BR-12, BR-26               |
-| UC-05–UC-06: sân/lưới/giá                                             | BadmintonCourt, CourtSchedule, PricingRule, Booking; chỉ trả dữ liệu công khai                                           | BR-01–BR-03, BR-19, BR-28         |
-| UC-07–UC-08, UC-20: tạo đơn/đặt nhanh/tạo thay khách                  | Customer, Booking, BookingPriceSegment, VerificationCode khi đặt nhanh, History, Audit, IdempotencyRequest, Notification | BR-04, BR-10, BR-20, BR-21, BR-26 |
-| UC-09–UC-10, UC-16, UC-21: hủy/đổi/từ chối/sự cố                      | Booking, giá snapshot, Invoice/thay thế/hoàn, History, Audit, Notification                                               | BR-05, BR-13, BR-22–BR-24         |
-| UC-11–UC-12: lịch sử/hồ sơ cá nhân                                    | Customer, Booking, hóa đơn hợp lệ, History; lọc theo tài khoản sở hữu                                                    | BR-18, BR-19, BR-28               |
-| UC-13: AI                                                             | Chỉ dữ liệu sân/lịch/giá/khả dụng công khai và FAQ; không bổ sung bảng hội thoại                                         | BR-28, NFR-10                     |
-| UC-14–UC-15, UC-17–UC-19: xử lý đơn/lập hóa đơn/ghi sử dụng/lịch ngày | Booking, snapshot giá, Invoice, InvoiceDailyCounter, History, Audit; ghi sử dụng chỉ trên đơn đã tồn tại                 | BR-06, BR-08, BR-09, BR-20        |
-| UC-22, UC-28–UC-29: hoàn/xem/thu tiền                                 | Invoice, dấu vết thu/hủy/hoàn và chuỗi replacesInvoiceId, Audit, IdempotencyRequest                                      | BR-09, BR-21–BR-23                |
-| UC-23, UC-31–UC-35: trạng thái/thêm/sửa/xóa/lịch/giá sân              | BadmintonCourt, CourtSchedule, PricingRule, Audit                                                                        | BR-01, BR-03, BR-16, BR-19, BR-25 |
-| UC-24–UC-27, UC-30: khách/tài khoản/đổi email/khóa/xóa/tra cứu        | Customer, UserAccount, VerificationCode, Booking, Audit                                                                  | BR-10–BR-12, BR-18, BR-26, BR-27  |
-| UC-36–UC-39: nhân viên/tài khoản nội bộ/quyền/xóa tài khoản           | Employee, UserAccount, VerificationCode, Audit                                                                           | BR-11, BR-15, BR-26, BR-27        |
-| UC-40–UC-43: toàn hệ thống/thống kê/nhật ký                           | Booking, History, Invoice, Audit                                                                                         | QT-15–QT-21, BR-14, BR-25         |
-| UC-44: chốt qua ngày                                                  | Booking, hóa đơn hợp lệ, History SYSTEM, Audit, Notification                                                             | BR-17, BR-21, NFR-09              |
+| Use Case | Dữ liệu hỗ trợ | Nguồn SRS |
+| --- | --- | --- |
+| UC-01–UC-04: đăng ký/xác minh/đăng nhập/quên mật khẩu | UserAccount, Customer, VerificationCode, Audit | BR-11, BR-12, BR-26 |
+| UC-05–UC-06: sân/lưới/giá | BadmintonCourt, CourtSchedule, PricingRule, Booking; chỉ trả dữ liệu công khai | BR-01–BR-03, BR-19, BR-28 |
+| UC-07–UC-08, UC-20: tạo đơn/đặt nhanh/tạo thay khách | Customer, Booking, BookingPriceSegment, VerificationCode khi đặt nhanh, History, Audit, IdempotencyRequest, Notification | BR-04, BR-10, BR-20, BR-21, BR-26 |
+| UC-09–UC-10, UC-16, UC-21: hủy/đổi/từ chối/sự cố | Booking, giá snapshot, Invoice/thay thế/hoàn, History, Audit, Notification | BR-05, BR-13, BR-22–BR-24 |
+| UC-11–UC-12: lịch sử/hồ sơ cá nhân | Customer, Booking, hóa đơn hợp lệ, History; lọc theo tài khoản sở hữu | BR-18, BR-19, BR-28 |
+| UC-13: AI | Chỉ dữ liệu sân/lịch/giá/khả dụng công khai và FAQ; không bổ sung bảng hội thoại | BR-28, NFR-10 |
+| UC-14–UC-15, UC-17–UC-19: xử lý đơn/lập hóa đơn/ghi sử dụng/lịch ngày | Booking, snapshot giá, Invoice, InvoiceDailyCounter, History, Audit; ghi sử dụng chỉ trên đơn đã tồn tại | BR-06, BR-08, BR-09, BR-20 |
+| UC-22, UC-28–UC-29: hoàn/xem/thu tiền | Invoice, dấu vết thu/hủy/hoàn và chuỗi replacesInvoiceId, Audit, IdempotencyRequest | BR-09, BR-21–BR-23 |
+| UC-23, UC-31–UC-35: trạng thái/thêm/sửa/xóa/lịch/giá sân | BadmintonCourt, CourtSchedule, PricingRule, Audit | BR-01, BR-03, BR-16, BR-19, BR-25 |
+| UC-24, UC-26–UC-27, UC-30: khách/tài khoản/khóa/xóa/tra cứu | Customer, UserAccount, VerificationCode, Booking, Audit | BR-10–BR-12, BR-18, BR-26, BR-27 |
+| UC-36–UC-39: nhân viên/tài khoản nội bộ/quyền/xóa tài khoản | Employee, UserAccount, VerificationCode, Audit | BR-11, BR-15, BR-26, BR-27 |
+| UC-40–UC-43: toàn hệ thống/thống kê/nhật ký | Booking, History, Invoice, Audit | QT-15–QT-21, BR-14, BR-25 |
+| UC-44: chốt qua ngày | Booking, hóa đơn hợp lệ, History SYSTEM, Audit, Notification | BR-17, BR-21, NFR-09 |
+
+## 9. Thay đổi tài liệu
+
+| Phiên bản | Thay đổi |
+| --- | --- |
+| 1.6 | Email bất biến; bỏ CHANGE_EMAIL và UC-25; Audit tự động, chỉ đọc. |
+| 1.7 | Bỏ trường reason khỏi Audit. |
