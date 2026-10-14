@@ -27,7 +27,6 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<Audit> Audits => Set<Audit>();
     public DbSet<VerificationCode> VerificationCodes => Set<VerificationCode>();
     public DbSet<BookingPriceSegment> BookingPriceSegments => Set<BookingPriceSegment>();
-    public DbSet<InvoiceDailyCounter> InvoiceDailyCounters => Set<InvoiceDailyCounter>();
     public DbSet<IdempotencyRequest> IdempotencyRequests => Set<IdempotencyRequest>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
@@ -168,12 +167,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
             entity.HasOne(e => e.Employee)
                 .WithMany()
-                .HasForeignKey(e => e.EmployeeId)
-                .IsRequired(false);
-
-            entity.HasOne(e => e.Customer)
-                .WithMany()
-                .HasForeignKey(e => e.CustomerId)
+                .HasForeignKey(e => e.ChangedByEmployee)
                 .IsRequired(false);
 
             entity.HasOne(e => e.Customer)
