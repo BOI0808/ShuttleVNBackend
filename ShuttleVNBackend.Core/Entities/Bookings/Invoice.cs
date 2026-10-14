@@ -29,6 +29,17 @@ public class Invoice
     public Guid? ReplacesInvoiceId { get; set; }
     public string Note { get; set; } = string.Empty;
 
-    public virtual Booking Booking { get; set; } = null!;
-    public virtual Employee Employee { get; set; } = null!;
+    private Booking? _booking;
+    public virtual Booking Booking
+    {
+        get => _booking ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Booking));
+        set => _booking = value;
+    }
+
+    private Employee? _employee;
+    public virtual Employee Employee
+    {
+        get => _employee ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Employee));
+        set => _employee = value;
+    }
 }

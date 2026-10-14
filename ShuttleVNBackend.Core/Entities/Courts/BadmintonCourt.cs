@@ -12,6 +12,17 @@ public class BadmintonCourt
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public virtual ICollection<CourtSchedule> CourtSchedules { get; set; } = new HashSet<CourtSchedule>();
-    public virtual ICollection<PricingRule> PricingRules { get; set; } = new HashSet<PricingRule>();
+    private ICollection<CourtSchedule>? _courtSchedules;
+    public virtual ICollection<CourtSchedule> CourtSchedules
+    {
+        get => _courtSchedules ?? throw new InvalidOperationException("Uninitialized property: " + nameof(CourtSchedules));
+        set => _courtSchedules = value;
+    }
+
+    private ICollection<PricingRule>? _pricingRules;
+    public virtual ICollection<PricingRule> PricingRules
+    {
+        get => _pricingRules ?? throw new InvalidOperationException("Uninitialized property: " + nameof(PricingRules));
+        set => _pricingRules = value;
+    }
 }

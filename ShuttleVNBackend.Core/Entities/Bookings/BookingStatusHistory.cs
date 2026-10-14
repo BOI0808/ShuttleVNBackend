@@ -16,7 +16,13 @@ public class BookingStatusHistory
     public DateTime ChangedAt { get; set; }
     public string Reason { get; set; } = string.Empty;
 
-    public virtual Booking Booking { get; set; } = null!;
+    private Booking? _booking;
+    public virtual Booking Booking
+    {
+        get => _booking ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Booking));
+        set => _booking = value;
+    }
+
     public virtual Employee? Employee { get; set; }
     public virtual Customer? Customer { get; set; }
 }
