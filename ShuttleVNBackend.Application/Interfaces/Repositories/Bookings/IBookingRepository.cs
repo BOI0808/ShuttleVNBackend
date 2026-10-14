@@ -12,4 +12,6 @@ public interface IBookingRepository
     Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default);
     Task<BookingInvoiceDto?> GetValidInvoiceAsync(Guid bookingId, CancellationToken ct = default);
     Task<List<BookingStatusHistoryDto>> GetStatusHistoryAsync(Guid bookingId, CancellationToken ct = default);
+    Task<bool> HasOverlapAsync(int courtId, DateOnly date, TimeOnly start, TimeOnly end,
+        Guid excludeBookingId, CancellationToken ct = default);
 }

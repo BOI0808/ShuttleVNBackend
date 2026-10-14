@@ -101,4 +101,13 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
                 .FirstOrDefault(),
             b.CreatedAt));
     }
+
+    public async Task<bool> HasOverlapAsync(int courtId, DateOnly date, TimeOnly start, TimeOnly end,
+        Guid excludeBookingId, CancellationToken ct = default)
+    {
+        return await dbContext.Bookings.AnyAsync(b =>
+            b.CourtId == courtId && b.Date == date && b.BookingId != excludeBookingId
+            && b.Status != BookingStatus.Cancelled
+            && b.StartTime < end && b.EndTime > start, ct);
+    }
 }
