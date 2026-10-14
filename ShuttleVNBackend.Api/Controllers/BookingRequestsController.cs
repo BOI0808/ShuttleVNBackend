@@ -30,4 +30,31 @@ public class BookingRequestsController(BookingRequestService bookingRequestServi
     {
         return Ok(ApiResponseFactory.Success(await bookingRequestService.GetDetailAsync(id, ct)));
     }
+
+    [HttpPost("{id:guid}/confirm")]
+    public async Task<ActionResult<ApiResponse<BookingDetailDto>>> Confirm(
+        [FromRoute] Guid id,
+        [FromBody] ConfirmBookingDto dto,
+        CancellationToken ct = default)
+    {
+        return Ok(ApiResponseFactory.Success(await bookingRequestService.ConfirmAsync(id, dto, ct)));
+    }
+
+    [HttpPost("{id:guid}/reject")]
+    public async Task<ActionResult<ApiResponse<BookingDetailDto>>> Reject(
+        [FromRoute] Guid id,
+        [FromBody] RejectBookingDto dto,
+        CancellationToken ct = default)
+    {
+        return Ok(ApiResponseFactory.Success(await bookingRequestService.RejectAsync(id, dto, ct)));
+    }
+
+    [HttpPost("{id:guid}/complete")]
+    public async Task<ActionResult<ApiResponse<BookingDetailDto>>> Complete(
+        [FromRoute] Guid id,
+        [FromBody] ConfirmBookingDto? dto,
+        CancellationToken ct = default)
+    {
+        return Ok(ApiResponseFactory.Success(await bookingRequestService.CompleteAsync(id, dto, ct)));
+    }
 }
