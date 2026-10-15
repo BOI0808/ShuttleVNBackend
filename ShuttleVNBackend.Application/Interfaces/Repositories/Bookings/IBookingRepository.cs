@@ -16,4 +16,6 @@ public interface IBookingRepository
         Guid excludeBookingId, CancellationToken ct = default);
     Task<PagedResult<BookingRow>> GetByCustomerAsync(Guid customerId, PageRequest page,
         CancellationToken ct = default);
+    Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page,
+        CancellationToken ct = default);
 }

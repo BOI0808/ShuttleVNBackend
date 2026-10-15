@@ -3,6 +3,7 @@ using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Bookings;
+using ShuttleVNBackend.Application.UseCases.Users.Helpers;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;
@@ -133,5 +134,51 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             PageSize = page.PageSize,
             TotalCount = totalCount
         };
+    }
+
+    public async Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page,
+        CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings.AsNoTracking().AsQueryable();
+
+        if (criteria.FromDate is { } from) query = query.Where(b => b.Date >= from);
+        if (criteria.ToDate is { } to) query = query.Where(b => b.Date <= to);
+        if (criteria.CourtId is { } courtId) query = query.Where(b => b.CourtId == courtId);
+        if (criteria.Status is { } status) query = query.Where(b => b.Status == status);
+        if (criteria.CustomerId is { } customerId) query = query.Where(b => b.CustomerId == customerId);
+
+        var term = criteria.Keyword?.Trim();
+        if (!string.IsNullOrEmpty(term))
+        {
+            var pattern = ToLikePattern(term);
+            var phonePattern = ToLikePattern(CustomerProfileRules.NormalizePhone(term));
+            query = query.Where(b =>
+                EF.Functions.ILike(b.BookingCode, pattern)
+                || EF.Functions.ILike(b.Customer.FullName, pattern)
+                || EF.Functions.ILike(b.Customer.Email, pattern)
+                || EF.Functions.ILike(b.Customer.Phone, phonePattern));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await ProjectRows(query
+                .OrderByDescending(b => b.Date)
+                .ThenByDescending(b => b.StartTime)
+                .ThenBy(b => b.BookingId)
+                .Skip((page.PageNumber - 1) * page.PageSize)
+                .Take(page.PageSize))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    private static string ToLikePattern(string term)
+    {
+        return $"%{term.Replace("\\", @"\\").Replace("%", "\\%").Replace("_", "\\_")}%";
     }
 }

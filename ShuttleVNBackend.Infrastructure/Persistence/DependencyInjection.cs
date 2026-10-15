@@ -61,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<BookingRequestService>();
+        services.AddScoped<AdminBookingService>();
 
         services.AddScoped<AuditInterceptor>();
 

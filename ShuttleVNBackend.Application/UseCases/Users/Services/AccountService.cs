@@ -108,6 +108,7 @@ public class AccountService(
         if (account.Status == status) return;
 
         account.Status = status;
+        if (status == AccountStatus.Active) account.FailedLoginAttempts = 0;
         account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
     }
