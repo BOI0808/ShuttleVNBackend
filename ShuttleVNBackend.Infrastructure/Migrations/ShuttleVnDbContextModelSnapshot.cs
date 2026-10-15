@@ -683,7 +683,7 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.BookingPriceSegment", b =>
                 {
                     b.HasOne("ShuttleVNBackend.Core.Entities.Bookings.Booking", "Booking")
-                        .WithMany()
+                        .WithMany("PriceSegments")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -717,7 +717,7 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.Invoice", b =>
                 {
                     b.HasOne("ShuttleVNBackend.Core.Entities.Bookings.Booking", "Booking")
-                        .WithMany()
+                        .WithMany("Invoices")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -782,6 +782,13 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
                         .WithOne("Employee")
                         .HasForeignKey("ShuttleVNBackend.Core.Entities.Users.Employee", "AccountId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Bookings.Booking", b =>
+                {
+                    b.Navigation("Invoices");
+
+                    b.Navigation("PriceSegments");
                 });
 
             modelBuilder.Entity("ShuttleVNBackend.Core.Entities.Courts.BadmintonCourt", b =>
