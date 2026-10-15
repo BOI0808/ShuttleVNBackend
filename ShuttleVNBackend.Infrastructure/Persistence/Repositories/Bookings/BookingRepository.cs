@@ -110,4 +110,28 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             && b.Status != BookingStatus.Cancelled
             && b.StartTime < end && b.EndTime > start, ct);
     }
+
+    public async Task<PagedResult<BookingRow>> GetByCustomerAsync(Guid customerId, PageRequest page,
+        CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings.AsNoTracking().Where(b => b.CustomerId == customerId);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await ProjectRows(query
+                .OrderByDescending(b => b.Date)
+                .ThenByDescending(b => b.StartTime)
+                .ThenByDescending(b => b.CreatedAt)
+                .ThenBy(b => b.BookingId)
+                .Skip((page.PageNumber - 1) * page.PageSize)
+                .Take(page.PageSize))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
+        };
+    }
 }
