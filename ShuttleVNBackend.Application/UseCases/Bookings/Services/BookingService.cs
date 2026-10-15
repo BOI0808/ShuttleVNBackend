@@ -28,25 +28,23 @@ public class BookingService(
     private static readonly TimeZoneInfo VietnamTz =
         TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
 
-    public async Task<PricePreviewResponse> GetPricePreviewAsync(
-        PricePreviewRequest request, CancellationToken ct = default)
+    public async Task<PricePreviewResponse> GetPricePreviewAsync(PricePreviewDto dto, CancellationToken ct = default)
     {
-        ValidateTimeSlot(request.StartTime, request.EndTime);
+        ValidateTimeSlot(dto.StartTime, dto.EndTime);
 
         var schedule = await bookingRepository.GetScheduleAsync(
-            request.CourtId, GetIsoDayOfWeek(request.Date), ct);
+            dto.CourtId, GetIsoDayOfWeek(dto.Date), ct);
 
-        ValidateSchedule(schedule, request.StartTime, request.EndTime);
+        ValidateSchedule(schedule, dto.StartTime, dto.EndTime);
 
         var rules = await bookingRepository.GetPricingRulesAsync(
-            request.CourtId, GetIsoDayOfWeek(request.Date), ct);
+            dto.CourtId, GetIsoDayOfWeek(dto.Date), ct);
 
-        var (totalCost, segments) = CalculatePrice(request.StartTime, request.EndTime, rules);
+        var (totalCost, segments) = CalculatePrice(dto.StartTime, dto.EndTime, rules);
         return new PricePreviewResponse(totalCost, segments);
     }
 
-    public async Task<BookingDto> CreateBookingAsync(
-        CreateBookingRequest request, CancellationToken ct = default)
+    public async Task<BookingDto> CreateBookingAsync(CreateBookingDto dto, CancellationToken ct = default)
     {
         if (currentUser.ActorType != ActorType.Customer || currentUser.ActorId is null)
             throw new UnauthorizedException("Only authenticated customers can create bookings.");
@@ -54,19 +52,17 @@ public class BookingService(
         var customer = await customerRepository.GetByAccountIdAsync(currentUser.ActorId.Value, ct)
             ?? throw new UnauthorizedException("Customer profile not found.");
 
-        return await CreateBookingCoreAsync(
-            customer, request.CourtId, request.Date,
-            request.StartTime, request.EndTime,
-            request.ConfirmedTotalCost,
-            ActorType.Customer, customer.CustomerId, null, ct);
+        return await CreateBookingAsync(
+            dto,
+            customer, ActorType.Customer,
+            customer.CustomerId, null, ct);
     }
 
-    public async Task<BookingDto> QuickBookingAsync(
-        QuickBookingRequest request, CancellationToken ct = default)
+    public async Task<BookingDto> QuickBookingAsync(QuickBookingDto dto, CancellationToken ct = default)
     {
-        ValidateContactInfo(request.FullName, request.Phone, request.Email);
+        ValidateContactInfo(dto.FullName, dto.Phone, dto.Email);
 
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
         var code = await verificationCodeRepository.GetActiveAsync(
             normalizedEmail, CodeType.QuickBooking, ct);
@@ -75,7 +71,7 @@ public class BookingService(
             throw new ValidationException("Verification code is invalid or expired.",
                 new Dictionary<string, string[]> { ["VerificationCode"] = ["Invalid or expired code."] });
 
-        var codeHash = HashCode(request.VerificationCode);
+        var codeHash = HashCode(dto.VerificationCode);
         if (code.CodeHash != codeHash)
         {
             code.Attempt++;
@@ -92,8 +88,8 @@ public class BookingService(
             customer = new Customer
             {
                 CustomerId = Guid.NewGuid(),
-                FullName = request.FullName.Trim(),
-                Phone = NormalizePhone(request.Phone),
+                FullName = dto.FullName.Trim(),
+                Phone = NormalizePhone(dto.Phone),
                 Email = normalizedEmail,
                 CreatedAt = clock.GetUtcNow().UtcDateTime,
                 UpdatedAt = clock.GetUtcNow().UtcDateTime
@@ -101,20 +97,21 @@ public class BookingService(
             await unitOfWork.AddAsync(customer, ct);
         }
 
-        var booking = await CreateBookingCoreAsync(
-            customer, request.CourtId, request.Date,
-            request.StartTime, request.EndTime,
-            request.ConfirmedTotalCost,
-            ActorType.Customer, customer.CustomerId, null, ct,
+        var booking = await CreateBookingAsync(
+            dto,
+            customer, ActorType.Customer,
+            customer.CustomerId, null, ct,
             consumeCode: code);
 
         return booking;
     }
 
     public async Task<BookingDto> CancelBookingAsync(
-        Guid bookingId, CancelBookingRequest request, CancellationToken ct = default)
+        Guid bookingId,
+        CancelBookingDto dto,
+        CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Reason))
+        if (string.IsNullOrWhiteSpace(dto.Reason))
             throw new ValidationException("Reason is required.",
                 new Dictionary<string, string[]> { ["Reason"] = ["Reason is required."] });
 
@@ -141,16 +138,14 @@ public class BookingService(
             var invoice = booking.Invoices.FirstOrDefault(i =>
                 i.Status is InvoiceStatus.Paid or InvoiceStatus.Unpaid);
             if (invoice?.Status == InvoiceStatus.Paid)
-                throw new ConflictException(
-                    "Paid bookings must be cancelled through an employee.");
+                throw new ConflictException("Paid bookings must be cancelled through an employee.");
         }
 
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var startUtc = TimeZoneInfo.ConvertTimeToUtc(
             booking.Date.ToDateTime(booking.StartTime), VietnamTz);
         if (nowUtc > startUtc.AddHours(-1))
-            throw new ConflictException(
-                "Booking can only be cancelled at least 1 hour before start time.");
+            throw new ConflictException("Booking can only be cancelled at least 1 hour before start time.");
 
         var oldStatus = booking.Status;
         booking.Status = BookingStatus.Cancelled;
@@ -162,7 +157,7 @@ public class BookingService(
             unpaidInvoice.Status = InvoiceStatus.Cancelled;
             unpaidInvoice.CancelledAt = nowUtc;
             unpaidInvoice.CancellationActorType = currentUser.ActorType;
-            unpaidInvoice.CancellationReason = request.Reason;
+            unpaidInvoice.CancellationReason = dto.Reason;
             if (currentUser.ActorType == ActorType.Customer)
             {
                 var customer = await customerRepository.GetByAccountIdAsync(currentUser.ActorId!.Value, ct);
@@ -178,7 +173,7 @@ public class BookingService(
             NewStatus = BookingStatus.Cancelled,
             ActorType = currentUser.ActorType,
             ChangedAt = nowUtc,
-            Reason = request.Reason
+            Reason = dto.Reason
         };
 
         switch (currentUser.ActorType)
@@ -200,9 +195,7 @@ public class BookingService(
         return BookingDto.FromEntity(booking);
     }
 
-    // US-7: Get booking history for authenticated customer
-    public async Task<PagedResult<BookingDto>> GetMyBookingsAsync(
-        PageRequest page, CancellationToken ct = default)
+    public async Task<PagedResult<BookingDto>> GetOwnBookingsAsync(PageRequest page, CancellationToken ct = default)
     {
         if (currentUser.ActorType != ActorType.Customer || currentUser.ActorId is null)
             throw new UnauthorizedException("Only authenticated customers can view booking history.");
@@ -212,45 +205,83 @@ public class BookingService(
 
         var paged = await bookingRepository.GetByCustomerAsync(customer.CustomerId, page, ct);
 
-        var dtos = paged.Items.Select(BookingDto.FromEntity).ToList();
+        var dtoList = paged.Items.Select(BookingDto.FromEntity).ToList();
         return new PagedResult<BookingDto>
         {
-            Items = dtos,
+            Items = dtoList,
             PageNumber = paged.PageNumber,
             PageSize = paged.PageSize,
             TotalCount = paged.TotalCount
         };
     }
 
-    private async Task<BookingDto> CreateBookingCoreAsync(
+    public async Task<BookingDto> GetBookingByIdAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        var booking = await bookingRepository.GetByIdWithDetailsAsync(bookingId, ct)
+            ?? throw new NotFoundException("Booking not found.");
+
+        if (currentUser.ActorType != ActorType.Customer)
+            return BookingDto.FromEntity(booking);
+        
+        var customer = currentUser.ActorId is not null
+            ? await customerRepository.GetByAccountIdAsync(currentUser.ActorId.Value, ct)
+            : null;
+
+        if (customer is null || booking.CustomerId != customer.CustomerId)
+            throw new NotFoundException("Booking not found.");
+
+        return BookingDto.FromEntity(booking);
+    }
+
+    public async Task<InvoiceDto> GetBookingInvoiceAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        var booking = await bookingRepository.GetByIdWithDetailsAsync(bookingId, ct)
+            ?? throw new NotFoundException("Booking not found.");
+
+        if (currentUser.ActorType == ActorType.Customer)
+        {
+            var customer = currentUser.ActorId is not null
+                ? await customerRepository.GetByAccountIdAsync(currentUser.ActorId.Value, ct)
+                : null;
+
+            if (customer is null || booking.CustomerId != customer.CustomerId)
+                throw new NotFoundException("Booking not found.");
+        }
+
+        var invoice = booking.Invoices
+            .OrderByDescending(i => i.IssuedAt)
+            .FirstOrDefault()
+            ?? throw new NotFoundException("Invoice not found.");
+
+        return InvoiceDto.FromEntity(invoice);
+    }
+
+    private async Task<BookingDto> CreateBookingAsync(
+        CreateBookingDto dto,
         Customer customer,
-        int courtId,
-        DateOnly date,
-        TimeOnly startTime,
-        TimeOnly endTime,
-        decimal? confirmedTotalCost,
         ActorType actorType,
         Guid? actorCustomerId,
         Guid? actorEmployeeId,
         CancellationToken ct,
         VerificationCode? consumeCode = null)
     {
-        ValidateTimeSlot(startTime, endTime);
+        ValidateTimeSlot(dto.StartTime, dto.EndTime);
 
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        var startUtc = TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(startTime), VietnamTz);
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(dto.Date.ToDateTime(dto.StartTime), VietnamTz);
 
         if (startUtc <= nowUtc)
             throw new ConflictException("Booking start time must be in the future.");
 
-        var isoDow = GetIsoDayOfWeek(date);
-        var schedule = await bookingRepository.GetScheduleAsync(courtId, isoDow, ct);
-        ValidateSchedule(schedule, startTime, endTime);
+        var isoDow = GetIsoDayOfWeek(dto.Date);
+        var schedule = await bookingRepository.GetScheduleAsync(dto.CourtId, isoDow, ct);
+        ValidateSchedule(schedule, dto.StartTime, dto.EndTime);
 
-        var rules = await bookingRepository.GetPricingRulesAsync(courtId, isoDow, ct);
-        var (totalCost, segments) = CalculatePrice(startTime, endTime, rules);
+        var rules = await bookingRepository.GetPricingRulesAsync(dto.CourtId, isoDow, ct);
+        var (totalCost, segments)
+            = CalculatePrice(dto.StartTime, dto.EndTime, rules);
 
-        if (confirmedTotalCost.HasValue && confirmedTotalCost.Value != totalCost)
+        if (dto.TotalCost.HasValue && dto.TotalCost.Value != totalCost)
             throw new ConflictException(
                 $"Price has changed. New total cost is {totalCost} VND. Please confirm the new price.");
 
@@ -261,10 +292,10 @@ public class BookingService(
             BookingId = Guid.NewGuid(),
             BookingCode = bookingCode,
             CustomerId = customer.CustomerId,
-            CourtId = courtId,
-            Date = date,
-            StartTime = startTime,
-            EndTime = endTime,
+            CourtId = dto.CourtId,
+            Date = dto.Date,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
             Status = BookingStatus.Pending,
             TotalCost = totalCost,
             CreatedAt = nowUtc,
