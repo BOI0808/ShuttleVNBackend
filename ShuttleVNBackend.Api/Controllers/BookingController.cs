@@ -79,7 +79,7 @@ public class BookingController(BookingService bookingService) : ControllerBase
         return Ok(ApiResponseFactory.Success(result));
     }
     
-    [HttpGet]
+    [HttpGet("{bookingId:guid}/invoice")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<InvoiceDto>>> GetInvoice(
         [FromRoute] Guid bookingId,
