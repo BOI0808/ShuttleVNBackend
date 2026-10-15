@@ -97,13 +97,18 @@ public class AccountService(
                ?? throw new NotFoundException("Account not found");
     }
 
-    public async Task UpdateAccountStatus(Guid accountId, AccountStatus status)
+    public async Task UpdateAccountStatus(Guid accountId, AccountStatus status, bool isAdmin)
     {
-        var account = await accountRepository.GetByIdAsync(accountId);
-        if (account is null)
-            throw new NotFoundException("Account not found");
+        var account = await accountRepository.GetByIdAsync(accountId)
+                      ?? throw new NotFoundException("Account not found");
+
+        if (!isAdmin && account.AccountType != AccountType.Customer)
+            throw new ForbiddenException("Staff can only manage customer accounts");
+
+        if (account.Status == status) return;
 
         account.Status = status;
+        account.UpdatedAt = DateTime.UtcNow;
         await unitOfWork.SaveChangesAsync();
     }
 
