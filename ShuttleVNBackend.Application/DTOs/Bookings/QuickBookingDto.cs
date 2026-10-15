@@ -1,6 +1,6 @@
 ﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
-public sealed record QuickBookingRequest(
+public sealed record QuickBookingDto(
     string FullName,
     string Phone,
     string Email,
@@ -8,6 +8,12 @@ public sealed record QuickBookingRequest(
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    decimal? ConfirmedTotalCost,
+    decimal? TotalCost,
     string VerificationCode
+): CreateBookingDto(
+    CourtId,
+    Date,
+    StartTime,
+    EndTime,
+    TotalCost
 );
