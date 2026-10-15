@@ -1,5 +1,5 @@
 ﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
-public sealed record CancelBookingRequest(
+public sealed record CancelBookingDto(
     string Reason
 );

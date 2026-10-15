@@ -1,6 +1,6 @@
 ﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
-public sealed record PricePreviewRequest(
+public sealed record PricePreviewDto(
     int CourtId,
     DateOnly Date,
     TimeOnly StartTime,

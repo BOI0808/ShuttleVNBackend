@@ -1,9 +1,9 @@
 ﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
-public sealed record CreateBookingRequest(
+public record CreateBookingDto(
     int CourtId,
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    decimal? ConfirmedTotalCost
+    decimal? TotalCost
 );
