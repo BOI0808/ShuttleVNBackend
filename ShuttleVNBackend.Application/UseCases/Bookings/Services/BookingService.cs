@@ -185,7 +185,7 @@ public class BookingService(
                     break;
                 }
             case ActorType.Employee:
-                history.EmployeeId = currentUser.ActorId;
+                history.ChangedByEmployee = currentUser.ActorId;
                 break;
         }
 
@@ -203,7 +203,7 @@ public class BookingService(
         var customer = await customerRepository.GetByAccountIdAsync(currentUser.ActorId.Value, ct)
             ?? throw new UnauthorizedException("Customer profile not found.");
 
-        var paged = await bookingRepository.GetByCustomerAsync(customer.CustomerId, page, ct);
+        var paged = await bookingRepository.GetByCustomerWithDetailsAsync(customer.CustomerId, page, ct);
 
         var dtoList = paged.Items.Select(BookingDto.FromEntity).ToList();
         return new PagedResult<BookingDto>
@@ -325,7 +325,7 @@ public class BookingService(
             NewStatus = BookingStatus.Pending,
             ActorType = actorType,
             CustomerId = actorCustomerId,
-            EmployeeId = actorEmployeeId,
+            ChangedByEmployee = actorEmployeeId,
             ChangedAt = nowUtc,
             Reason = "Booking created"
         };
