@@ -18,6 +18,31 @@ public class Booking
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public virtual Customer Customer { get; set; } = null!;
-    public virtual BadmintonCourt Court { get; set; } = null!;
+    private Customer? _customer;
+    public virtual Customer Customer
+    {
+        get => _customer ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Customer));
+        set => _customer = value;
+    }
+
+    private BadmintonCourt? _court;
+    public virtual BadmintonCourt Court
+    {
+        get => _court ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Court));
+        set => _court = value;
+    }
+
+    private ICollection<BookingPriceSegment>? _priceSegments;
+    public virtual ICollection<BookingPriceSegment> PriceSegments
+    {
+        get => _priceSegments ?? throw new InvalidOperationException("Uninitialized property: " + nameof(PriceSegments));
+        set => _priceSegments = value;
+    }
+
+    private ICollection<Invoice>? _invoices;
+    public virtual ICollection<Invoice> Invoices
+    {
+        get => _invoices ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Invoices));
+        set => _invoices = value;
+    }
 }

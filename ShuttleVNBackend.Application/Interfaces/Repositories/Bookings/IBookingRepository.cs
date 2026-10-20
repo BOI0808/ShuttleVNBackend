@@ -1,6 +1,7 @@
-using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Bookings;
+using ShuttleVNBackend.Core.Entities.Bookings;
+using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 
@@ -18,4 +19,11 @@ public interface IBookingRepository
         CancellationToken ct = default);
     Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page,
         CancellationToken ct = default);
+
+    Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default);
+    Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default);
+    Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
+    Task<PagedResult<Booking>> GetByCustomerWithDetailsAsync(Guid customerId, PageRequest page, CancellationToken ct = default);
+    Task<CourtSchedule?> GetScheduleAsync(int courtId, int dayOfWeek, CancellationToken ct = default);
+    Task<List<PricingRule>> GetPricingRulesAsync(int courtId, int dayOfWeek, CancellationToken ct = default);
 }

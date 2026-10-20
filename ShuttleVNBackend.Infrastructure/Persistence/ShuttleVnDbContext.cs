@@ -196,7 +196,7 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.PaymentMethod).HasConversion<string>();
 
             entity.HasOne(e => e.Booking)
-                .WithMany()
+                .WithMany(b => b.Invoices)
                 .HasForeignKey(e => e.BookingId);
 
             entity.HasOne(e => e.IssueEmployee)
@@ -256,6 +256,9 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         {
             entity.HasKey(e => new { e.BookingId, e.SegmentNo });
             entity.Property(e => e.PricePerHour).HasPrecision(18, 0);
+            entity.HasOne(e => e.Booking)
+                .WithMany(b => b.PriceSegments)
+                .HasForeignKey(e => e.BookingId);
         });
 
         modelBuilder.Entity<InvoiceDailyCounter>(entity => entity.HasKey(e => e.IssueDate));
