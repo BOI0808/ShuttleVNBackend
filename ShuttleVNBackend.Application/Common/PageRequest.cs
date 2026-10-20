@@ -1,4 +1,4 @@
-﻿namespace ShuttleVNBackend.Application.Common;
+namespace ShuttleVNBackend.Application.Common;
 
 public record PageRequest
 {

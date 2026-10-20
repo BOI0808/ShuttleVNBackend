@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Application.Exceptions;

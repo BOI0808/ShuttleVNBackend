@@ -1,4 +1,4 @@
-﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
+namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
 public sealed record PricePreviewDto(
     int CourtId,

@@ -1,4 +1,4 @@
-﻿namespace ShuttleVNBackend.Application.DTOs.Bookings;
+namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
 public record CreateBookingDto(
     int CourtId,

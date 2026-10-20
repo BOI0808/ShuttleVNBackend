@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Bookings;

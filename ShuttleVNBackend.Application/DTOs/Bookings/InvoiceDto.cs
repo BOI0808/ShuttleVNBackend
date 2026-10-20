@@ -1,4 +1,4 @@
-﻿using ShuttleVNBackend.Core.Entities.Bookings;
+using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
 namespace ShuttleVNBackend.Application.DTOs.Bookings;
