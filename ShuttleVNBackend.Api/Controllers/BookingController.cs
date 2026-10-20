@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShuttleVNBackend.Api.Common;
@@ -26,23 +27,37 @@ public class BookingController(BookingService bookingService) : ControllerBase
         return Ok(ApiResponseFactory.Success(result));
     }
 
+    /// <summary>Creates a booking with confirmed TotalCost and QuoteFingerprint from price-preview.</summary>
+    /// <response code="400">Price confirmation is missing or invalid.</response>
+    /// <response code="409">A changed price includes the fresh quote in data for explicit confirmation. Other conflicts return null data.</response>
     [HttpPost]
     [Authorize(Policy = "CustomerOnly")]
+    [ProducesResponseType(typeof(ApiResponse<BookingDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PricePreviewResponse>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<BookingDto>>> CreateBooking(
         [FromBody] CreateBookingDto dto,
+        [FromHeader(Name = "Idempotency-Key"), Required] string idempotencyKey,
         CancellationToken ct = default)
     {
-        var result = await bookingService.CreateBookingAsync(dto, ct);
+        var result = await bookingService.CreateBookingAsync(dto, idempotencyKey, ct);
         return Ok(ApiResponseFactory.Success(result));
     }
 
+    /// <summary>Creates a guest booking with confirmed TotalCost and QuoteFingerprint from price-preview.</summary>
+    /// <response code="400">Price confirmation is missing or invalid.</response>
+    /// <response code="409">A changed price includes the fresh quote in data for explicit confirmation. Other conflicts return null data.</response>
     [HttpPost("quick")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<BookingDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PricePreviewResponse>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<BookingDto>>> QuickBooking(
         [FromBody] QuickBookingDto dto,
+        [FromHeader(Name = "Idempotency-Key"), Required] string idempotencyKey,
         CancellationToken ct = default)
     {
-        var result = await bookingService.QuickBookingAsync(dto, ct);
+        var result = await bookingService.QuickBookingAsync(dto, idempotencyKey, ct);
         return Ok(ApiResponseFactory.Success(result));
     }
 
@@ -51,9 +66,10 @@ public class BookingController(BookingService bookingService) : ControllerBase
     public async Task<ActionResult<ApiResponse<BookingDto>>> CancelBooking(
         [FromRoute] Guid bookingId,
         [FromBody] CancelBookingDto dto,
+        [FromHeader(Name = "Idempotency-Key"), Required] string idempotencyKey,
         CancellationToken ct = default)
     {
-        var result = await bookingService.CancelBookingAsync(bookingId, dto, ct);
+        var result = await bookingService.CancelBookingAsync(bookingId, dto, idempotencyKey, ct);
         return Ok(ApiResponseFactory.Success(result));
     }
 

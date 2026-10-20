@@ -10,7 +10,6 @@ using ShuttleVNBackend.Application.Interfaces.Users;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.Bookings.Services;
 using ShuttleVNBackend.Application.UseCases.Courts.Services;
-using ShuttleVNBackend.Application.UseCases.Bookings.Services;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
 using ShuttleVNBackend.Application.UseCases.System;
 using ShuttleVNBackend.Application.UseCases.Users.Services;
@@ -36,6 +35,9 @@ public static class DependencyInjection
         });
 
         services.AddSingleton(TimeProvider.System);
+        services.AddDataProtection();
+        services.AddHttpContextAccessor();
+        services.AddScoped<IBookingIdempotency, BookingIdempotency>();
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ShuttleVnDbContext>());
 

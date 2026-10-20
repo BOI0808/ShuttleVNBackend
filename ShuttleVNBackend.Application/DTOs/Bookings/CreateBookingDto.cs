@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
 public record CreateBookingDto(
@@ -5,5 +7,6 @@ public record CreateBookingDto(
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    decimal? TotalCost
+    [Required] decimal? TotalCost,
+    string? QuoteFingerprint = null
 );

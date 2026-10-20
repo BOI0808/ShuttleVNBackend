@@ -9,5 +9,6 @@ public sealed record PricePreviewDto(
 
 public sealed record PricePreviewResponse(
     decimal TotalCost,
-    IReadOnlyList<BookingPriceSegmentDto> Segments
+    IReadOnlyList<BookingPriceSegmentDto> Segments,
+    string? QuoteFingerprint = null
 );

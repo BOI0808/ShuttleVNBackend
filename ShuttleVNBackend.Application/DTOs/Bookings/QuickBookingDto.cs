@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
 public sealed record QuickBookingDto(
@@ -8,12 +10,14 @@ public sealed record QuickBookingDto(
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    decimal? TotalCost,
-    string VerificationCode
-): CreateBookingDto(
+    [Required] decimal? TotalCost,
+    string VerificationCode,
+    string? QuoteFingerprint = null
+) : CreateBookingDto(
     CourtId,
     Date,
     StartTime,
     EndTime,
-    TotalCost
+    TotalCost,
+    QuoteFingerprint
 );

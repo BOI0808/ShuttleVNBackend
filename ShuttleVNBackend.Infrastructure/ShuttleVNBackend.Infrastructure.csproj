@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <ProjectReference Include="..\ShuttleVNBackend.Application\ShuttleVNBackend.Application.csproj"/>
         <ProjectReference Include="..\ShuttleVNBackend.Core\ShuttleVNBackend.Core.csproj"/>
     </ItemGroup>
