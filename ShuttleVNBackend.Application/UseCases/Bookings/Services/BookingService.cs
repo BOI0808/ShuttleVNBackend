@@ -72,7 +72,9 @@ public class BookingService(
                 new Dictionary<string, string[]> { ["VerificationCode"] = ["Invalid or expired code."] });
 
         var codeHash = HashCode(dto.VerificationCode);
-        if (code.CodeHash != codeHash)
+        if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(code.CodeHash),
+                Encoding.UTF8.GetBytes(codeHash)))
         {
             code.Attempt++;
             if (code.Attempt >= 5)
@@ -451,7 +453,7 @@ public class BookingService(
     private static string HashCode(string code)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim()));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
+        return Convert.ToBase64String(bytes);
     }
 
 }
