@@ -15,4 +15,8 @@ public class UserAccount
 
     public virtual Customer? Customer { get; set; }
     public virtual Employee? Employee { get; set; }
+
+    public string GetRole() =>
+        AccountType == AccountType.Customer ? "Customer"
+        : Employee?.IsAdmin == true ? "Admin" : "Employee";
 }

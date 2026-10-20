@@ -22,20 +22,24 @@ public class PricingRuleRepository(ShuttleVnDbContext dbContext) : IPricingRuleR
             .ToListAsync(ct);
     }
 
-    public async Task<List<PricingRule>> ReplaceDayAsync(
+    public Task<List<PricingRule>> ReplaceDayAsync(
         int courtId,
         int dayOfWeek,
         IReadOnlyCollection<PricingRule> pricingRules,
         CancellationToken ct = default)
     {
-        var oldRules = await dbContext.PricingRules
-            .Where(r => r.CourtId == courtId && r.DayOfWeek == dayOfWeek)
-            .ToListAsync(ct);
+        return dbContext.ExecuteInTransactionAsync(async token =>
+        {
+            await dbContext.LockCourtAsync(courtId, token);
+            var oldRules = await dbContext.PricingRules
+                .Where(r => r.CourtId == courtId && r.DayOfWeek == dayOfWeek)
+                .ToListAsync(token);
 
-        dbContext.PricingRules.RemoveRange(oldRules);
-        dbContext.PricingRules.AddRange(pricingRules);
-        await dbContext.SaveChangesAsync(ct);
+            dbContext.PricingRules.RemoveRange(oldRules);
+            dbContext.PricingRules.AddRange(pricingRules);
+            await dbContext.SaveChangesAsync(token);
 
-        return pricingRules.OrderBy(r => r.StartTime).ToList();
+            return pricingRules.OrderBy(r => r.StartTime).ToList();
+        }, ct);
     }
 }

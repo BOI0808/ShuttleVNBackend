@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace ShuttleVNBackend.Application.Exceptions;
 
@@ -16,21 +16,21 @@ public class AppException : Exception
 }
 
 public class NotFoundException(string message = "Resource not found")
-    : AppException(message, StatusCodes.Status404NotFound, "NOT_FOUND");
+    : AppException(message, (int)HttpStatusCode.NotFound, "NOT_FOUND");
 
 public class ValidationException(
     string message = "Validation failed",
     IDictionary<string, string[]>? errors = null)
-    : AppException(message, StatusCodes.Status400BadRequest, "VALIDATION_ERROR")
+    : AppException(message, (int)HttpStatusCode.BadRequest, "VALIDATION_ERROR")
 {
     public IDictionary<string, string[]> Errors { get; } = errors ?? new Dictionary<string, string[]>();
 }
 
 public class UnauthorizedException(string message = "Unauthorized")
-    : AppException(message, StatusCodes.Status401Unauthorized, "UNAUTHORIZED");
+    : AppException(message, (int)HttpStatusCode.Unauthorized, "UNAUTHORIZED");
 
 public class ForbiddenException(string message = "Forbidden")
-    : AppException(message, StatusCodes.Status403Forbidden, "FORBIDDEN");
+    : AppException(message, (int)HttpStatusCode.Forbidden, "FORBIDDEN");
 
 public class ConflictException(string message = "Resource already exists")
-    : AppException(message, StatusCodes.Status409Conflict, "CONFLICT");
+    : AppException(message, (int)HttpStatusCode.Conflict, "CONFLICT");

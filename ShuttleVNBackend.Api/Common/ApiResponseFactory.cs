@@ -11,8 +11,9 @@ public class ApiResponseFactory
 
     public static ApiResponse<T> Failure<T>(
         string message,
-        IDictionary<string, string[]>? errors = null)
+        IDictionary<string, string[]>? errors = null,
+        T? data = default)
     {
-        return new ApiResponse<T>(false, default, message, errors);
+        return new ApiResponse<T>(false, data, message, errors);
     }
 }

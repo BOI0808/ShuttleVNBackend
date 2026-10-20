@@ -25,8 +25,8 @@ public class ExceptionHandlingMiddleware(
             if (ex is ValidationException validationEx)
                 errors = validationEx.Errors;
 
-            var problem = ApiResponseFactory.Failure<object>(
-                ex.Message, errors);
+            var data = ex is PriceChangedException priceChanged ? priceChanged.Quote : null;
+            var problem = ApiResponseFactory.Failure<object>(ex.Message, errors, data);
 
             await context.Response.WriteAsJsonAsync(problem);
         }

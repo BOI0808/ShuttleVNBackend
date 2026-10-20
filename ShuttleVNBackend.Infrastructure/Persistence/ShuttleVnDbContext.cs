@@ -45,6 +45,24 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
         Set<T>().RemoveRange(entities);
     }
 
+    public async Task LockCourtAsync(int courtId, CancellationToken ct = default)
+    {
+        if (Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Court row locks require an active transaction.");
+
+        await Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT 1 FROM \"BadmintonCourts\" WHERE \"CourtId\" = {courtId} FOR UPDATE", ct);
+    }
+
+    public async Task LockBookingAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        if (Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Booking row locks require an active transaction.");
+
+        await Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT 1 FROM \"Bookings\" WHERE \"BookingId\" = {bookingId} FOR UPDATE", ct);
+    }
+
     public async Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> action,
         CancellationToken ct = default)
     {

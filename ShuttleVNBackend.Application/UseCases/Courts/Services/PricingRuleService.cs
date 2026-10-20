@@ -1,5 +1,6 @@
 using ShuttleVNBackend.Application.DTOs.Courts;
 using ShuttleVNBackend.Application.Exceptions;
+using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
 using ShuttleVNBackend.Application.UseCases.Courts.Helpers;
 using ShuttleVNBackend.Core.Entities.Courts;
@@ -9,7 +10,8 @@ namespace ShuttleVNBackend.Application.UseCases.Courts.Services;
 public class PricingRuleService(
     IPricingRuleRepository pricingRuleRepository,
     ICourtRepository courtRepository,
-    TimeProvider clock)
+    TimeProvider clock,
+    IUnitOfWork unitOfWork)
 {
     public async Task<IReadOnlyList<PricingRule>> GetPricingRulesAsync(int courtId, CancellationToken ct = default)
     {
@@ -19,41 +21,45 @@ public class PricingRuleService(
             : rules.OrderBy(r => r.DayOfWeek).ThenBy(r => r.StartTime).ToList();
     }
 
-    public async Task<IReadOnlyList<PricingRule>> SavePricingRulesAsync(
+    public Task<IReadOnlyList<PricingRule>> SavePricingRulesAsync(
         int courtId,
         int dayOfWeek,
         SavePricingRuleDto request,
         CancellationToken ct = default)
     {
-        var errors = new Dictionary<string, string[]>();
-        CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);
+        return unitOfWork.ExecuteInTransactionAsync<IReadOnlyList<PricingRule>>(async token =>
+        {
+            await unitOfWork.LockCourtAsync(courtId, token);
+            var errors = new Dictionary<string, string[]>();
+            CourtValidation.ValidateDayOfWeek(dayOfWeek, errors);
 
-        var schedules = await courtRepository.GetSchedulesAsync(courtId, ct);
-        if (schedules is null)
-            throw new InvalidOperationException($"Court with id {courtId} not found.");
+            var schedules = await courtRepository.GetSchedulesAsync(courtId, token);
+            if (schedules is null)
+                throw new InvalidOperationException($"Court with id {courtId} not found.");
 
-        var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
-        if (schedule is null)
-            throw new InvalidOperationException($"Court {courtId} has no schedule for day {dayOfWeek}.");
+            var schedule = schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
+            if (schedule is null)
+                throw new InvalidOperationException($"Court {courtId} has no schedule for day {dayOfWeek}.");
 
-        ValidateRules(request.PricingRules, schedule, errors);
-        CourtValidation.ThrowIfAny(errors);
+            ValidateRules(request.PricingRules, schedule, errors);
+            CourtValidation.ThrowIfAny(errors);
 
-        var now = clock.GetUtcNow().UtcDateTime;
-        var rules = request.PricingRules
-            .OrderBy(r => r.StartTime)
-            .Select(r => new PricingRule
-            {
-                CourtId = courtId,
-                DayOfWeek = dayOfWeek,
-                StartTime = r.StartTime,
-                PricePerHour = r.PricePerHour,
-                CreatedAt = now,
-                UpdatedAt = now
-            })
-            .ToList();
+            var now = clock.GetUtcNow().UtcDateTime;
+            var rules = request.PricingRules
+                .OrderBy(r => r.StartTime)
+                .Select(r => new PricingRule
+                {
+                    CourtId = courtId,
+                    DayOfWeek = dayOfWeek,
+                    StartTime = r.StartTime,
+                    PricePerHour = r.PricePerHour,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                })
+                .ToList();
 
-        return await pricingRuleRepository.ReplaceDayAsync(courtId, dayOfWeek, rules, ct);
+            return await pricingRuleRepository.ReplaceDayAsync(courtId, dayOfWeek, rules, token);
+        }, ct);
     }
 
     private static void ValidateRules(

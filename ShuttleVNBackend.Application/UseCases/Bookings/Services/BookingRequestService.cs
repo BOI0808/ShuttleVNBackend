@@ -19,8 +19,44 @@ public class BookingRequestService(
     IInvoiceCodeGenerator invoiceCodeGenerator,
     IUnitOfWork unitOfWork,
     ICurrentUser currentUser,
-    TimeProvider clock)
+    TimeProvider clock,
+    IBookingIdempotency idempotency)
 {
+    public Task<BookingDetailDto> ConfirmAsync(Guid bookingId, ConfirmBookingDto dto, string key,
+        CancellationToken ct = default) => ExecuteMutationAsync(bookingId, key, "booking.confirm",
+        NormalizePayment(dto), token => ConfirmCoreAsync(bookingId, dto, token), ct);
+
+    public Task<BookingDetailDto> RejectAsync(Guid bookingId, RejectBookingDto dto, string key,
+        CancellationToken ct = default) => ExecuteMutationAsync(bookingId, key, "booking.reject",
+        new { Reason = dto.Reason?.Trim() }, token => RejectCoreAsync(bookingId, dto, token), ct);
+
+    public Task<BookingDetailDto> CompleteAsync(Guid bookingId, ConfirmBookingDto? dto, string key,
+        CancellationToken ct = default) => ExecuteMutationAsync(bookingId, key, "booking.complete",
+        NormalizePayment(dto), token => CompleteCoreAsync(bookingId, dto, token), ct);
+
+    private async Task<BookingDetailDto> ExecuteMutationAsync(Guid bookingId, string key, string operation,
+        object payload, Func<CancellationToken, Task<BookingMutationResponse<BookingDetailDto>>> action,
+        CancellationToken ct)
+    {
+        RequireEmployeeId();
+        var response = await idempotency.ExecuteAsync(idempotency.GetScope(), key, operation, bookingId, payload,
+            async token =>
+            {
+                RequireEmployeeId();
+                await LockAsync(bookingId, token);
+            }, action, ct);
+        return response.GetData();
+    }
+
+    private static object NormalizePayment(ConfirmBookingDto? dto) => new
+    {
+        HasPayment = dto is not null,
+        dto?.IsPaid,
+        dto?.PaymentMethod,
+        PaidAt = dto?.PaidAt is { } paidAt ? (DateTime?)NormalizeUtc(paidAt) : null,
+        Note = dto?.Note?.Trim() ?? string.Empty
+    };
+
     private static readonly TimeSpan PaidAtClockSkew = TimeSpan.FromMinutes(1);
 
     private const string ExpiredReason =
@@ -51,7 +87,7 @@ public class BookingRequestService(
         return row.ToDetail(invoice, history);
     }
 
-    public async Task<BookingDetailDto> ConfirmAsync(Guid bookingId, ConfirmBookingDto dto,
+    private async Task<BookingMutationResponse<BookingDetailDto>> ConfirmCoreAsync(Guid bookingId, ConfirmBookingDto dto,
         CancellationToken ct = default)
     {
         ValidatePayment(dto);
@@ -81,13 +117,13 @@ public class BookingRequestService(
         return await FinishAsync(bookingId, conflict, ct);
     }
 
-    public async Task<BookingDetailDto> RejectAsync(Guid bookingId, RejectBookingDto dto,
+    private async Task<BookingMutationResponse<BookingDetailDto>> RejectCoreAsync(Guid bookingId, RejectBookingDto dto,
         CancellationToken ct = default)
     {
         var reason = dto.Reason?.Trim();
         if (string.IsNullOrEmpty(reason))
             throw new ValidationException(errors: new Dictionary<string, string[]>
-                { ["Reason"] = ["Reason is required"] });
+            { ["Reason"] = ["Reason is required"] });
 
         var employeeId = RequireEmployeeId();
 
@@ -112,7 +148,7 @@ public class BookingRequestService(
         return await FinishAsync(bookingId, conflict, ct);
     }
 
-    public async Task<BookingDetailDto> CompleteAsync(Guid bookingId, ConfirmBookingDto? dto,
+    private async Task<BookingMutationResponse<BookingDetailDto>> CompleteCoreAsync(Guid bookingId, ConfirmBookingDto? dto,
         CancellationToken ct = default)
     {
         var employeeId = RequireEmployeeId();
@@ -147,16 +183,26 @@ public class BookingRequestService(
         return await FinishAsync(bookingId, conflict, ct);
     }
 
-    private async Task<BookingDetailDto> FinishAsync(Guid bookingId, string? conflict, CancellationToken ct)
+    private async Task<BookingMutationResponse<BookingDetailDto>> FinishAsync(Guid bookingId, string? conflict, CancellationToken ct)
     {
-        if (conflict is not null) throw new ConflictException(conflict);
-        return await GetDetailAsync(bookingId, ct);
+        return conflict is not null
+            ? new BookingMutationResponse<BookingDetailDto>(null, conflict, bookingId)
+            : new BookingMutationResponse<BookingDetailDto>(await GetDetailAsync(bookingId, ct), BookingId: bookingId);
     }
 
     private async Task<Booking> LockAsync(Guid bookingId, CancellationToken ct)
     {
-        return await bookingRepository.GetByIdForUpdateAsync(bookingId, ct)
-               ?? throw new NotFoundException("Booking not found");
+        var snapshot = await bookingRepository.GetByIdAsync(bookingId, ct)
+            ?? throw new NotFoundException("Booking not found");
+        await unitOfWork.LockCourtAsync(snapshot.CourtId, ct);
+        var booking = await bookingRepository.GetByIdForUpdateAsync(bookingId, ct)
+            ?? throw new NotFoundException("Booking not found");
+        if (booking.CourtId != snapshot.CourtId)
+        {
+            throw new ConflictException("Booking court changed; retry the request.");
+        }
+
+        return booking;
     }
 
     private Guid RequireEmployeeId()

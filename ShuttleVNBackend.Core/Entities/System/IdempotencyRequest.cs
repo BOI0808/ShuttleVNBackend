@@ -1,5 +1,8 @@
+using ShuttleVNBackend.Core.Attributes;
+
 namespace ShuttleVNBackend.Core.Entities.System;
 
+[NoAudit]
 public class IdempotencyRequest
 {
     public Guid Id { get; set; }

@@ -59,33 +59,37 @@ public class CourtService(
         return new CourtGridResponseDto(day, items);
     }
 
-    public async Task<UpdateCourtStatusResultDto> UpdateCourtStatusAsync(
+    public Task<UpdateCourtStatusResultDto> UpdateCourtStatusAsync(
         int courtId,
         UpdateCourtStatusDto dto,
         CancellationToken ct = default)
     {
-        if (!Enum.IsDefined(dto.Status))
-            throw new ValidationException(errors: new Dictionary<string, string[]>
-            { ["Status"] = ["Invalid court status"] });
-
-        var court = await courtRepository.GetByIdAsync(courtId, ct)
-                    ?? throw new NotFoundException("Court not found");
-
-        var oldStatus = court.Status;
-        if (oldStatus != dto.Status)
+        return unitOfWork.ExecuteInTransactionAsync(async token =>
         {
-            court.Status = dto.Status;
-            court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+            await unitOfWork.LockCourtAsync(courtId, token);
+            if (!Enum.IsDefined(dto.Status))
+                throw new ValidationException(errors: new Dictionary<string, string[]>
+                { ["Status"] = ["Invalid court status"] });
 
-            await unitOfWork.SaveChangesAsync(ct);
-        }
+            var court = await courtRepository.GetByIdAsync(courtId, token)
+                        ?? throw new NotFoundException("Court not found");
 
-        var affected = dto.Status == CourtStatus.Active
-            ? 0
-            : await bookingRepository.CountUpcomingByCourtAsync(courtId,
-                DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct);
+            var oldStatus = court.Status;
+            if (oldStatus != dto.Status)
+            {
+                court.Status = dto.Status;
+                court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
 
-        return new UpdateCourtStatusResultDto(ToDto(court, await GetInUseIdsAsync(ct)), affected);
+                await unitOfWork.SaveChangesAsync(token);
+            }
+
+            var affected = dto.Status == CourtStatus.Active
+                ? 0
+                : await bookingRepository.CountUpcomingByCourtAsync(courtId,
+                    DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), token);
+
+            return new UpdateCourtStatusResultDto(ToDto(court, await GetInUseIdsAsync(token)), affected);
+        }, ct);
     }
 
     private async Task<HashSet<int>> GetInUseIdsAsync(CancellationToken ct)
@@ -173,7 +177,9 @@ public class CourtService(
             Description = request.Description?.Trim() ?? string.Empty,
             Status = CourtStatus.Active,
             CreatedAt = now,
-            UpdatedAt = now
+            UpdatedAt = now,
+            CourtSchedules = [],
+            PricingRules = []
         };
 
         for (var day = 1; day < 8; day++)
@@ -203,42 +209,50 @@ public class CourtService(
         return court;
     }
 
-    public async Task<BadmintonCourt> UpdateCourtAsync(
+    public Task<BadmintonCourt> UpdateCourtAsync(
         int courtId,
         UpdateCourtDto request,
         CancellationToken ct = default)
     {
-        var name = request.Name.Trim();
-        if (name.Length == 0)
-            throw new ValidationException(errors: new Dictionary<string, string[]>
-            {
-                ["Name"] = ["Court name is required."]
-            });
+        return unitOfWork.ExecuteInTransactionAsync(async token =>
+        {
+            await unitOfWork.LockCourtAsync(courtId, token);
+            var name = request.Name.Trim();
+            if (name.Length == 0)
+                throw new ValidationException(errors: new Dictionary<string, string[]>
+                {
+                    ["Name"] = ["Court name is required."]
+                });
 
-        var court = await GetCourtOrThrowAsync(courtId, ct);
+            var court = await GetCourtOrThrowAsync(courtId, token);
 
-        if (await courtRepository.NameExistsAsync(name, courtId, ct))
-            throw new ConflictException($"Court with name '{name}' already exists.");
+            if (await courtRepository.NameExistsAsync(name, courtId, token))
+                throw new ConflictException($"Court with name '{name}' already exists.");
 
-        court.Name = name;
-        court.Description = request.Description?.Trim() ?? string.Empty;
-        court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+            court.Name = name;
+            court.Description = request.Description?.Trim() ?? string.Empty;
+            court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
 
-        await unitOfWork.SaveChangesAsync(ct);
-        return court;
+            await unitOfWork.SaveChangesAsync(token);
+            return court;
+        }, ct);
     }
 
-    public async Task SetCourtStatusAsync(
+    public Task SetCourtStatusAsync(
         int courtId,
         CourtStatus status,
         CancellationToken ct = default)
     {
-        var court = await GetCourtOrThrowAsync(courtId, ct);
+        return unitOfWork.ExecuteInTransactionAsync(async token =>
+        {
+            await unitOfWork.LockCourtAsync(courtId, token);
+            var court = await GetCourtOrThrowAsync(courtId, token);
 
-        court.Status = status;
-        court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+            court.Status = status;
+            court.UpdatedAt = clock.GetUtcNow().UtcDateTime;
 
-        await unitOfWork.SaveChangesAsync(ct);
+            return await unitOfWork.SaveChangesAsync(token);
+        }, ct);
     }
 
     private async Task<BadmintonCourt> GetCourtOrThrowAsync(int courtId, CancellationToken ct)
