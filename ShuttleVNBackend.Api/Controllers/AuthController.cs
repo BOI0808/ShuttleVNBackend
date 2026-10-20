@@ -10,7 +10,6 @@ using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Application.DTOs.Authentication;
 using ShuttleVNBackend.Application.UseCases.Authentication.Services;
 using ShuttleVNBackend.Application.UseCases.Users.Services;
-using ShuttleVNBackend.Core.Entities.Users.Enums;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -40,9 +39,7 @@ public class AuthController(
     {
         var account = await appAuthService.VerifyLogin(dto, ct);
 
-        var role = account.AccountType == AccountType.Customer
-            ? "Customer"
-            : account.Employee?.IsAdmin == true ? "Admin" : "Employee";
+        var role = account.GetRole();
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
