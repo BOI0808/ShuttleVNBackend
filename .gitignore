@@ -82,3 +82,6 @@ TestResults/
 *.tmp
 *.swp
 *.bak
+
+# AI
+.github/agents/

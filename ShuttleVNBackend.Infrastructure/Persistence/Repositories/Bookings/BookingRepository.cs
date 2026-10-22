@@ -18,6 +18,14 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
     }
 
+    public Task<List<Guid>> GetPendingIdsAsync(DateOnly throughDate, CancellationToken ct = default)
+    {
+        return dbContext.Bookings.AsNoTracking()
+            .Where(b => b.Status == BookingStatus.Pending && b.Date <= throughDate)
+            .Select(b => b.BookingId)
+            .ToListAsync(ct);
+    }
+
     public async Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default) 
     {
         var rows = await dbContext.Bookings
