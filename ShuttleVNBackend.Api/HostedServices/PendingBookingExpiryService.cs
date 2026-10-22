@@ -14,19 +14,6 @@ public sealed class PendingBookingExpiryService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = clock.GetUtcNow();
-            var localNow = TimeZoneInfo.ConvertTime(now, VietnamTimeZone);
-            var nextBoundary = new DateTimeOffset(
-                localNow.Year, localNow.Month, localNow.Day, localNow.Hour,
-                localNow.Minute < 30 ? 30 : 0, 0, localNow.Offset);
-            if (localNow.Minute >= 30)
-                nextBoundary = nextBoundary.AddHours(1);
-
-            var runAt = nextBoundary.AddMinutes(1);
-            var delay = runAt - localNow;
-            if (delay > TimeSpan.Zero)
-                await Task.Delay(delay, clock, stoppingToken);
-
             try
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
@@ -41,6 +28,19 @@ public sealed class PendingBookingExpiryService(
             {
                 logger.LogError(exception, "Failed to expire started pending bookings.");
             }
+
+            var now = clock.GetUtcNow();
+            var localNow = TimeZoneInfo.ConvertTime(now, VietnamTimeZone);
+            var nextBoundary = new DateTimeOffset(
+                localNow.Year, localNow.Month, localNow.Day, localNow.Hour,
+                localNow.Minute < 30 ? 30 : 0, 0, localNow.Offset);
+            if (localNow.Minute >= 30)
+                nextBoundary = nextBoundary.AddHours(1);
+
+            var runAt = nextBoundary.AddMinutes(1);
+            var delay = runAt - localNow;
+            if (delay > TimeSpan.Zero)
+                await Task.Delay(delay, clock, stoppingToken);
         }
     }
 }
