@@ -86,19 +86,19 @@ public class CustomerRepository(ShuttleVnDbContext dbContext) : ICustomerReposit
     private IQueryable<CustomerListItemDto> Project(IQueryable<Customer> customers)
     {
         return from c in customers
-            join a in dbContext.UserAccounts.AsNoTracking() on c.AccountId equals a.AccountId into accounts
-            from a in accounts.DefaultIfEmpty()
-            orderby c.CreatedAt, c.CustomerId
-            select new CustomerListItemDto(
-                c.CustomerId,
-                c.FullName,
-                c.Phone,
-                c.Email,
-                c.AccountId,
-                c.AccountId != null,
-                a != null ? (AccountStatus?)a.Status : null,
-                c.CreatedAt,
-                c.UpdatedAt);
+               join a in dbContext.UserAccounts.AsNoTracking() on c.AccountId equals a.AccountId into accounts
+               from a in accounts.DefaultIfEmpty()
+               orderby c.CreatedAt, c.CustomerId
+               select new CustomerListItemDto(
+                   c.CustomerId,
+                   c.FullName,
+                   c.Phone,
+                   c.Email,
+                   c.AccountId,
+                   c.AccountId != null,
+                   a != null ? (AccountStatus?)a.Status : null,
+                   c.CreatedAt,
+                   c.UpdatedAt);
     }
 
     private static string ToLikePattern(string term)

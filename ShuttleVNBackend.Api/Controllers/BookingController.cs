@@ -94,7 +94,7 @@ public class BookingController(BookingService bookingService) : ControllerBase
         var result = await bookingService.GetBookingByIdAsync(bookingId, ct);
         return Ok(ApiResponseFactory.Success(result));
     }
-    
+
     [HttpGet("{bookingId:guid}/invoice")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<InvoiceDto>>> GetInvoice(
