@@ -1,3 +1,4 @@
+using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
@@ -17,8 +18,7 @@ public class StatisticsService(
     public async Task<CourtUsageSummaryDto> GetCourtUsageAsync(
         DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
     {
-        var now = clock.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(now);
+        var today = VietnamTime.TodayLocal(clock);
         var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
         var to = toDate ?? today;
 

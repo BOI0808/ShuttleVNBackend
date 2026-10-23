@@ -43,12 +43,12 @@ public class CourtService(
 
     public async Task<CourtGridResponseDto> GetCourtGridAsync(DateOnly? date, CancellationToken ct = default)
     {
-        var now = clock.GetUtcNow().UtcDateTime;
-        var day = date ?? DateOnly.FromDateTime(now);
+        var today = VietnamTime.TodayLocal(clock);
+        var day = date ?? today;
         var isoDay = day.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)day.DayOfWeek;
 
         var sources = await courtRepository.GetAllForGridAsync(day, isoDay, ct);
-        var inUse = day == DateOnly.FromDateTime(now) ? await GetInUseIdsAsync(ct) : [];
+        var inUse = day == today ? await GetInUseIdsAsync(ct) : [];
 
         var items = sources.Select(s => new CourtGridItemDto(
             ToDto(s.Court, inUse),
@@ -86,7 +86,7 @@ public class CourtService(
             var affected = dto.Status == CourtStatus.Active
                 ? 0
                 : await bookingRepository.CountUpcomingByCourtAsync(courtId,
-                    DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), token);
+                    VietnamTime.TodayLocal(clock), token);
 
             return new UpdateCourtStatusResultDto(ToDto(court, await GetInUseIdsAsync(token)), affected);
         }, ct);
@@ -94,7 +94,7 @@ public class CourtService(
 
     private async Task<HashSet<int>> GetInUseIdsAsync(CancellationToken ct)
     {
-        var now = clock.GetUtcNow().UtcDateTime;
+        var now = VietnamTime.NowLocal(clock);
         return await courtRepository.GetCourtIdsInUseAsync(
             DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now), ct);
     }
