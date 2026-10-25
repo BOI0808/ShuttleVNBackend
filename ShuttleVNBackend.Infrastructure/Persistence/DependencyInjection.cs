@@ -32,6 +32,7 @@ public static class DependencyInjection
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddSingleton(TimeProvider.System);
