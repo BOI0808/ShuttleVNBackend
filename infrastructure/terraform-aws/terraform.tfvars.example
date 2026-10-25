@@ -1,0 +1,4 @@
+project_name        = ""
+ami_id              = ""
+ssh_public_key_path = ""
+ssh_allowed_cidr    = ""
