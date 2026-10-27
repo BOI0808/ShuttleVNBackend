@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -6,6 +7,11 @@ using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Api.Middlewares;
 using ShuttleVNBackend.Api.Options;
 using ShuttleVNBackend.Infrastructure.Persistence;
+
+DotEnv.Load(new DotEnvOptions(
+    overwriteExistingVars: false,
+    probeForEnv: true,
+    supportVariableExpansion: false));
 
 var builder = WebApplication.CreateBuilder(args);
 
