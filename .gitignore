@@ -83,3 +83,26 @@ TestResults/
 *.tmp
 *.swp
 *.bak
+
+# AI
+.github/agents/
+
+# =========================
+# Terraform
+# =========================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+**/cloudformation/parameters.json
+
+# Credentials and private keys
+.aws/
+*.pem
+*.key
