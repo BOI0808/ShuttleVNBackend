@@ -275,6 +275,12 @@ public class BookingService(
         return BookingDto.FromEntity(booking);
     }
 
+    public async Task<BookingDto?> GetBookingByCodeAsync(string code, CancellationToken ct = default)
+    {
+        var booking = await bookingRepository.GetByCodeAsync(code, null, ct);
+        return booking is null ? null : BookingDto.FromEntity(booking);
+    }
+
     public async Task<PagedResult<BookingDto>> GetOwnBookingsAsync(PageRequest page, CancellationToken ct = default)
     {
         if (currentUser.ActorType != ActorType.Customer || currentUser.ActorId is null)

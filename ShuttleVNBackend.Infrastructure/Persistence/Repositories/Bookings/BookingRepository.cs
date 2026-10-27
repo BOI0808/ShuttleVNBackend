@@ -228,6 +228,25 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
     }
 
+    public async Task<Booking?> GetByCodeAsync(string bookingCode, string? phoneOrEmail, CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings
+            .Include(b => b.Customer)
+            .Include(b => b.Court)
+            .Include(b => b.PriceSegments)
+            .Include(b => b.Invoices)
+            .AsNoTracking()
+            .Where(b => b.BookingCode == bookingCode);
+
+        if (!string.IsNullOrWhiteSpace(phoneOrEmail))
+        {
+            var trimmed = phoneOrEmail.Trim().ToLower();
+            query = query.Where(b => b.Customer.Phone == trimmed || b.Customer.Email.ToLower() == trimmed);
+        }
+
+        return await query.FirstOrDefaultAsync(ct);
+    }
+
     public async Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await dbContext.Bookings

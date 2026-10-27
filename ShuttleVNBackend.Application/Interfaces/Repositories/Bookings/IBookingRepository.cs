@@ -24,6 +24,7 @@ public interface IBookingRepository
         CancellationToken ct = default);
 
     Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default);
+    Task<Booking?> GetByCodeAsync(string bookingCode, string? phoneOrEmail, CancellationToken ct = default);
     Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default);
     Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
     Task<PagedResult<Booking>> GetByCustomerWithDetailsAsync(Guid customerId, PageRequest page, CancellationToken ct = default);
