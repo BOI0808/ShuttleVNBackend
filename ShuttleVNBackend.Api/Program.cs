@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShuttleVNBackend.Api.Extensions;
+using ShuttleVNBackend.Api.HostedServices;
 using ShuttleVNBackend.Api.Middlewares;
 using ShuttleVNBackend.Api.Options;
 using ShuttleVNBackend.Infrastructure.Persistence;
@@ -45,6 +46,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHostedService<PendingBookingExpiryService>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 

@@ -65,6 +65,22 @@ public class BookingRequestService(
     private const string ExpiredMessage =
         "The usage date has passed; the pending request was cancelled automatically.";
 
+    public async Task ExpireStartedPendingBookingsAsync(CancellationToken ct = default)
+    {
+        var today = VietnamTime.TodayLocal(clock);
+        var bookingIds = await bookingRepository.GetPendingIdsAsync(today, ct);
+        foreach (var bookingId in bookingIds)
+        {
+            await unitOfWork.ExecuteInTransactionAsync(async token =>
+            {
+                var booking = await LockAsync(bookingId, token);
+                if (booking.Status == BookingStatus.Pending && HasStarted(booking))
+                    await ExpireAsync(booking, token);
+                return true;
+            }, ct);
+        }
+    }
+
     public async Task<PagedResult<BookingListItemDto>> GetPendingAsync(PageRequest page, CancellationToken ct = default)
     {
         var rows = await bookingRepository.GetPendingAsync(page, ct);
