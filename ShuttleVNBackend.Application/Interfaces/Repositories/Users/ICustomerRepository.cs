@@ -13,4 +13,7 @@ public interface ICustomerRepository
     public Task<PagedResult<CustomerListItemDto>> SearchAsync(string? keyword, PageRequest page,
         CancellationToken ct = default);
     public Task<CustomerListItemDto?> GetListItemByIdAsync(Guid id, CancellationToken ct = default);
+    public Task<CustomerListItemDto?> GetListItemByEmailAsync(string email, CancellationToken ct = default);
+    public Task<IReadOnlyList<CustomerListItemDto>> GetListItemsByPhoneAsync(string phone,
+        CancellationToken ct = default);
 }

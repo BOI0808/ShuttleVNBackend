@@ -20,6 +20,8 @@ public interface IBookingRepository
         CancellationToken ct = default);
     Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page,
         CancellationToken ct = default);
+    Task<PagedResult<BookingRow>> SearchByLookupAsync(QuickLookupQuery query, PageRequest page,
+        CancellationToken ct = default);
 
     Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default);
     Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default);

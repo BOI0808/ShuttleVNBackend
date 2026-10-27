@@ -50,4 +50,9 @@ public static partial class CustomerProfileRules
         if (errors.Count > 0) throw new ValidationException(errors: errors);
         return new NormalizedProfile(fullName, phone, email);
     }
+
+    public static bool IsValidPhone(string normalizedPhone)
+    {
+        return PhoneFormat().IsMatch(normalizedPhone);
+    }
 }

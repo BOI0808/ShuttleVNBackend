@@ -186,6 +186,36 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
+    public async Task<PagedResult<BookingRow>> SearchByLookupAsync(
+        QuickLookupQuery query, PageRequest page, CancellationToken ct = default)
+    {
+        var value = query.Value;
+        var bookings = dbContext.Bookings.AsNoTracking();
+        var filtered = query.MatchType switch
+        {
+            QuickLookupMatchType.BookingCode => bookings.Where(b => b.BookingCode == value),
+            QuickLookupMatchType.Email => bookings.Where(b => b.Customer.Email.ToLower().Trim() == value),
+            _ => bookings.Where(b => b.Customer.Phone.Replace(" ", "").Replace("-", "") == value)
+        };
+
+        var totalCount = await filtered.CountAsync(ct);
+        var items = await ProjectRows(filtered
+                .OrderByDescending(b => b.Date)
+                .ThenByDescending(b => b.StartTime)
+                .ThenBy(b => b.BookingId)
+                .Skip((page.PageNumber - 1) * page.PageSize)
+                .Take(page.PageSize))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
+        };
+    }
+
     private static string ToLikePattern(string term)
     {
         return $"%{term.Replace("\\", @"\\").Replace("%", "\\%").Replace("_", "\\_")}%";
