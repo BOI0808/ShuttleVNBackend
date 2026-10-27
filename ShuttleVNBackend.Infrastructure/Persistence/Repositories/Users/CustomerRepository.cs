@@ -82,7 +82,7 @@ public class CustomerRepository(ShuttleVnDbContext dbContext) : ICustomerReposit
         return await Project(dbContext.Customers.AsNoTracking().Where(c => c.CustomerId == id))
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<CustomerListItemDto?> GetListItemByEmailAsync(string email, CancellationToken ct = default)
     {
         return await Project(dbContext.Customers.AsNoTracking()
