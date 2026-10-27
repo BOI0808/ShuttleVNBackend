@@ -1,8 +1,11 @@
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using ShuttleVNBackend.Application.DTOs.Authentication;
+using ShuttleVNBackend.Application.DTOs.Email;
 using ShuttleVNBackend.Application.Exceptions;
+using ShuttleVNBackend.Application.Interfaces;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 using ShuttleVNBackend.Core.Entities.Users;
@@ -14,7 +17,8 @@ namespace ShuttleVNBackend.Application.UseCases.Authentication.Services;
 public class AppAuthService(
     IAccountRepository accountRepository,
     IVerificationCodeRepository verificationCodeRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IEmailService emailService)
 {
     private readonly PasswordHasher<UserAccount> _hasher = new();
 
@@ -82,31 +86,52 @@ public class AppAuthService(
         return account;
     }
 
-    public async Task<string> IssueCode(string email, CodeType type)
+    public async Task IssueCodeAsync(string email, CodeType type, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email is required", nameof(email));
-
-        var existingCode = await verificationCodeRepository.GetActiveAsync(email, type);
-        if (existingCode is not null && !existingCode.IsUsed)
-            throw new InvalidOperationException("Already having an active code");
-
-        await verificationCodeRepository.DeleteExistingAsync(email, type);
-
-        var plainCode = GenerateCode();
-        var code = new VerificationCode
+        if (!MailAddress.TryCreate(email, out var address) || address.Address != email)
         {
-            Email = email,
-            Type = type,
-            CodeHash = HashCode(plainCode),
-            IsUsed = false,
-            Attempt = 0,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
-        };
-        await unitOfWork.AddAsync(code);
-        await unitOfWork.SaveChangesAsync();
+            throw new ValidationException(errors: new Dictionary<string, string[]>
+            {
+                ["Email"] = ["A valid email address is required."]
+            });
+        }
 
-        return plainCode;
+        var purpose = type switch
+        {
+            CodeType.VerifyEmail => "email verification",
+            CodeType.ResetPassword => "password reset",
+            CodeType.QuickBooking => "quick booking verification",
+            _ => throw new ValidationException(errors: new Dictionary<string, string[]>
+            {
+                ["Type"] = ["Invalid verification code type."]
+            })
+        };
+
+        await unitOfWork.ExecuteInTransactionAsync(async token =>
+        {
+            var existingCode = await verificationCodeRepository.GetActiveAsync(email, type, token);
+            if (existingCode is not null && !existingCode.IsUsed)
+            {
+                throw new ConflictException("Already having an active code");
+            }
+
+            await verificationCodeRepository.DeleteExistingAsync(email, type);
+            var plainCode = GenerateCode();
+            var code = new VerificationCode
+            {
+                Email = email,
+                Type = type,
+                CodeHash = HashCode(plainCode),
+                IsUsed = false,
+                Attempt = 0,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+            };
+            await unitOfWork.AddAsync(code, token);
+            await unitOfWork.SaveChangesAsync(token);
+            await emailService.SendAsync(new EmailMessage(email, $"ShuttleVN {purpose} code",
+                $"Your {purpose} code is: {plainCode}\n\nThis code expires in 5 minutes. Do not share it with anyone."), token);
+            return true;
+        }, ct);
     }
 
     public async Task<bool> IsValidVerificationCode(string email, string code, CodeType type)

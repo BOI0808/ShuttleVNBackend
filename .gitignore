@@ -52,6 +52,7 @@ env/
 # =========================
 .env
 .env.*
+!.env.example
 
 # =========================
 # Logs
@@ -85,3 +86,23 @@ TestResults/
 
 # AI
 .github/agents/
+
+# =========================
+# Terraform
+# =========================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+**/cloudformation/parameters.json
+
+# Credentials and private keys
+.aws/
+*.pem
+*.key

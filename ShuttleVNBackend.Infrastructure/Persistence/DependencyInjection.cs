@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ShuttleVNBackend.Infrastructure.Email;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         });
 
         services.AddSingleton(TimeProvider.System);
+        services.AddEmailService(configuration);
         services.AddDataProtection();
         services.AddHttpContextAccessor();
         services.AddScoped<IBookingIdempotency, BookingIdempotency>();
