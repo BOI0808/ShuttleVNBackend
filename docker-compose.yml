@@ -6,9 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: shuttlevn-api
+    env_file:
+      - .env
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: ConnectionString
     ports:
       - "8080:8080"

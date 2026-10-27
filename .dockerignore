@@ -23,6 +23,8 @@ docker-compose*
 
 # Development configuration
 **/appsettings.Development.json
+**/.env
+**/.env.*
 
 # NuGet
 **/.nuget/
