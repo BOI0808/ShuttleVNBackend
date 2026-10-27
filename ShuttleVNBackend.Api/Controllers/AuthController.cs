@@ -73,12 +73,15 @@ public class AuthController(
 
     [HttpPost("issue-code")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<string>>> IssueCode(
-        [FromBody] CodeRequestDto dto)
+    public async Task<ActionResult<ApiResponse<object>>> IssueCode(
+        [FromBody] CodeRequestDto dto,
+        CancellationToken ct)
     {
-        var code = await appAuthService.IssueCode(dto.Email, dto.Type);
-        // TODO: Implement EmailService
-        return Ok(ApiResponseFactory.Success(code));
+        await appAuthService.IssueCodeAsync(dto.Email, dto.Type, ct);
+        return Ok(ApiResponseFactory.Success<object>(new
+        {
+            message = "Verification code sent to your email."
+        }));
     }
 
     [HttpPost("reset-password")]
