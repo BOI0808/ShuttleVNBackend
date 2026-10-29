@@ -8,7 +8,7 @@ namespace ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 public interface IBookingRepository
 {
     Task<int> CountUpcomingByCourtAsync(int courtId, DateOnly fromDate, CancellationToken ct = default);
-    Task<List<Guid>> GetPendingIdsAsync(DateOnly throughDate, CancellationToken ct = default);
+    Task<List<Guid>> GetSettlementCandidateIdsAsync(DateTime localCutoff, CancellationToken ct = default);
     Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default);
     Task<PagedResult<BookingRow>> GetPendingAsync(PageRequest page, CancellationToken ct = default);
     Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default);
@@ -23,6 +23,7 @@ public interface IBookingRepository
 
     Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default);
     Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default);
+    Task<Booking?> GetFreshDetailsAsync(Guid bookingId, CancellationToken ct = default);
     Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
     Task<PagedResult<Booking>> GetByCustomerWithDetailsAsync(Guid customerId, PageRequest page, CancellationToken ct = default);
     Task<CourtSchedule?> GetScheduleAsync(int courtId, int dayOfWeek, CancellationToken ct = default);

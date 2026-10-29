@@ -11,22 +11,26 @@ namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.Bookings;
 
 public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepository
 {
-    public async Task<int> CountUpcomingByCourtAsync(int courtId, DateOnly fromDate, CancellationToken ct = default) 
+    public async Task<int> CountUpcomingByCourtAsync(int courtId, DateOnly fromDate, CancellationToken ct = default)
     {
         return await dbContext.Bookings.CountAsync(b =>
             b.CourtId == courtId && b.Date >= fromDate
             && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
     }
 
-    public Task<List<Guid>> GetPendingIdsAsync(DateOnly throughDate, CancellationToken ct = default)
+    public Task<List<Guid>> GetSettlementCandidateIdsAsync(DateTime localCutoff, CancellationToken ct = default)
     {
-        return dbContext.Bookings.AsNoTracking()
-            .Where(b => b.Status == BookingStatus.Pending && b.Date <= throughDate)
+        var date = DateOnly.FromDateTime(localCutoff);
+        var time = TimeOnly.FromDateTime(localCutoff);
+        return dbContext.Bookings
+            .AsNoTracking()
+            .Where(b => (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
+                && (b.Date < date || (b.Date == date && b.EndTime <= time)))
             .Select(b => b.BookingId)
             .ToListAsync(ct);
     }
 
-    public async Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default) 
+    public async Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default)
     {
         var rows = await dbContext.Bookings
             .FromSqlInterpolated($"""SELECT * FROM "Bookings" WHERE "BookingId" = {bookingId} FOR UPDATE""")
@@ -34,7 +38,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         return rows.FirstOrDefault();
     }
 
-    public async Task<PagedResult<BookingRow>> GetPendingAsync(PageRequest page, CancellationToken ct = default) 
+    public async Task<PagedResult<BookingRow>> GetPendingAsync(PageRequest page, CancellationToken ct = default)
     {
         var query = dbContext.Bookings.AsNoTracking()
             .Where(b => b.Status == BookingStatus.Pending);
@@ -55,13 +59,13 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
-    public async Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default) 
+    public async Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await ProjectRows(dbContext.Bookings.AsNoTracking().Where(b => b.BookingId == bookingId))
             .FirstOrDefaultAsync(ct);
     }
 
-    public async Task<BookingInvoiceDto?> GetValidInvoiceAsync(Guid bookingId, CancellationToken ct = default) 
+    public async Task<BookingInvoiceDto?> GetValidInvoiceAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await dbContext.Invoices.AsNoTracking()
             .Where(i => i.BookingId == bookingId
@@ -70,7 +74,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .FirstOrDefaultAsync(ct);
     }
 
-    public async Task<List<BookingStatusHistoryDto>> GetStatusHistoryAsync(Guid bookingId, 
+    public async Task<List<BookingStatusHistoryDto>> GetStatusHistoryAsync(Guid bookingId,
         CancellationToken ct = default)
     {
         return await dbContext.BookingStatusHistories.AsNoTracking()
@@ -88,7 +92,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .ToListAsync(ct);
     }
 
-    private IQueryable<BookingRow> ProjectRows(IQueryable<Booking> source) 
+    private IQueryable<BookingRow> ProjectRows(IQueryable<Booking> source)
     {
         return source.Select(b => new BookingRow(
             b.BookingId,
@@ -112,7 +116,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             b.CreatedAt));
     }
 
-    public async Task<bool> HasOverlapAsync(int courtId, DateOnly date, TimeOnly start, TimeOnly end, 
+    public async Task<bool> HasOverlapAsync(int courtId, DateOnly date, TimeOnly start, TimeOnly end,
         Guid excludeBookingId, CancellationToken ct = default)
     {
         return await dbContext.Bookings.AnyAsync(b =>
@@ -121,7 +125,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             && b.StartTime < end && b.EndTime > start, ct);
     }
 
-    public async Task<PagedResult<BookingRow>> GetByCustomerAsync(Guid customerId, PageRequest page, 
+    public async Task<PagedResult<BookingRow>> GetByCustomerAsync(Guid customerId, PageRequest page,
         CancellationToken ct = default)
     {
         var query = dbContext.Bookings.AsNoTracking().Where(b => b.CustomerId == customerId);
@@ -145,7 +149,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
-    public async Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page, 
+    public async Task<PagedResult<BookingRow>> SearchAsync(BookingSearchCriteria criteria, PageRequest page,
         CancellationToken ct = default)
     {
         var query = dbContext.Bookings.AsNoTracking().AsQueryable();
@@ -186,19 +190,19 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
-    private static string ToLikePattern(string term) 
+    private static string ToLikePattern(string term)
     {
         return $"%{term.Replace("\\", @"\\").Replace("%", "\\%").Replace("_", "\\_")}%";
     }
 
-    public async Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default) 
+    public async Task<Booking?> GetByIdAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await dbContext.Bookings
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
     }
 
-    public async Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default) 
+    public async Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await dbContext.Bookings
             .Include(b => b.Customer)
@@ -208,12 +212,30 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
     }
 
-    public async Task<bool> CodeExistsAsync(string code, CancellationToken ct = default) 
+    public async Task<Booking?> GetFreshDetailsAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        foreach (var entry in dbContext.ChangeTracker.Entries().ToList())
+        {
+            if (entry.Entity is Booking booking && booking.BookingId == bookingId ||
+                entry.Entity is Invoice invoice && invoice.BookingId == bookingId ||
+                entry.Entity is BookingPriceSegment priceSegment && priceSegment.BookingId == bookingId)
+            {
+                if (entry.State is not EntityState.Unchanged)
+                    throw new InvalidOperationException("Cannot refresh a booking with unsaved changes.");
+
+                entry.State = EntityState.Detached;
+            }
+        }
+
+        return await GetByIdWithDetailsAsync(bookingId, ct);
+    }
+
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
     {
         return await dbContext.Bookings.AnyAsync(b => b.BookingCode == code, ct);
     }
 
-    public async Task<PagedResult<Booking>> GetByCustomerWithDetailsAsync( 
+    public async Task<PagedResult<Booking>> GetByCustomerWithDetailsAsync(
         Guid customerId, PageRequest page, CancellationToken ct = default)
     {
         var query = dbContext.Bookings
@@ -242,14 +264,14 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
-    public async Task<CourtSchedule?> GetScheduleAsync(int courtId, int dayOfWeek, CancellationToken ct = default) 
+    public async Task<CourtSchedule?> GetScheduleAsync(int courtId, int dayOfWeek, CancellationToken ct = default)
     {
         return await dbContext.CourtSchedules
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.CourtId == courtId && s.DayOfWeek == dayOfWeek, ct);
     }
 
-    public async Task<List<PricingRule>> GetPricingRulesAsync(int courtId, int dayOfWeek, CancellationToken ct = default) 
+    public async Task<List<PricingRule>> GetPricingRulesAsync(int courtId, int dayOfWeek, CancellationToken ct = default)
     {
         return await dbContext.PricingRules
             .AsNoTracking()

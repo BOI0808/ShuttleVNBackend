@@ -24,7 +24,8 @@ public class BookingService(
     ICurrentUser currentUser,
     TimeProvider clock,
     IUnitOfWork unitOfWork,
-    IBookingIdempotency idempotency)
+    IBookingIdempotency idempotency,
+    BookingLifecycle lifecycle)
 {
     public async Task<BookingDto> CreateBookingAsync(CreateBookingDto dto, string key, CancellationToken ct = default)
     {
@@ -72,22 +73,28 @@ public class BookingService(
     public async Task<BookingDto> CancelBookingAsync(Guid bookingId, CancelBookingDto dto, string key,
         CancellationToken ct = default)
     {
+        InvoiceRules.ValidateReason(dto.Reason);
+        await lifecycle.SettleAsync(bookingId, ct);
         var response = await idempotency.ExecuteAsync(idempotency.GetScope(), key, "booking.cancel", bookingId,
-            new { Reason = dto.Reason.Trim() },
+            new { dto.ExpectedState, Reason = dto.Reason.Trim(), dto.Refund },
             async token =>
             {
                 if (currentUser.ActorId is null || currentUser.ActorType is not (ActorType.Customer or ActorType.Employee))
                     throw new UnauthorizedException();
 
-                await unitOfWork.LockBookingAsync(bookingId, token);
-                await GetBookingByIdAsync(bookingId, token);
+                var booking = await lifecycle.LockAsync(bookingId, ct: token);
+                lifecycle.Authorize(booking);
             },
-            async token => new BookingMutationResponse<BookingDto>(
-                await CancelBookingCoreAsync(
-                    bookingId,
-                    new CancelBookingDto(Reason: dto.Reason.Trim()),
-                    token)
-            ), ct);
+            async token =>
+            {
+                var booking = await lifecycle.LockAsync(bookingId, ct: token);
+                if (await lifecycle.SettleLockedAsync(booking, token))
+                {
+                    return new BookingMutationResponse<BookingDto>(null, "Booking end time passed; booking settled. Reload.", bookingId);
+                }
+                return new BookingMutationResponse<BookingDto>(
+                    await CancelBookingCoreAsync(booking, dto with { Reason = dto.Reason.Trim() }, token));
+            }, ct);
         return response.GetData();
     }
 
@@ -187,16 +194,13 @@ public class BookingService(
     }
 
     private async Task<BookingDto> CancelBookingCoreAsync(
-        Guid bookingId,
+        Booking booking,
         CancelBookingDto dto,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Reason))
             throw new ValidationException("Reason is required.",
                 new Dictionary<string, string[]> { ["Reason"] = ["Reason is required."] });
-
-        var booking = await bookingRepository.GetByIdWithDetailsAsync(bookingId, ct)
-            ?? throw new NotFoundException("Booking not found.");
 
         if (currentUser.ActorType == ActorType.Customer)
         {
@@ -209,6 +213,8 @@ public class BookingService(
 
         if (booking.Status == BookingStatus.Cancelled)
             return BookingDto.FromEntity(booking);
+
+        InvoiceRules.CheckState(booking, dto.ExpectedState);
 
         if (booking.Status is not (BookingStatus.Pending or BookingStatus.Confirmed))
             throw new ConflictException("Only pending or confirmed bookings can be cancelled.");
@@ -231,18 +237,15 @@ public class BookingService(
         booking.Status = BookingStatus.Cancelled;
         booking.UpdatedAt = nowUtc;
 
-        var unpaidInvoice = booking.Invoices.FirstOrDefault(i => i.Status == InvoiceStatus.Unpaid);
-        if (unpaidInvoice is not null)
+        var validInvoice = InvoiceRules.ValidInvoice(booking);
+        if (validInvoice is not null)
         {
-            unpaidInvoice.Status = InvoiceStatus.Cancelled;
-            unpaidInvoice.CancelledAt = nowUtc;
-            unpaidInvoice.CancellationActorType = currentUser.ActorType;
-            unpaidInvoice.CancellationReason = dto.Reason;
-            if (currentUser.ActorType == ActorType.Customer)
-            {
-                var customer = await customerRepository.GetByIdAsync(currentUser.ActorId!.Value, ct);
-                unpaidInvoice.CancelledByCustomer = customer?.CustomerId;
-            }
+            InvoiceRules.Cancel(validInvoice, dto.Reason, currentUser.ActorType,
+                currentUser.ActorId!.Value, dto.Refund, nowUtc);
+        }
+        else if (dto.Refund is not null)
+        {
+            throw new ConflictException("Booking has no valid invoice to refund.");
         }
 
         var history = new BookingStatusHistory
@@ -383,15 +386,7 @@ public class BookingService(
 
         foreach (var seg in segments)
         {
-            await unitOfWork.AddAsync(new BookingPriceSegment
-            {
-                BookingId = booking.BookingId,
-                SegmentNo = seg.SegmentNo,
-                PriceStartTime = seg.PriceStartTime,
-                SegmentStartTime = seg.SegmentStartTime,
-                SegmentEndTime = seg.SegmentEndTime,
-                PricePerHour = seg.PricePerHour
-            }, ct);
+            await unitOfWork.AddAsync(seg.ToEntity(booking.BookingId), ct);
         }
 
         var history = new BookingStatusHistory
@@ -421,7 +416,7 @@ public class BookingService(
         return BookingDto.FromEntity(saved);
     }
 
-    private static (decimal TotalCost, IReadOnlyList<BookingPriceSegmentDto> Segments)
+    internal static (decimal TotalCost, IReadOnlyList<BookingPriceSegmentDto> Segments)
         CalculatePrice(TimeOnly startTime, TimeOnly endTime, List<PricingRule> rules)
     {
         if (rules.Count == 0)
@@ -453,21 +448,21 @@ public class BookingService(
                 rule.PricePerHour));
         }
 
-        if (segments.Count == 0)
-            throw new ConflictException("Booking time does not fall within any pricing rule.");
+        if (segments.Count == 0 || segments[0].SegmentStartTime != startTime || segments[^1].SegmentEndTime != endTime)
+            throw new ConflictException("Pricing rules do not cover the entire booking interval.");
 
         var totalCost = Math.Round(totalCostRaw, 0, MidpointRounding.AwayFromZero);
         return (totalCost, segments);
     }
 
-    private static void ValidateTimeSlot(TimeOnly startTime, TimeOnly endTime)
+    internal static void ValidateTimeSlot(TimeOnly startTime, TimeOnly endTime)
     {
         var errors = new Dictionary<string, string[]>();
 
-        if (startTime.Minute != 0 && startTime.Minute != 30)
-            errors["StartTime"] = ["Start time must be at :00 or :30."];
-        if (endTime.Minute != 0 && endTime.Minute != 30)
-            errors["EndTime"] = ["End time must be at :00 or :30."];
+        if (startTime.Ticks % TimeSpan.TicksPerMinute != 0 || startTime.Minute is not (0 or 30))
+            errors["StartTime"] = ["Start time must be at :00 or :30 with no seconds."];
+        if (endTime.Ticks % TimeSpan.TicksPerMinute != 0 || endTime.Minute is not (0 or 30))
+            errors["EndTime"] = ["End time must be at :00 or :30 with no seconds."];
         if (startTime >= endTime)
             errors["EndTime"] = ["End time must be after start time."];
         if ((endTime - startTime).TotalMinutes < 30)

@@ -6,6 +6,7 @@ public interface IUnitOfWork
     void Remove<T>(T entity) where T : class;
     void RemoveRange<T>(IEnumerable<T> entities) where T : class;
     Task<int> SaveChangesAsync(CancellationToken ct = default);
+    Task<int> SaveSystemChangesAsync(CancellationToken ct = default);
 
     Task LockCourtAsync(int courtId, CancellationToken ct = default);
     Task LockBookingAsync(Guid bookingId, CancellationToken ct = default);

@@ -20,7 +20,8 @@ public class BookingRequestService(
     IUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     TimeProvider clock,
-    IBookingIdempotency idempotency)
+    IBookingIdempotency idempotency,
+    BookingLifecycle lifecycle)
 {
     public Task<BookingDetailDto> ConfirmAsync(Guid bookingId, ConfirmBookingDto dto, string key,
         CancellationToken ct = default) => ExecuteMutationAsync(bookingId, key, "booking.confirm",
@@ -39,46 +40,44 @@ public class BookingRequestService(
         CancellationToken ct)
     {
         RequireEmployeeId();
-        var response = await idempotency.ExecuteAsync(idempotency.GetScope(), key, operation, bookingId, payload,
-            async token =>
-            {
-                RequireEmployeeId();
-                await LockAsync(bookingId, token);
-            }, action, ct);
+        await lifecycle.SettleAsync(bookingId, ct);
+        var response = await idempotency.ExecuteAsync(
+            idempotency.GetScope(), key, operation, bookingId, payload,
+            token => AuthorizeMutationAsync(bookingId, token), action, ct);
+
         return response.GetData();
+    }
+
+    private async Task AuthorizeMutationAsync(Guid bookingId, CancellationToken ct)
+    {
+        RequireEmployeeId();
+        await lifecycle.LockAsync(bookingId, ct: ct);
     }
 
     private static object NormalizePayment(ConfirmBookingDto? dto) => new
     {
         HasPayment = dto is not null,
         dto?.IsPaid,
+        Amount = dto?.Amount?.ToString("G29", global::System.Globalization.CultureInfo.InvariantCulture),
         dto?.PaymentMethod,
-        PaidAt = dto?.PaidAt is { } paidAt ? (DateTime?)NormalizeUtc(paidAt) : null,
+        dto?.PaidAt,
         Note = dto?.Note?.Trim() ?? string.Empty
     };
 
-    private static readonly TimeSpan PaidAtClockSkew = TimeSpan.FromMinutes(1);
-
-    private const string ExpiredReason =
-        "Automatically cancelled: the usage date passed before the request was processed.";
-
-    private const string ExpiredMessage =
-        "The usage date has passed; the pending request was cancelled automatically.";
-
-    public async Task ExpireStartedPendingBookingsAsync(CancellationToken ct = default)
+    public async Task SettleEndedBookingsAsync(CancellationToken ct = default)
     {
-        var today = VietnamTime.TodayLocal(clock);
-        var bookingIds = await bookingRepository.GetPendingIdsAsync(today, ct);
+        var localCutoff = VietnamTime.NowLocal(clock);
+        var bookingIds = await bookingRepository.GetSettlementCandidateIdsAsync(localCutoff, ct);
         foreach (var bookingId in bookingIds)
         {
-            await unitOfWork.ExecuteInTransactionAsync(async token =>
-            {
-                var booking = await LockAsync(bookingId, token);
-                if (booking.Status == BookingStatus.Pending && HasStarted(booking))
-                    await ExpireAsync(booking, token);
-                return true;
-            }, ct);
+            await unitOfWork.ExecuteInTransactionAsync(token => SettleBookingAsync(bookingId, token), ct);
         }
+    }
+
+    private async Task<bool> SettleBookingAsync(Guid bookingId, CancellationToken ct)
+    {
+        var booking = await lifecycle.LockAsync(bookingId, ct: ct);
+        return await lifecycle.SettleLockedAsync(booking, ct);
     }
 
     public async Task<PagedResult<BookingListItemDto>> GetPendingAsync(PageRequest page, CancellationToken ct = default)
@@ -106,31 +105,48 @@ public class BookingRequestService(
     private async Task<BookingMutationResponse<BookingDetailDto>> ConfirmCoreAsync(Guid bookingId, ConfirmBookingDto dto,
         CancellationToken ct = default)
     {
-        ValidatePayment(dto);
         var employeeId = RequireEmployeeId();
 
-        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(async token =>
-        {
-            var booking = await LockAsync(bookingId, token);
-            if (booking.Status == BookingStatus.Confirmed) return null;
-            if (booking.Status != BookingStatus.Pending)
-                throw new ConflictException($"The booking is already {booking.Status}.");
-
-            if (IsPastUsageDate(booking)) return await ExpireAsync(booking, token);
-            if (HasStarted(booking))
-                throw new ConflictException(
-                    "The booking has already started; record usage or cancel it instead.");
-
-            await EnsureCourtAvailableAsync(booking, token);
-
-            var now = clock.GetUtcNow().UtcDateTime;
-            await ChangeStatusAsync(booking, BookingStatus.Confirmed, employeeId, "Confirmed by staff", now, token);
-            await IssueInvoiceAsync(booking, dto, employeeId, now, token);
-            await unitOfWork.SaveChangesAsync(token);
-            return null;
-        }, ct);
+        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(
+            token => ConfirmBookingAsync(bookingId, dto, employeeId, token), ct);
 
         return await FinishAsync(bookingId, conflict, ct);
+    }
+
+    private async Task<string?> ConfirmBookingAsync(Guid bookingId, ConfirmBookingDto dto, Guid employeeId,
+        CancellationToken ct)
+    {
+        var booking = await lifecycle.LockAsync(bookingId, ct: ct);
+        if (await lifecycle.SettleLockedAsync(booking, ct))
+        {
+            return "Booking end time passed; booking was settled automatically. Reload its current state.";
+        }
+
+        ValidatePayment(dto, booking.TotalCost);
+
+        if (booking.Status == BookingStatus.Confirmed)
+        {
+            return null;
+        }
+
+        if (booking.Status != BookingStatus.Pending)
+        {
+            throw new ConflictException($"The booking is already {booking.Status}.");
+        }
+
+        if (HasStarted(booking))
+        {
+            throw new ConflictException(
+                "The booking has already started; confirmation is no longer allowed.");
+        }
+
+        await EnsureCourtAvailableAsync(booking, ct);
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        await ChangeStatusAsync(booking, BookingStatus.Confirmed, employeeId, "Confirmed by staff", now, ct);
+        await IssueInvoiceAsync(booking, dto, employeeId, now, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return null;
     }
 
     private async Task<BookingMutationResponse<BookingDetailDto>> RejectCoreAsync(Guid bookingId, RejectBookingDto dto,
@@ -138,65 +154,80 @@ public class BookingRequestService(
     {
         var reason = dto.Reason?.Trim();
         if (string.IsNullOrEmpty(reason))
+        {
             throw new ValidationException(errors: new Dictionary<string, string[]>
-            { ["Reason"] = ["Reason is required"] });
+            {
+                ["Reason"] = ["Reason is required"]
+            });
+        }
 
         var employeeId = RequireEmployeeId();
-
-        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(async token =>
-        {
-            var booking = await LockAsync(bookingId, token);
-            if (booking.Status == BookingStatus.Cancelled) return null;
-            if (booking.Status == BookingStatus.Confirmed)
-                throw new ConflictException(
-                    "Confirmed bookings cannot be rejected; use the cancellation flow instead.");
-            if (booking.Status != BookingStatus.Pending)
-                throw new ConflictException($"The booking is already {booking.Status}.");
-
-            if (IsPastUsageDate(booking)) return await ExpireAsync(booking, token);
-
-            var now = clock.GetUtcNow().UtcDateTime;
-            await ChangeStatusAsync(booking, BookingStatus.Cancelled, employeeId, reason, now, token);
-            await unitOfWork.SaveChangesAsync(token);
-            return null;
-        }, ct);
+        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(
+            token => RejectBookingAsync(bookingId, reason, employeeId, token), ct);
 
         return await FinishAsync(bookingId, conflict, ct);
+    }
+
+    private async Task<string?> RejectBookingAsync(Guid bookingId, string reason, Guid employeeId, CancellationToken ct)
+    {
+        var booking = await lifecycle.LockAsync(bookingId, ct: ct);
+        if (await lifecycle.SettleLockedAsync(booking, ct))
+        {
+            return "Booking end time passed; booking was settled automatically. Reload its current state.";
+        }
+
+        if (booking.Status == BookingStatus.Cancelled)
+        {
+            return null;
+        }
+
+        if (booking.Status == BookingStatus.Confirmed)
+        {
+            throw new ConflictException(
+                "Confirmed bookings cannot be rejected; use the cancellation flow instead.");
+        }
+
+        if (booking.Status != BookingStatus.Pending)
+        {
+            throw new ConflictException($"The booking is already {booking.Status}.");
+        }
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        await ChangeStatusAsync(booking, BookingStatus.Cancelled, employeeId, reason, now, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return null;
     }
 
     private async Task<BookingMutationResponse<BookingDetailDto>> CompleteCoreAsync(Guid bookingId, ConfirmBookingDto? dto,
         CancellationToken ct = default)
     {
-        var employeeId = RequireEmployeeId();
+        RequireEmployeeId();
 
-        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(async token =>
-        {
-            var booking = await LockAsync(bookingId, token);
-            if (booking.Status == BookingStatus.Completed) return null;
-            if (booking.Status == BookingStatus.Cancelled)
-                throw new ConflictException("The booking is already Cancelled.");
-
-            if (booking.Status == BookingStatus.Pending && IsPastUsageDate(booking))
-                return await ExpireAsync(booking, token);
-            if (!HasEnded(booking))
-                throw new ConflictException("The booking has not ended yet.");
-
-            var now = clock.GetUtcNow().UtcDateTime;
-            if (booking.Status == BookingStatus.Pending)
-            {
-                if (dto is null)
-                    throw new ValidationException("Payment information is required to complete a pending booking.");
-                ValidatePayment(dto);
-                await IssueInvoiceAsync(booking, dto, employeeId, now, token);
-            }
-
-            await ChangeStatusAsync(booking, BookingStatus.Completed, employeeId, "Usage recorded by staff", now,
-                token);
-            await unitOfWork.SaveChangesAsync(token);
-            return null;
-        }, ct);
+        var conflict = await unitOfWork.ExecuteInTransactionAsync<string?>(
+            token => CompleteBookingAsync(bookingId, token), ct);
 
         return await FinishAsync(bookingId, conflict, ct);
+    }
+
+    private async Task<string?> CompleteBookingAsync(Guid bookingId, CancellationToken ct)
+    {
+        var booking = await lifecycle.LockAsync(bookingId, ct: ct);
+        if (await lifecycle.SettleLockedAsync(booking, ct))
+        {
+            return "Booking end time passed; booking was settled automatically. Reload its current state.";
+        }
+
+        if (booking.Status == BookingStatus.Completed)
+        {
+            return null;
+        }
+
+        if (booking.Status == BookingStatus.Cancelled)
+        {
+            throw new ConflictException("The booking is already Cancelled.");
+        }
+
+        throw new ConflictException("The booking has not ended yet; manual completion cannot bypass automatic settlement.");
     }
 
     private async Task<BookingMutationResponse<BookingDetailDto>> FinishAsync(Guid bookingId, string? conflict, CancellationToken ct)
@@ -206,21 +237,6 @@ public class BookingRequestService(
             : new BookingMutationResponse<BookingDetailDto>(await GetDetailAsync(bookingId, ct), BookingId: bookingId);
     }
 
-    private async Task<Booking> LockAsync(Guid bookingId, CancellationToken ct)
-    {
-        var snapshot = await bookingRepository.GetByIdAsync(bookingId, ct)
-            ?? throw new NotFoundException("Booking not found");
-        await unitOfWork.LockCourtAsync(snapshot.CourtId, ct);
-        var booking = await bookingRepository.GetByIdForUpdateAsync(bookingId, ct)
-            ?? throw new NotFoundException("Booking not found");
-        if (booking.CourtId != snapshot.CourtId)
-        {
-            throw new ConflictException("Booking court changed; retry the request.");
-        }
-
-        return booking;
-    }
-
     private Guid RequireEmployeeId()
     {
         return currentUser is { ActorType: ActorType.Employee, ActorId: { } id }
@@ -228,28 +244,9 @@ public class BookingRequestService(
             : throw new UnauthorizedException("Employee identity is required.");
     }
 
-    private bool IsPastUsageDate(Booking booking)
-    {
-        return booking.Date < VietnamTime.TodayLocal(clock);
-    }
-
     private bool HasStarted(Booking booking)
     {
         return VietnamTime.NowLocal(clock) >= VietnamTime.ToLocalDateTime(booking.Date, booking.StartTime);
-    }
-
-    private bool HasEnded(Booking booking)
-    {
-        return VietnamTime.NowLocal(clock) >= VietnamTime.ToLocalDateTime(booking.Date, booking.EndTime);
-    }
-
-    private async Task<string> ExpireAsync(Booking booking, CancellationToken ct)
-    {
-        var now = clock.GetUtcNow().UtcDateTime;
-        await ChangeStatusAsync(booking, BookingStatus.Cancelled, null, ExpiredReason, now, ct,
-            ActorType.System);
-        await unitOfWork.SaveChangesAsync(ct);
-        return ExpiredMessage;
     }
 
     private async Task ChangeStatusAsync(Booking booking, BookingStatus newStatus, Guid? employeeId, string reason,
@@ -286,7 +283,8 @@ public class BookingRequestService(
             IssuedByEmployee = employeeId,
             IssuedAt = now,
             PaidByEmployee = dto.IsPaid ? employeeId : null,
-            PaidAt = dto.IsPaid ? NormalizeUtc(dto.PaidAt!.Value) : null,
+            PaidAt = dto.IsPaid ? dto.PaidAt : null,
+            PaidAmount = dto.IsPaid ? dto.Amount : null,
             PaymentMethod = dto.IsPaid ? dto.PaymentMethod : null,
             Note = dto.Note?.Trim() ?? string.Empty
         }, ct);
@@ -311,33 +309,24 @@ public class BookingRequestService(
             throw new ConflictException("The time slot overlaps with another booking.");
     }
 
-    private void ValidatePayment(ConfirmBookingDto dto)
+    private void ValidatePayment(ConfirmBookingDto dto, decimal total)
     {
-        var errors = new Dictionary<string, string[]>();
         if (dto.IsPaid)
         {
-            if (dto.PaymentMethod is null || !Enum.IsDefined(dto.PaymentMethod.Value))
-                errors["PaymentMethod"] = ["Payment method is required when the booking is paid"];
-            if (dto.PaidAt is null)
-                errors["PaidAt"] = ["Payment time is required when the booking is paid"];
-            else if (NormalizeUtc(dto.PaidAt.Value) > clock.GetUtcNow().UtcDateTime + PaidAtClockSkew)
-                errors["PaidAt"] = ["Payment time cannot be in the future"];
-        }
-        else if (dto.PaymentMethod is not null || dto.PaidAt is not null)
-        {
-            errors["IsPaid"] = ["Payment method and time must be empty when the booking is unpaid"];
-        }
+            if (dto.Amount is null || dto.PaymentMethod is null || dto.PaidAt is null)
+            {
+                throw new ValidationException("Payment amount, method and actual UTC payment time are required.");
+            }
 
-        if (errors.Count > 0) throw new ValidationException(errors: errors);
-    }
-
-    private static DateTime NormalizeUtc(DateTime value)
-    {
-        return value.Kind switch
+            InvoiceRules.ValidatePayment(dto.Amount.Value, total, dto.PaymentMethod.Value,
+                dto.PaidAt.Value, clock.GetUtcNow().UtcDateTime);
+        }
+        else if (dto.Amount is not null || dto.PaymentMethod is not null || dto.PaidAt is not null)
         {
-            DateTimeKind.Utc => value,
-            DateTimeKind.Local => value.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
-        };
+            throw new ValidationException(errors: new Dictionary<string, string[]>
+            {
+                ["IsPaid"] = ["Payment amount, method and time must be empty when the booking is unpaid"]
+            });
+        }
     }
 }

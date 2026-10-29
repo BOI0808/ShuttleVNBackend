@@ -29,6 +29,20 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<BookingPriceSegment> BookingPriceSegments => Set<BookingPriceSegment>();
     public DbSet<IdempotencyRequest> IdempotencyRequests => Set<IdempotencyRequest>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public bool IsSystemSave { get; private set; }
+
+    public async Task<int> SaveSystemChangesAsync(CancellationToken ct = default)
+    {
+        IsSystemSave = true;
+        try
+        {
+            return await SaveChangesAsync(ct);
+        }
+        finally
+        {
+            IsSystemSave = false;
+        }
+    }
 
     public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
     {
