@@ -263,17 +263,20 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
 
     public async Task<Booking?> GetFreshDetailsAsync(Guid bookingId, CancellationToken ct = default)
     {
-        foreach (var entry in dbContext.ChangeTracker.Entries().ToList())
-        {
-            if (entry.Entity is Booking booking && booking.BookingId == bookingId ||
+        var entries = dbContext.ChangeTracker.Entries()
+            .Where(entry => entry.Entity is Booking booking && booking.BookingId == bookingId ||
                 entry.Entity is Invoice invoice && invoice.BookingId == bookingId ||
                 entry.Entity is BookingPriceSegment priceSegment && priceSegment.BookingId == bookingId)
-            {
-                if (entry.State is not EntityState.Unchanged)
-                    throw new InvalidOperationException("Cannot refresh a booking with unsaved changes.");
+            .ToList();
 
-                entry.State = EntityState.Detached;
-            }
+        if (entries.Any(entry => entry.State is not EntityState.Unchanged))
+        {
+            throw new InvalidOperationException("Cannot refresh a booking with unsaved changes.");
+        }
+
+        foreach (var entry in entries)
+        {
+            entry.State = EntityState.Detached;
         }
 
         return await GetByIdWithDetailsAsync(bookingId, ct);
