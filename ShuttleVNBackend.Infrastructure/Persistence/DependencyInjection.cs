@@ -37,6 +37,7 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddEmailService(configuration);
+        services.AddHostedService<BookingNotificationWorker>();
         services.AddDataProtection();
         services.AddHttpContextAccessor();
         services.AddScoped<IBookingIdempotency, BookingIdempotency>();
