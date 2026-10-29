@@ -4,5 +4,6 @@ public enum InvoiceStatus
 {
     Unpaid,
     Paid,
-    Cancelled
+    Cancelled,
+    Refunded
 }

@@ -70,7 +70,7 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
     // Entity key only exists after saved to the database so we write log here
     public override int SavedChanges(SaveChangesCompletedEventData e, int result)
     {
-        var logs = BuildLogs();
+        var logs = BuildLogs(e.Context);
         if (logs.Count <= 0 || e.Context is null)
             return base.SavedChanges(e, result);
 
@@ -82,7 +82,7 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData e, int result, CancellationToken ct = default)
     {
-        var logs = BuildLogs();
+        var logs = BuildLogs(e.Context);
         if (logs.Count <= 0 || e.Context is null)
             return await base.SavedChangesAsync(e, result, ct);
 
@@ -102,14 +102,15 @@ public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
         return Task.CompletedTask;
     }
 
-    private List<Audit> BuildLogs()
+    private List<Audit> BuildLogs(DbContext? context)
     {
         var now = DateTime.UtcNow;
+        var actor = context is ShuttleVnDbContext { IsSystemSave: true } ? ActorType.System : currentUser.ActorType;
         var logs = _pending.Select(p => new Audit
         {
-            ActorType = currentUser.ActorType,
-            EmployeeId = currentUser.ActorType == ActorType.Employee ? currentUser.ActorId : null,
-            CustomerId = currentUser.ActorType == ActorType.Customer ? currentUser.ActorId : null,
+            ActorType = actor,
+            EmployeeId = actor == ActorType.Employee ? currentUser.ActorId : null,
+            CustomerId = actor == ActorType.Customer ? currentUser.ActorId : null,
             Action = p.Action,
             EntityName = p.EntityName,
             EntityId = p.EntityId ?? KeyOf(p.EntryForKey!),

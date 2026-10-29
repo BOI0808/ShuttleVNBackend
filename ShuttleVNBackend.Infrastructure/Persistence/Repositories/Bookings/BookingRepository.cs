@@ -18,10 +18,14 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed), ct);
     }
 
-    public Task<List<Guid>> GetPendingIdsAsync(DateOnly throughDate, CancellationToken ct = default)
+    public Task<List<Guid>> GetSettlementCandidateIdsAsync(DateTime localCutoff, CancellationToken ct = default)
     {
-        return dbContext.Bookings.AsNoTracking()
-            .Where(b => b.Status == BookingStatus.Pending && b.Date <= throughDate)
+        var date = DateOnly.FromDateTime(localCutoff);
+        var time = TimeOnly.FromDateTime(localCutoff);
+        return dbContext.Bookings
+            .AsNoTracking()
+            .Where(b => (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
+                && (b.Date < date || (b.Date == date && b.EndTime <= time)))
             .Select(b => b.BookingId)
             .ToListAsync(ct);
     }
@@ -255,6 +259,24 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .Include(b => b.PriceSegments)
             .Include(b => b.Invoices)
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
+    }
+
+    public async Task<Booking?> GetFreshDetailsAsync(Guid bookingId, CancellationToken ct = default)
+    {
+        foreach (var entry in dbContext.ChangeTracker.Entries().ToList())
+        {
+            if (entry.Entity is Booking booking && booking.BookingId == bookingId ||
+                entry.Entity is Invoice invoice && invoice.BookingId == bookingId ||
+                entry.Entity is BookingPriceSegment priceSegment && priceSegment.BookingId == bookingId)
+            {
+                if (entry.State is not EntityState.Unchanged)
+                    throw new InvalidOperationException("Cannot refresh a booking with unsaved changes.");
+
+                entry.State = EntityState.Detached;
+            }
+        }
+
+        return await GetByIdWithDetailsAsync(bookingId, ct);
     }
 
     public async Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)

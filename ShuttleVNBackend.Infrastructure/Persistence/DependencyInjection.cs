@@ -38,6 +38,7 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddEmailService(configuration);
+        services.AddHostedService<BookingNotificationWorker>();
         services.AddDataProtection();
         services.AddHttpContextAccessor();
         services.AddScoped<IBookingIdempotency, BookingIdempotency>();
@@ -49,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInvoiceCodeGenerator, InvoiceCodeGenerator>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
@@ -67,6 +69,9 @@ public static class DependencyInjection
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<BookingService>();
+        services.AddScoped<BookingLifecycle>();
+        services.AddScoped<BookingRescheduleService>();
+        services.AddScoped<InvoiceService>();
         services.AddScoped<BookingRequestService>();
         services.AddScoped<AdminBookingService>();
         services.AddScoped<QuickLookupService>();

@@ -29,6 +29,20 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
     public DbSet<BookingPriceSegment> BookingPriceSegments => Set<BookingPriceSegment>();
     public DbSet<IdempotencyRequest> IdempotencyRequests => Set<IdempotencyRequest>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public bool IsSystemSave { get; private set; }
+
+    public async Task<int> SaveSystemChangesAsync(CancellationToken ct = default)
+    {
+        IsSystemSave = true;
+        try
+        {
+            return await SaveChangesAsync(ct);
+        }
+        finally
+        {
+            IsSystemSave = false;
+        }
+    }
 
     public new async Task AddAsync<T>(T entity, CancellationToken ct = default) where T : class
     {
@@ -213,6 +227,10 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
             entity.Property(e => e.TotalCost).HasPrecision(10, 2);
             entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.PaymentMethod).HasConversion<string>();
+            entity.Property(e => e.RefundMethod).HasConversion<string>();
+            entity.Property(e => e.CancellationActorType).HasConversion<string>();
+            entity.Property(e => e.RefundAmount).HasPrecision(10, 2);
+            entity.Property(e => e.PaidAmount).HasPrecision(10, 2);
 
             entity.HasOne(e => e.Booking)
                 .WithMany(b => b.Invoices)
@@ -220,7 +238,27 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
 
             entity.HasOne(e => e.IssueEmployee)
                 .WithMany()
-                .HasForeignKey(e => e.IssuedByEmployee);
+                .HasForeignKey(e => e.IssuedByEmployee)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Employee>()
+                .WithMany()
+                .HasForeignKey(e => e.CancelledByEmployee)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(e => e.CancelledByCustomer)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Employee>()
+                .WithMany()
+                .HasForeignKey(e => e.RefundedByEmployee)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Invoice>()
+                .WithMany()
+                .HasForeignKey(e => e.ReplacesInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => e.ReplacesInvoiceId).IsUnique();
 
             entity.HasOne(e => e.PaidEmployee)
                 .WithMany()
@@ -232,10 +270,29 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
                 .IsUnique()
                 .HasFilter("\"Status\" IN ('Unpaid', 'Paid')");
 
-            entity.ToTable(t => t.HasCheckConstraint("ck_invoice_payment_group",
-                "(\"Status\" = 'Unpaid' AND \"PaidAt\" IS NULL AND \"PaymentMethod\" IS NULL AND \"PaidByEmployee\" IS NULL) OR " +
-                "(\"Status\" = 'Paid' AND \"PaidAt\" IS NOT NULL AND \"PaymentMethod\" IS NOT NULL AND \"PaidByEmployee\" IS NOT NULL) OR " +
-                "\"Status\" = 'Cancelled'"));
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("ck_invoice_payment_group",
+                    "(\"Status\" IN ('Unpaid','Cancelled') AND \"PaidAt\" IS NULL AND \"PaymentMethod\" IS NULL AND \"PaidByEmployee\" IS NULL) OR " +
+                    "(\"Status\" IN ('Paid','Refunded') AND \"PaidAt\" IS NOT NULL AND \"PaymentMethod\" IS NOT NULL AND \"PaidByEmployee\" IS NOT NULL)");
+                t.HasCheckConstraint("ck_invoice_paid_amount",
+                    "(\"Status\" IN ('Unpaid','Cancelled') AND \"PaidAmount\" IS NULL) OR " +
+                    "(\"Status\" IN ('Paid','Refunded') AND \"PaidAmount\" IS NOT NULL AND " +
+                    "\"PaidAmount\" > 0 AND \"PaidAmount\" = trunc(\"PaidAmount\") AND \"PaidAmount\" = \"TotalCost\")");
+                t.HasCheckConstraint("ck_invoice_refund_group",
+                    "(\"Status\" = 'Refunded' AND \"RefundedByEmployee\" IS NOT NULL AND \"RefundedAt\" IS NOT NULL AND " +
+                    "\"RefundMethod\" IS NOT NULL AND \"RefundAmount\" IS NOT NULL AND \"RefundAmount\" = \"TotalCost\" AND \"RefundAmount\" > 0 AND " +
+                    "\"RefundReason\" IS NOT NULL AND length(btrim(\"RefundReason\")) > 0 AND \"RefundedAt\" >= \"PaidAt\") OR " +
+                    "(\"Status\" <> 'Refunded' AND \"RefundedByEmployee\" IS NULL AND \"RefundedAt\" IS NULL AND " +
+                    "\"RefundMethod\" IS NULL AND \"RefundAmount\" IS NULL AND \"RefundReason\" IS NULL)");
+                t.HasCheckConstraint("ck_invoice_cancellation_group",
+                    "(\"Status\" IN ('Unpaid','Paid') AND \"CancelledAt\" IS NULL AND \"CancellationActorType\" IS NULL AND " +
+                    "\"CancelledByEmployee\" IS NULL AND \"CancelledByCustomer\" IS NULL AND \"CancellationReason\" IS NULL) OR " +
+                    "(\"Status\" IN ('Cancelled','Refunded') AND \"CancelledAt\" IS NOT NULL AND \"CancellationActorType\" IS NOT NULL AND \"CancellationReason\" IS NOT NULL AND " +
+                    "length(btrim(\"CancellationReason\")) > 0 AND ((\"CancellationActorType\" = 'System' AND \"CancelledByEmployee\" IS NULL AND \"CancelledByCustomer\" IS NULL) OR " +
+                    "(\"CancellationActorType\" = 'Customer' AND \"CancelledByCustomer\" IS NOT NULL AND \"CancelledByEmployee\" IS NULL) OR " +
+                    "(\"CancellationActorType\" = 'Employee' AND \"CancelledByEmployee\" IS NOT NULL AND \"CancelledByCustomer\" IS NULL)))");
+            });
         });
 
         modelBuilder.Entity<InvoiceDailyCounter>(entity =>
