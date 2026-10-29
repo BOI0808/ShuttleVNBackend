@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInvoiceCodeGenerator, InvoiceCodeGenerator>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
@@ -66,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<BookingService>();
+        services.AddScoped<InvoiceService>();
         services.AddScoped<BookingRequestService>();
         services.AddScoped<AdminBookingService>();
 

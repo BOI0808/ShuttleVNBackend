@@ -11,10 +11,11 @@ public class Invoice
     public Guid BookingId { get; set; }
     public decimal TotalCost { get; set; }
     public InvoiceStatus Status { get; set; }
-    public Guid IssuedByEmployee { get; set; }
+    public Guid? IssuedByEmployee { get; set; }
     public DateTime IssuedAt { get; set; }
     public Guid? PaidByEmployee { get; set; }
     public DateTime? PaidAt { get; set; }
+    public decimal? PaidAmount { get; set; }
     public PaymentMethod? PaymentMethod { get; set; }
     public Guid? CancelledByEmployee { get; set; }
     public DateTime? CancelledAt { get; set; }
@@ -30,6 +31,6 @@ public class Invoice
     public string Note { get; set; } = string.Empty;
 
     public virtual Booking Booking { get; set; } = null!;
-    public virtual Employee IssueEmployee { get; set; } = null!;
+    public virtual Employee? IssueEmployee { get; set; }
     public virtual Employee? PaidEmployee { get; set; }
 }

@@ -6,4 +6,5 @@ public record ConfirmBookingDto(
     bool IsPaid,
     PaymentMethod? PaymentMethod,
     DateTime? PaidAt,
-    string? Note);
+    string? Note,
+    decimal? Amount = null);
