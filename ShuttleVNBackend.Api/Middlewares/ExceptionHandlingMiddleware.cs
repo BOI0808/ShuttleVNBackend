@@ -31,10 +31,10 @@ public class ExceptionHandlingMiddleware(
             await context.Response.WriteAsJsonAsync(problem);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-                                           {
-                                               SqlState: PostgresErrorCodes.ExclusionViolation
+        {
+            SqlState: PostgresErrorCodes.ExclusionViolation
                                                    or PostgresErrorCodes.UniqueViolation
-                                           })
+        })
         {
             logger.LogWarning(ex, "Database constraint conflict");
 

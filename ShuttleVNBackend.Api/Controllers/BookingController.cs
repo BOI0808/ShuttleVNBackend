@@ -94,7 +94,19 @@ public class BookingController(BookingService bookingService) : ControllerBase
         var result = await bookingService.GetBookingByIdAsync(bookingId, ct);
         return Ok(ApiResponseFactory.Success(result));
     }
-    
+
+    [HttpGet("code/{code}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<BookingDto>>> GetBookingByCode(
+        [FromRoute] string code, 
+        CancellationToken ct = default)
+    {
+        var result = await bookingService.GetBookingByCodeAsync(code, ct);
+        if (result == null) 
+            return NotFound(ApiResponseFactory.Failure<BookingDto>("Không tìm thấy đơn đặt sân"));;
+        return Ok(ApiResponseFactory.Success(result));
+    }
+
     [HttpGet("{bookingId:guid}/invoice")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<InvoiceDto>>> GetInvoice(

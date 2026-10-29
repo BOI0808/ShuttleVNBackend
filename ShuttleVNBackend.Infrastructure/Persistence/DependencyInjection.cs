@@ -33,6 +33,7 @@ public static class DependencyInjection
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddSingleton(TimeProvider.System);
@@ -68,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<BookingService>();
         services.AddScoped<BookingRequestService>();
         services.AddScoped<AdminBookingService>();
+        services.AddScoped<QuickLookupService>();
 
         services.AddScoped<AuditInterceptor>();
 

@@ -1,3 +1,4 @@
+using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.Exceptions;
 using ShuttleVNBackend.Application.Interfaces.Repositories;
@@ -17,8 +18,7 @@ public class StatisticsService(
     public async Task<CourtUsageSummaryDto> GetCourtUsageAsync(
         DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
     {
-        var now = clock.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(now);
+        var today = VietnamTime.TodayLocal(clock);
         var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
         var to = toDate ?? today;
 
@@ -87,5 +87,47 @@ public class StatisticsService(
             Math.Round(totalBooked, 2), Math.Round(totalAvailable, 2),
             totalAvailable > 0 ? Math.Round(totalBooked / totalAvailable * 100, 2) : 0,
             mostUsed, stats, hourly);
+    }
+
+    public async Task<RevenueSummaryDto> GetRevenueAsync(
+        DateOnly? fromDate, DateOnly? toDate, RevenueGroupBy groupBy, CancellationToken ct = default)
+    {
+        var today = VietnamTime.TodayLocal(clock);
+        var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
+        var to = toDate ?? today;
+
+        if (from > to || to.DayNumber - from.DayNumber >= MaxRangeDays)
+            throw new ValidationException(errors: new Dictionary<string, string[]>
+            {
+                ["DateRange"] = [$"fromDate must be <= toDate and the range at most {MaxRangeDays} days"]
+            });
+
+        var invoices = await statisticsRepository.GetPaidInvoicesAsync(
+            VietnamTime.ToUtc(from, TimeOnly.MinValue),
+            VietnamTime.ToUtc(to.AddDays(1), TimeOnly.MinValue), ct);
+
+        var totals = invoices
+            .GroupBy(i => PeriodStart(VietnamTime.ToLocalDate(i.PaidAt), groupBy))
+            .ToDictionary(g => g.Key, g => (Count: g.Count(), Revenue: g.Sum(i => i.TotalCost)));
+
+        var periods = EnumeratePeriods(from, to, groupBy)
+            .Select(start => totals.TryGetValue(start, out var t)
+                ? new RevenuePeriodDto(start, t.Count, t.Revenue)
+                : new RevenuePeriodDto(start, 0, 0m))
+            .ToList();
+
+        return new RevenueSummaryDto(from, to, groupBy,
+            periods.Sum(p => p.InvoiceCount), periods.Sum(p => p.Revenue), periods);
+    }
+
+    private static DateOnly PeriodStart(DateOnly date, RevenueGroupBy groupBy) =>
+        groupBy == RevenueGroupBy.Month ? new DateOnly(date.Year, date.Month, 1) : date;
+
+    private static IEnumerable<DateOnly> EnumeratePeriods(DateOnly from, DateOnly to, RevenueGroupBy groupBy)
+    {
+        var last = PeriodStart(to, groupBy);
+        for (var current = PeriodStart(from, groupBy); current <= last;
+             current = groupBy == RevenueGroupBy.Month ? current.AddMonths(1) : current.AddDays(1))
+            yield return current;
     }
 }
