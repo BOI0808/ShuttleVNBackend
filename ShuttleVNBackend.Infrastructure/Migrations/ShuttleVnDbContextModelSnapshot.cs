@@ -74,6 +74,8 @@ namespace ShuttleVNBackend.Infrastructure.Migrations
 
                     b.HasIndex("Date", "CourtId", "StartTime", "BookingId");
 
+                    b.HasIndex("CustomerId", "Date", "StartTime", "CreatedAt", "BookingId");
+
                     b.ToTable("Bookings");
 
                     b.HasAnnotation("CustomExclusion:Constraints", "[{\"parts\":[{\"path\":\"CourtId\",\"op\":\"=\"},{\"path\":\"Date\",\"op\":\"=\"},{\"expr\":\"tsrange(\\u0022Date\\u0022 \\u002B \\u0022StartTime\\u0022, \\u0022Date\\u0022 \\u002B \\u0022EndTime\\u0022)\",\"op\":\"\\u0026\\u0026\"}],\"filter\":\"\\u0022Status\\u0022 \\u003C\\u003E \\u0027Cancelled\\u0027\",\"name\":\"ex_bookings_no_overlap\"}]");

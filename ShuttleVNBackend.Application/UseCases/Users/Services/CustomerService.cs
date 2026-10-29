@@ -63,7 +63,7 @@ public class CustomerService(
 
         if (profile.Email.Length > 0 && profile.Email != CustomerProfileRules.NormalizeEmail(customer.Email))
             throw new ValidationException(errors: new Dictionary<string, string[]>
-                { ["Email"] = ["Email cannot be changed here; use the change-email flow"] });
+            { ["Email"] = ["Email không thể thay đổi"] });
 
         if (customer.FullName != profile.FullName || customer.Phone != profile.Phone)
         {

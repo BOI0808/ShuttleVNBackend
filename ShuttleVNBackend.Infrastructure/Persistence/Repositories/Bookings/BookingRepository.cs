@@ -190,6 +190,36 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
+    public async Task<PagedResult<BookingRow>> SearchByLookupAsync(
+        QuickLookupQuery query, PageRequest page, CancellationToken ct = default)
+    {
+        var value = query.Value;
+        var bookings = dbContext.Bookings.AsNoTracking();
+        var filtered = query.MatchType switch
+        {
+            QuickLookupMatchType.BookingCode => bookings.Where(b => b.BookingCode == value),
+            QuickLookupMatchType.Email => bookings.Where(b => b.Customer.Email.ToLower().Trim() == value),
+            _ => bookings.Where(b => b.Customer.Phone.Replace(" ", "").Replace("-", "") == value)
+        };
+
+        var totalCount = await filtered.CountAsync(ct);
+        var items = await ProjectRows(filtered
+                .OrderByDescending(b => b.Date)
+                .ThenByDescending(b => b.StartTime)
+                .ThenBy(b => b.BookingId)
+                .Skip((page.PageNumber - 1) * page.PageSize)
+                .Take(page.PageSize))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = page.PageNumber,
+            PageSize = page.PageSize,
+            TotalCount = totalCount
+        };
+    }
+
     private static string ToLikePattern(string term)
     {
         return $"%{term.Replace("\\", @"\\").Replace("%", "\\%").Replace("_", "\\_")}%";
@@ -200,6 +230,25 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         return await dbContext.Bookings
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
+    }
+
+    public async Task<Booking?> GetByCodeAsync(string bookingCode, string? phoneOrEmail, CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings
+            .Include(b => b.Customer)
+            .Include(b => b.Court)
+            .Include(b => b.PriceSegments)
+            .Include(b => b.Invoices)
+            .AsNoTracking()
+            .Where(b => b.BookingCode == bookingCode);
+
+        if (!string.IsNullOrWhiteSpace(phoneOrEmail))
+        {
+            var trimmed = phoneOrEmail.Trim().ToLower();
+            query = query.Where(b => b.Customer.Phone == trimmed || b.Customer.Email.ToLower() == trimmed);
+        }
+
+        return await query.FirstOrDefaultAsync(ct);
     }
 
     public async Task<Booking?> GetByIdWithDetailsAsync(Guid bookingId, CancellationToken ct = default)

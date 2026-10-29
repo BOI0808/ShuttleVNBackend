@@ -176,7 +176,8 @@ public class ShuttleVnDbContext : DbContext, IUnitOfWork
                 .HasForeignKey(e => e.CourtId);
 
             entity.HasIndex(e => new { e.Status, e.CreatedAt, e.BookingId });
-            entity.HasIndex(e => new { e.Date, e.CourtId, e.StartTime, e.BookingId });          
+            entity.HasIndex(e => new { e.Date, e.CourtId, e.StartTime, e.BookingId });
+            entity.HasIndex(e => new { e.CustomerId, e.Date, e.StartTime, e.CreatedAt, e.BookingId });
 
             entity.HasExclusionConstraint(ex => ex
                 .WithEquality(e => e.CourtId)

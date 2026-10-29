@@ -86,7 +86,7 @@ public class AccountController(
         return Ok(ApiResponseFactory.Success(await customerService.GetBookingsAsync(id, page, ct)));
     }
 
-        // Create customer (profile-only)
+    // Create customer (profile-only)
     [HttpPost("customers")]
     [Authorize(Policy = "StaffOnly")]
     public async Task<ActionResult<ApiResponse<CustomerListItemDto>>> CreateCustomer(
