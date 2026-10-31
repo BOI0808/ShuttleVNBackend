@@ -1,0 +1,33 @@
+---
+- name: Prepare private server
+  hosts: private
+  become: true
+
+  tasks:
+    - name: Create private service directories
+      ansible.builtin.file:
+        path: "/opt/shuttlevn/{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+      loop:
+        - backend
+        - monitoring
+
+    - name: Install production API Compose file
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/api.compose.yml.j2"
+        dest: /opt/shuttlevn/backend/compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Install private API environment
+      ansible.builtin.copy:
+        src: "{{ lookup('ansible.builtin.env', 'HOME') }}/.config/shuttlevn/api.env"
+        dest: /opt/shuttlevn/backend/api.env
+        owner: root
+        group: root
+        mode: '0600'
+      no_log: true

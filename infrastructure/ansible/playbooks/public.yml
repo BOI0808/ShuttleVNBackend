@@ -1,0 +1,68 @@
+---
+- name: Prepare public server
+  hosts: public
+  become: true
+
+  tasks:
+    - name: Create public service directories
+      ansible.builtin.file:
+        path: "/opt/shuttlevn/{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+      loop:
+        - frontend
+        - proxy
+        - monitoring
+    
+    - name: Install frontend Compose file
+      ansible.builtin.template:
+        src: ../templates/frontend.compose.yml.j2
+        dest: /opt/shuttlevn/frontend/compose.yml
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+
+    - name: Install ShuttleVN Nginx config
+      ansible.builtin.template:
+        src: ../templates/shuttlevn.nginx.conf.j2
+        dest: /etc/nginx/sites-available/shuttlevn
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload Nginx
+
+    - name: Disable default Nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+
+    - name: Enable ShuttleVN Nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/shuttlevn
+        dest: /etc/nginx/sites-enabled/shuttlevn
+        state: link
+      notify: Reload Nginx
+
+    - name: Check Nginx config
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Enable and start Nginx
+      ansible.builtin.service:
+        name: nginx
+        enabled: true
+        state: started
+  
+  handlers:
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

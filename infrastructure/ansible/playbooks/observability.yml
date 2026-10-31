@@ -1,0 +1,82 @@
+---
+- name: Prepare private monitoring
+  hosts: private
+  become: true
+
+  tasks:
+    - name: Check Grafana admin password file
+      ansible.builtin.stat:
+        path: /opt/shuttlevn/monitoring/grafana_admin_password
+      register: grafana_password_file
+
+    - name: Require password on first setup
+      ansible.builtin.assert:
+        that:
+          - grafana_password_file.stat.exists or
+            (lookup('ansible.builtin.env', 'GRAFANA_ADMIN_PASSWORD') | length > 0)
+        fail_msg: Set GRAFANA_ADMIN_PASSWORD before the first run.
+
+    - name: Create Grafana admin password file
+      ansible.builtin.copy:
+        dest: /opt/shuttlevn/monitoring/grafana_admin_password
+        content: "{{ lookup('ansible.builtin.env', 'GRAFANA_ADMIN_PASSWORD') }}\n"
+        owner: root
+        group: root
+        mode: '0600'
+      when: not grafana_password_file.stat.exists
+      no_log: true
+
+    - name: Install Prometheus configuration
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/prometheus.yml.j2"
+        dest: /opt/shuttlevn/monitoring/prometheus.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        notify: Restart Prometheus
+
+    - name: Install Grafana datasource
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../templates/grafana-datasource.yml"
+        dest: /opt/shuttlevn/monitoring/grafana-datasource.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        notify: Restart Grafana
+
+    - name: Install observability Compose file
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/observability.compose.yml.j2"
+        dest: /opt/shuttlevn/monitoring/observability.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Start Prometheus and Grafana
+      community.docker.docker_compose_v2:
+        project_src: /opt/shuttlevn/monitoring
+        files:
+          - observability.yml
+        project_name: observability
+        state: present
+  
+  handlers:
+    - name: Restart Prometheus
+      community.docker.docker_compose_v2:
+        project_src: /opt/shuttlevn/monitoring
+        files:
+          - observability.yml
+        project_name: observability
+        services:
+          - prometheus
+        state: restarted
+
+    - name: Restart Grafana
+      community.docker.docker_compose_v2:
+        project_src: /opt/shuttlevn/monitoring
+        files:
+          - observability.yml
+        project_name: observability
+        services:
+          - grafana
+        state: restarted

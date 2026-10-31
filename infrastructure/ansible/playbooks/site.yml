@@ -1,0 +1,6 @@
+---
+- import_playbook: common.yml
+- import_playbook: public.yml
+- import_playbook: private.yml
+- import_playbook: exporters.yml
+- import_playbook: observability.yml

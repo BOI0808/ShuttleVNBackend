@@ -1,0 +1,19 @@
+---
+- name: Configure host exporters
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install exporter Compose file
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../templates/exporters.compose.yml.j2"
+        dest: /opt/shuttlevn/monitoring/compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Start host exporters
+      community.docker.docker_compose_v2:
+        project_src: /opt/shuttlevn/monitoring
+        project_name: host-exporters
+        state: present
