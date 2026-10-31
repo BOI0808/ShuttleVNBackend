@@ -21,6 +21,9 @@ public class ExceptionHandlingMiddleware(
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = ex.StatusCode;
 
+            if (ex is TooManyRequestsException tooManyRequests)
+                context.Response.Headers["Retry-After"] = tooManyRequests.RetryAfterSeconds.ToString();
+
             IDictionary<string, string[]> errors = new Dictionary<string, string[]>();
             if (ex is ValidationException validationEx)
                 errors = validationEx.Errors;
@@ -31,10 +34,10 @@ public class ExceptionHandlingMiddleware(
             await context.Response.WriteAsJsonAsync(problem);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-                                           {
-                                               SqlState: PostgresErrorCodes.ExclusionViolation
+        {
+            SqlState: PostgresErrorCodes.ExclusionViolation
                                                    or PostgresErrorCodes.UniqueViolation
-                                           })
+        })
         {
             logger.LogWarning(ex, "Database constraint conflict");
 

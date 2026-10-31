@@ -32,4 +32,10 @@ public static class VietnamTime
     {
         return TimeZoneInfo.ConvertTimeToUtc(ToLocalDateTime(date, time), Zone);
     }
+
+    public static DateOnly ToLocalDate(DateTime utc)
+    {
+        var utcValue = DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utcValue, Zone));
+    }
 }

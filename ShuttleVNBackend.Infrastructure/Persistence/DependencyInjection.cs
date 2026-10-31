@@ -33,10 +33,13 @@ public static class DependencyInjection
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddSingleton(TimeProvider.System);
         services.AddEmailService(configuration);
+        services.AddAccountSetup(configuration);
+        services.AddHostedService<BookingNotificationWorker>();
         services.AddDataProtection();
         services.AddHttpContextAccessor();
         services.AddScoped<IBookingIdempotency, BookingIdempotency>();
@@ -48,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ICourtRepository, CourtRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInvoiceCodeGenerator, InvoiceCodeGenerator>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
@@ -56,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUser, CurrentUser>();
 
         services.AddScoped<AppAuthService>();
+        services.AddScoped<PasswordSetupService>();
         services.AddScoped<AccountService>();
         services.AddScoped<CustomerService>();
         services.AddScoped<EmployeeService>();
@@ -66,8 +71,12 @@ public static class DependencyInjection
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<BookingService>();
+        services.AddScoped<BookingLifecycle>();
+        services.AddScoped<BookingRescheduleService>();
+        services.AddScoped<InvoiceService>();
         services.AddScoped<BookingRequestService>();
         services.AddScoped<AdminBookingService>();
+        services.AddScoped<QuickLookupService>();
 
         services.AddScoped<AuditInterceptor>();
 

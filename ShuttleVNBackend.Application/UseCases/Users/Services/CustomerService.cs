@@ -7,7 +7,6 @@ using ShuttleVNBackend.Application.Interfaces.Repositories.Bookings;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Users;
 using ShuttleVNBackend.Application.UseCases.Bookings.Helpers;
 using ShuttleVNBackend.Application.UseCases.Users.Helpers;
-using ShuttleVNBackend.Core.Entities.Users;
 
 namespace ShuttleVNBackend.Application.UseCases.Users.Services;
 
@@ -29,30 +28,6 @@ public class CustomerService(
                ?? throw new NotFoundException("Customer not found");
     }
 
-    public async Task<CustomerListItemDto> CreateCustomer(CustomerProfileDto dto, CancellationToken ct = default)
-    {
-        var profile = CustomerProfileRules.Normalize(dto, true);
-
-        if (await customerRepository.GetByEmailAsync(profile.Email, ct) is not null)
-            throw new ConflictException("Email is already used by another customer");
-
-        var now = clock.GetUtcNow().UtcDateTime;
-        var customer = new Customer
-        {
-            CustomerId = Guid.NewGuid(),
-            AccountId = null,
-            FullName = profile.FullName,
-            Phone = profile.Phone,
-            Email = profile.Email,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        await unitOfWork.AddAsync(customer, ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return await GetByIdAsync(customer.CustomerId, ct);
-    }
-
     public async Task<CustomerListItemDto> UpdateCustomer(Guid id, CustomerProfileDto dto,
         CancellationToken ct = default)
     {
@@ -63,7 +38,7 @@ public class CustomerService(
 
         if (profile.Email.Length > 0 && profile.Email != CustomerProfileRules.NormalizeEmail(customer.Email))
             throw new ValidationException(errors: new Dictionary<string, string[]>
-                { ["Email"] = ["Email cannot be changed here; use the change-email flow"] });
+            { ["Email"] = ["Email không thể thay đổi"] });
 
         if (customer.FullName != profile.FullName || customer.Phone != profile.Phone)
         {

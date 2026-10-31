@@ -83,22 +83,37 @@ public class CustomerRepository(ShuttleVnDbContext dbContext) : ICustomerReposit
             .FirstOrDefaultAsync(ct);
     }
 
+    public async Task<CustomerListItemDto?> GetListItemByEmailAsync(string email, CancellationToken ct = default)
+    {
+        return await Project(dbContext.Customers.AsNoTracking()
+                .Where(c => c.Email.ToLower().Trim() == email))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<CustomerListItemDto>> GetListItemsByPhoneAsync(
+        string phone, CancellationToken ct = default)
+    {
+        return await Project(dbContext.Customers.AsNoTracking()
+                .Where(c => c.Phone.Replace(" ", "").Replace("-", "") == phone))
+            .ToListAsync(ct);
+    }
+
     private IQueryable<CustomerListItemDto> Project(IQueryable<Customer> customers)
     {
         return from c in customers
-            join a in dbContext.UserAccounts.AsNoTracking() on c.AccountId equals a.AccountId into accounts
-            from a in accounts.DefaultIfEmpty()
-            orderby c.CreatedAt, c.CustomerId
-            select new CustomerListItemDto(
-                c.CustomerId,
-                c.FullName,
-                c.Phone,
-                c.Email,
-                c.AccountId,
-                c.AccountId != null,
-                a != null ? (AccountStatus?)a.Status : null,
-                c.CreatedAt,
-                c.UpdatedAt);
+               join a in dbContext.UserAccounts.AsNoTracking() on c.AccountId equals a.AccountId into accounts
+               from a in accounts.DefaultIfEmpty()
+               orderby c.CreatedAt, c.CustomerId
+               select new CustomerListItemDto(
+                   c.CustomerId,
+                   c.FullName,
+                   c.Phone,
+                   c.Email,
+                   c.AccountId,
+                   c.AccountId != null,
+                   a != null ? (AccountStatus?)a.Status : null,
+                   c.CreatedAt,
+                   c.UpdatedAt);
     }
 
     private static string ToLikePattern(string term)

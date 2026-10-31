@@ -1,5 +1,6 @@
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 using ShuttleVNBackend.Core.Entities.Bookings;
+using ShuttleVNBackend.Application.UseCases.Bookings.Services;
 
 namespace ShuttleVNBackend.Application.DTOs.Bookings;
 
@@ -19,7 +20,8 @@ public sealed record BookingDto(
     decimal TotalCost,
     DateTime CreatedAt,
     IReadOnlyList<BookingPriceSegmentDto> PriceSegments,
-    InvoiceDto? Invoice)
+    InvoiceDto? Invoice,
+    string ExpectedState)
 {
     public static BookingDto FromEntity(Booking booking)
     {
@@ -46,7 +48,8 @@ public sealed record BookingDto(
                 .OrderBy(s => s.SegmentNo)
                 .Select(BookingPriceSegmentDto.FromEntity)
                 .ToList(),
-            latestInvoice is null ? null : InvoiceDto.FromEntity(latestInvoice));
+            latestInvoice is null ? null : InvoiceDto.FromEntity(latestInvoice),
+            InvoiceRules.State(booking));
     }
 }
 
@@ -58,6 +61,16 @@ public sealed record BookingPriceSegmentDto(
     decimal PricePerHour
 )
 {
+    public BookingPriceSegment ToEntity(Guid bookingId) => new()
+    {
+        BookingId = bookingId,
+        SegmentNo = SegmentNo,
+        PriceStartTime = PriceStartTime,
+        SegmentStartTime = SegmentStartTime,
+        SegmentEndTime = SegmentEndTime,
+        PricePerHour = PricePerHour
+    };
+
     public static BookingPriceSegmentDto FromEntity(BookingPriceSegment segment)
     {
         return new BookingPriceSegmentDto(
