@@ -59,6 +59,27 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
         };
     }
 
+    public async Task<PagedResult<BookingRow>> GetPendingPreviewAsync(int take, CancellationToken ct = default)
+    {
+        var query = dbContext.Bookings.AsNoTracking()
+            .Where(b => b.Status == BookingStatus.Pending);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await ProjectRows(query
+                .OrderBy(b => b.Date).ThenBy(b => b.StartTime)
+                .ThenBy(b => b.CreatedAt).ThenBy(b => b.BookingId)
+                .Take(take))
+            .ToListAsync(ct);
+
+        return new PagedResult<BookingRow>
+        {
+            Items = items,
+            PageNumber = 1,
+            PageSize = take,
+            TotalCount = totalCount
+        };
+    }
+
     public async Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default)
     {
         return await ProjectRows(dbContext.Bookings.AsNoTracking().Where(b => b.BookingId == bookingId))

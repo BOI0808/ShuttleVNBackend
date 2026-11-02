@@ -11,6 +11,7 @@ public interface IBookingRepository
     Task<List<Guid>> GetSettlementCandidateIdsAsync(DateTime localCutoff, CancellationToken ct = default);
     Task<Booking?> GetByIdForUpdateAsync(Guid bookingId, CancellationToken ct = default);
     Task<PagedResult<BookingRow>> GetPendingAsync(PageRequest page, CancellationToken ct = default);
+    Task<PagedResult<BookingRow>> GetPendingPreviewAsync(int take, CancellationToken ct = default);
     Task<BookingRow?> GetRowByIdAsync(Guid bookingId, CancellationToken ct = default);
     Task<BookingInvoiceDto?> GetValidInvoiceAsync(Guid bookingId, CancellationToken ct = default);
     Task<List<BookingStatusHistoryDto>> GetStatusHistoryAsync(Guid bookingId, CancellationToken ct = default);

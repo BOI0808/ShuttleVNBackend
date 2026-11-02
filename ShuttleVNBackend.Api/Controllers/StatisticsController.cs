@@ -4,7 +4,6 @@ using ShuttleVNBackend.Api.Common;
 using ShuttleVNBackend.Api.DTOs.Common;
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.UseCases.Statistics.Services;
-using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Api.Controllers;
 
@@ -14,12 +13,14 @@ namespace ShuttleVNBackend.Api.Controllers;
 public class StatisticsController(StatisticsService statisticsService) : ControllerBase
 {
     [HttpGet("court-usage")]
-    public async Task<ActionResult<ApiResponse<List<BadmintonCourt>>>> GetCourtUsage(
+    public async Task<ActionResult<ApiResponse<CourtUsageSummaryDto>>> GetCourtUsage(
         [FromQuery] DateOnly? fromDate,
         [FromQuery] DateOnly? toDate,
+        [FromQuery] RevenueGroupBy groupBy = RevenueGroupBy.Day,
         CancellationToken ct = default)
     {
-        return Ok(ApiResponseFactory.Success(await statisticsService.GetCourtUsageAsync(fromDate, toDate, ct)));
+        return Ok(ApiResponseFactory.Success(
+            await statisticsService.GetCourtUsageAsync(fromDate, toDate, groupBy, ct)));
     }
 
     [HttpGet("revenue")]
