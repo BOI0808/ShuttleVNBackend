@@ -1,7 +1,6 @@
 using ShuttleVNBackend.Application.Common;
 using ShuttleVNBackend.Application.DTOs.Statistics;
 using ShuttleVNBackend.Application.Exceptions;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.System;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 
@@ -12,95 +11,39 @@ public class StatisticsService(
     TimeProvider clock)
 {
     private const int MaxRangeDays = 366;
-    private const int FirstHour = 5;
-    private const int HourBuckets = 17;
+
+    private readonly record struct Usage(int BookingCount, double BookedHours, int CompletedCount, double CompletedHours);
 
     public async Task<CourtUsageSummaryDto> GetCourtUsageAsync(
-        DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
+        DateOnly? fromDate, DateOnly? toDate, RevenueGroupBy groupBy, CancellationToken ct = default)
     {
-        var today = VietnamTime.TodayLocal(clock);
-        var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
-        var to = toDate ?? today;
+        var (from, to) = ResolveRange(fromDate, toDate);
 
-        if (from > to || to.DayNumber - from.DayNumber >= MaxRangeDays)
-            throw new ValidationException(errors: new Dictionary<string, string[]>
+        var courts = await statisticsRepository.GetCourtsAsync(ct);
+        var rows = await statisticsRepository.GetUsageRowsAsync(from, to, ct);
+
+        var rowsByPeriod = rows.ToLookup(r => PeriodStart(r.Date, groupBy));
+        var periods = EnumeratePeriods(from, to, groupBy)
+            .Select(start =>
             {
-                ["DateRange"] = [$"fromDate must be <= toDate and the range at most {MaxRangeDays} days"]
-            });
+                var u = SumUsage(rowsByPeriod[start]);
+                return new CourtUsagePeriodDto(
+                    start, u.BookingCount, u.BookedHours, u.CompletedCount, u.CompletedHours);
+            })
+            .ToList();
 
-        var courts = await statisticsRepository.GetCourtsWithSchedulesAsync(ct);
-        var bookings = await statisticsRepository.GetBookingsInRangeAsync(from, to, ct);
-
-        var dayCounts = new int[8]; // index = ISO day 1..7
-        for (var d = from; d <= to; d = d.AddDays(1))
-            dayCounts[d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek]++;
-
-        var stats = courts.Select(c =>
-        {
-            var own = bookings.Where(b => b.CourtId == c.CourtId).ToList();
-            var used = own.Where(b => b.Status is BookingStatus.Confirmed or BookingStatus.Completed).ToList();
-
-            var availableHours = c.CourtSchedules
-                .Where(s => s.IsAvailable)
-                .Sum(s => (s.CloseTime - s.OpenTime).TotalHours * dayCounts[s.DayOfWeek]);
-            var bookedHours = used.Sum(b => (b.EndTime - b.StartTime).TotalHours);
-
-            return new CourtUsageStatDto(
-                c.CourtId, c.Name, c.Status.ToString(),
-                Math.Round(availableHours, 2), (int)Math.Round(availableHours * 2),
-                Math.Round(bookedHours, 2), (int)Math.Round(bookedHours * 2),
-                used.Count,
-                used.Count(b => b.Status == BookingStatus.Confirmed),
-                used.Count(b => b.Status == BookingStatus.Completed),
-                own.Count(b => b.Status == BookingStatus.Cancelled),
-                availableHours > 0 ? Math.Round(bookedHours / availableHours * 100, 2) : 0,
-                used.Sum(b => b.TotalCost));
-        }).ToList();
-
-        var usedAll = bookings.Where(b => b.Status is BookingStatus.Confirmed or BookingStatus.Completed).ToList();
-
-        var hourly = Enumerable.Range(0, HourBuckets).Select(i =>
-        {
-            var bucketStart = new TimeOnly(FirstHour + i, 0);
-            var bucketEnd = bucketStart.AddHours(1);
-            double hours = 0;
-            var count = 0;
-            foreach (var b in usedAll)
-            {
-                var overlapStart = b.StartTime > bucketStart ? b.StartTime : bucketStart;
-                var overlapEnd = b.EndTime < bucketEnd ? b.EndTime : bucketEnd;
-                var minutes = (overlapEnd - overlapStart).TotalMinutes;
-                if (minutes <= 0) continue;
-                hours += minutes / 60;
-                count++;
-            }
-
-            return new HourlyUsageStatDto(bucketStart.ToString("HH:mm"), Math.Round(hours, 2), count);
-        }).ToList();
-
-        var totalBooked = stats.Sum(s => s.BookedHours);
-        var totalAvailable = stats.Sum(s => s.TotalAvailableHours);
-        var mostUsed = stats.Where(s => s.BookedHours > 0).MaxBy(s => s.BookedHours)?.CourtName;
+        var total = SumUsage(rows);
 
         return new CourtUsageSummaryDto(
-            from, to, usedAll.Count,
-            Math.Round(totalBooked, 2), Math.Round(totalAvailable, 2),
-            totalAvailable > 0 ? Math.Round(totalBooked / totalAvailable * 100, 2) : 0,
-            mostUsed, stats, hourly);
+            from, to, groupBy,
+            total.BookingCount, total.BookedHours, total.CompletedCount, total.CompletedHours,
+            periods, BuildCourts(courts, rows));
     }
 
     public async Task<RevenueSummaryDto> GetRevenueAsync(
         DateOnly? fromDate, DateOnly? toDate, RevenueGroupBy groupBy, CancellationToken ct = default)
     {
-        var today = VietnamTime.TodayLocal(clock);
-        var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
-        var to = toDate ?? today;
-
-        if (from > to || to.DayNumber - from.DayNumber >= MaxRangeDays)
-            throw new ValidationException(errors: new Dictionary<string, string[]>
-            {
-                ["DateRange"] = [$"fromDate must be <= toDate and the range at most {MaxRangeDays} days"]
-            });
+        var (from, to) = ResolveRange(fromDate, toDate);
 
         var invoices = await statisticsRepository.GetPaidInvoicesAsync(
             VietnamTime.ToUtc(from, TimeOnly.MinValue),
@@ -119,6 +62,68 @@ public class StatisticsService(
         return new RevenueSummaryDto(from, to, groupBy,
             periods.Sum(p => p.InvoiceCount), periods.Sum(p => p.Revenue), periods);
     }
+
+    private (DateOnly From, DateOnly To) ResolveRange(DateOnly? fromDate, DateOnly? toDate)
+    {
+        var today = VietnamTime.TodayLocal(clock);
+        var from = fromDate ?? new DateOnly(today.Year, today.Month, 1);
+        var to = toDate ?? today;
+
+        if (from > to || to.DayNumber - from.DayNumber >= MaxRangeDays)
+        {
+            throw new ValidationException(errors: new Dictionary<string, string[]>
+            {
+                ["DateRange"] = [$"fromDate must be <= toDate and the range at most {MaxRangeDays} days"]
+            });
+        }
+
+        return (from, to);
+    }
+
+    private static Usage SumUsage(IEnumerable<CourtUsageRow> rows)
+    {
+        var bookingCount = 0;
+        var completedCount = 0;
+        var bookedMinutes = 0d;
+        var completedMinutes = 0d;
+
+        foreach (var row in rows)
+        {
+            var minutes = (row.EndTime - row.StartTime).TotalMinutes;
+            bookingCount++;
+            bookedMinutes += minutes;
+
+            if (row.Status != BookingStatus.Completed)
+            {
+                continue;
+            }
+
+            completedCount++;
+            completedMinutes += minutes;
+        }
+
+        return new Usage(bookingCount, ToHours(bookedMinutes), completedCount, ToHours(completedMinutes));
+    }
+
+    private static List<CourtUsageCourtDto> BuildCourts(
+        IReadOnlyList<CourtNameRow> courts, IReadOnlyList<CourtUsageRow> rows)
+    {
+        var rowsByCourt = rows.ToLookup(r => r.CourtId);
+
+        return courts
+            .Select(c => (Court: c, Totals: SumUsage(rowsByCourt[c.CourtId])))
+            .Where(x => x.Court.Name is not null || x.Totals.BookingCount > 0)
+            .Select(x => new CourtUsageCourtDto(
+                x.Court.CourtId,
+                x.Court.Name ?? $"Sân đã xóa #{x.Court.CourtId}",
+                x.Totals.BookingCount,
+                x.Totals.BookedHours,
+                x.Totals.CompletedCount,
+                x.Totals.CompletedHours))
+            .ToList();
+    }
+
+    private static double ToHours(double minutes) => Math.Round(minutes / 60, 2);
 
     private static DateOnly PeriodStart(DateOnly date, RevenueGroupBy groupBy) =>
         groupBy == RevenueGroupBy.Month ? new DateOnly(date.Year, date.Month, 1) : date;
