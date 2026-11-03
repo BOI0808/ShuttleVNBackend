@@ -22,7 +22,7 @@ Hệ thống RESTful Web API cho nền tảng quản lý và đặt sân cầu l
 
 ---
 
-## 🏛 Cấu trúc Solution (Clean Architecture)
+## Cấu trúc Solution
 
 Dự án tuân thủ nghiêm ngặt nguyên tắc phụ thuộc một chiều của Clean Architecture:
 
