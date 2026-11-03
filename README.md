@@ -46,7 +46,7 @@ ShuttleVNBackend.Core ◄───────┘
 
 ---
 
-## 🚀 Hướng dẫn Cài đặt & Khởi chạy (Getting Started)
+## Cài đặt & Khởi chạy
 
 ### 1. Yêu cầu môi trường
 * [.NET 10 SDK](https://dotnet.microsoft.com/download)
