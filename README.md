@@ -4,7 +4,7 @@ Hệ thống RESTful Web API cho nền tảng quản lý và đặt sân cầu l
 
 ---
 
-## 🛠 Công nghệ & Thư viện (Tech Stack)
+## Công nghệ sử dụng (Tech Stack)
 
 * **Runtime & Framework**: [.NET 10](https://dotnet.microsoft.com/) (C# 13 / `net10.0`), ASP.NET Core Web API
 * **Kiến trúc**: Clean Architecture (Onion / Layered Architecture)
