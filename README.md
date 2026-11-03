@@ -108,7 +108,7 @@ Container API sẽ được map ra cổng `8080:8080` (hoặc cổng cấu hình
 
 ---
 
-## 🌟 Các tính năng chính
+## Các tính năng chính
 
 1. **Quản lý Đặt sân & Lịch thi đấu**:
    * Đặt sân theo khoảng thời gian thực tế, hỗ trợ khách vãng lai và thành viên.
