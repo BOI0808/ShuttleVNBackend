@@ -4,6 +4,20 @@ Hệ thống RESTful Web API cho nền tảng quản lý và đặt sân cầu l
 
 ---
 
+## Mục lục
+
+* [Công nghệ sử dụng (Tech Stack)](#công-nghệ-sử-dụng-tech-stack)
+* [Cấu trúc Solution](#cấu-trúc-solution)
+* [Cài đặt & Khởi chạy](#cài-đặt--khởi-chạy)
+  * [1. Yêu cầu môi trường](#1-yêu-cầu-môi-trường)
+  * [2. Cấu hình biến môi trường](#2-cấu-hình-biến-môi-trường)
+  * [3. Cập nhật Database (Migrations)](#3-cập-nhật-database-migrations)
+  * [4. Khởi chạy ứng dụng](#4-khởi-chạy-ứng-dụng)
+* [Chạy với Docker](#chạy-với-docker)
+* [Các tính năng chính](#các-tính-năng-chính)
+
+---
+
 ## Công nghệ sử dụng (Tech Stack)
 
 * **Runtime & Framework**: [.NET 10](https://dotnet.microsoft.com/) (C# 13 / `net10.0`), ASP.NET Core Web API
@@ -124,4 +138,3 @@ Container API sẽ được map ra cổng `8080:8080` (hoặc cổng cấu hình
 4. **Tra cứu & Tìm kiếm**:
    * Quick Lookup cho nhân viên: tra cứu nhanh theo mã đơn, số điện thoại, tên khách hàng.
    * Tìm kiếm đơn đặt sân phía khách hàng.
-
