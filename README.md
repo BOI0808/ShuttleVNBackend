@@ -1,6 +1,6 @@
 # ShuttleVN Backend API
 
-Hệ thống RESTful Web API cho nền tảng quản lý và đặt sân cầu lông trực tuyến **ShuttleVN**, phục vụ 3 nhóm đối tượng: Khách hàng (Customer), Nhân viên vận hành (Employee) và Quản trị viên (Admin).
+Hệ thống RESTful Web API cho nền tảng quản lý và đặt sân cầu lông trực tuyến **ShuttleVN**.
 
 ---
 
