@@ -98,7 +98,7 @@ API mặc định sẽ lắng nghe tại:
 
 ---
 
-## 🐳 Chạy với Docker
+## Chạy với Docker
 
 Khởi chạy container nhanh bằng Docker Compose:
 ```bash
