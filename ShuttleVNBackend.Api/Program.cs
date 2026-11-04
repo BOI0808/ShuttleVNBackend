@@ -3,6 +3,7 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using ShuttleVNBackend.Api;
 using ShuttleVNBackend.Api.Extensions;
 using ShuttleVNBackend.Api.HostedServices;
 using ShuttleVNBackend.Api.Middlewares;
@@ -47,6 +48,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<PendingBookingExpiryService>();
+builder.Services.AddAssistantRateLimit();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -95,6 +97,7 @@ app.UseCors("Frontend");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
