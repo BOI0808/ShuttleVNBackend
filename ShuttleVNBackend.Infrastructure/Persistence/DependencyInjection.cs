@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<PricingRuleService>();
         services.AddScoped<AuditService>();
         services.AddScoped<StatisticsService>();
+        services.AddScoped<DashboardService>();
         services.AddScoped<BookingService>();
         services.AddScoped<BookingLifecycle>();
         services.AddScoped<BookingRescheduleService>();

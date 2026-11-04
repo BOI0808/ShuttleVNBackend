@@ -1,28 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using ShuttleVNBackend.Application.DTOs.Statistics;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.System;
-using ShuttleVNBackend.Core.Entities.Bookings;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
-using ShuttleVNBackend.Core.Entities.Courts;
 
 namespace ShuttleVNBackend.Infrastructure.Persistence.Repositories.System;
 
 public class StatisticsRepository(ShuttleVnDbContext dbContext) : IStatisticsRepository
 {
-    public async Task<IReadOnlyList<BadmintonCourt>> GetCourtsWithSchedulesAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<CourtNameRow>> GetCourtsAsync(CancellationToken ct = default)
     {
         return await dbContext.BadmintonCourts.AsNoTracking()
-            .Include(c => c.CourtSchedules)
             .OrderBy(c => c.CourtId)
+            .Select(c => new CourtNameRow(c.CourtId, c.Name))
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Booking>> GetBookingsInRangeAsync(
+    public async Task<IReadOnlyList<CourtUsageRow>> GetUsageRowsAsync(
         DateOnly from, DateOnly to, CancellationToken ct = default)
     {
         return await dbContext.Bookings.AsNoTracking()
-            .Where(b => b.Date >= from && b.Date <= to && b.Status != BookingStatus.Pending)
+            .Where(b => b.Date >= from && b.Date <= to && b.Status != BookingStatus.Cancelled)
+            .Select(b => new CourtUsageRow(b.CourtId, b.Date, b.StartTime, b.EndTime, b.Status))
             .ToListAsync(ct);
     }
 

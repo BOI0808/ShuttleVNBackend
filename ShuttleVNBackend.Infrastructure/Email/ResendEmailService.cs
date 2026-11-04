@@ -20,6 +20,7 @@ public sealed class ResendEmailService(HttpClient httpClient, IOptions<EmailServ
         
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
+        request.Headers.UserAgent.ParseAdd("ShuttleVN/1.0");
         request.Content = JsonContent.Create(new
         {
             from = new MailboxAddress(settings.FromName, settings.FromAddress).ToString(),

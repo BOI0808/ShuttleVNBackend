@@ -1,29 +1,27 @@
 namespace ShuttleVNBackend.Application.DTOs.Statistics;
 
-public record CourtUsageStatDto(
+public record CourtUsagePeriodDto(
+    DateOnly PeriodStart,
+    int BookingCount,
+    double BookedHours,
+    int CompletedCount,
+    double CompletedHours);
+
+public record CourtUsageCourtDto(
     int CourtId,
     string CourtName,
-    string Status,
-    double TotalAvailableHours,
-    int TotalSlots,
-    double BookedHours,
-    int BookedSlots,
     int BookingCount,
-    int ConfirmedCount,
+    double BookedHours,
     int CompletedCount,
-    int CancelledCount,
-    double OccupancyRate,
-    decimal TotalRevenue);
-
-public record HourlyUsageStatDto(string Hour, double BookedHours, int BookingCount);
+    double CompletedHours);
 
 public record CourtUsageSummaryDto(
     DateOnly FromDate,
     DateOnly ToDate,
-    int TotalBookings,
-    double TotalBookedHours,
-    double TotalAvailableHours,
-    double AverageOccupancyRate,
-    string? MostUsedCourtName,
-    IReadOnlyList<CourtUsageStatDto> Courts,
-    IReadOnlyList<HourlyUsageStatDto> HourlyBreakdown);
+    RevenueGroupBy GroupBy,
+    int BookingCount,
+    double BookedHours,
+    int CompletedCount,
+    double CompletedHours,
+    IReadOnlyList<CourtUsagePeriodDto> Periods,
+    IReadOnlyList<CourtUsageCourtDto> Courts);
