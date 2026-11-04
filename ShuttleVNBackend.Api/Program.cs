@@ -101,8 +101,8 @@ app.MapControllers();
 using var scope = app.Services.CreateScope();
 
 var db = scope.ServiceProvider.GetRequiredService<ShuttleVnDbContext>();
-db.Database.Migrate();
+await db.Database.MigrateAsync();
 
 await app.SeedAdminAccountAsync();
 
-app.Run();
+await app.RunAsync();
