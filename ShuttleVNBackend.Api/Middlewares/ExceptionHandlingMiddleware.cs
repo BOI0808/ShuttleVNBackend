@@ -22,21 +22,20 @@ public class ExceptionHandlingMiddleware(
             context.Response.StatusCode = ex.StatusCode;
 
             if (ex is TooManyRequestsException tooManyRequests)
-                context.Response.Headers["Retry-After"] = tooManyRequests.RetryAfterSeconds.ToString();
+                context.Response.Headers.RetryAfter = tooManyRequests.RetryAfterSeconds.ToString();
 
             IDictionary<string, string[]> errors = new Dictionary<string, string[]>();
             if (ex is ValidationException validationEx)
                 errors = validationEx.Errors;
 
             var data = ex is PriceChangedException priceChanged ? priceChanged.Quote : null;
-            var problem = ApiResponseFactory.Failure<object>(ex.Message, errors, data);
-
-            await context.Response.WriteAsJsonAsync(problem);
+            await context.Response.WriteAsJsonAsync(
+                ApiResponseFactory.Failure<object>(ex.Message, errors, data),
+                context.RequestAborted);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
         {
-            SqlState: PostgresErrorCodes.ExclusionViolation
-                                                   or PostgresErrorCodes.UniqueViolation
+            SqlState: PostgresErrorCodes.ExclusionViolation or PostgresErrorCodes.UniqueViolation
         })
         {
             logger.LogWarning(ex, "Database constraint conflict");
@@ -44,8 +43,10 @@ public class ExceptionHandlingMiddleware(
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status409Conflict;
 
-            await context.Response.WriteAsJsonAsync(ApiResponseFactory.Failure<object>(
-                "The data was changed by another operation. Please reload and try again."));
+            await context.Response.WriteAsJsonAsync(
+                ApiResponseFactory.Failure<object>(
+                    "The data was changed by another operation. Please reload and try again."),
+                context.RequestAborted);
         }
         catch (Exception ex)
         {
@@ -55,7 +56,8 @@ public class ExceptionHandlingMiddleware(
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
             await context.Response.WriteAsJsonAsync(
-                ApiResponseFactory.Failure<object>("Internal server error"));
+                ApiResponseFactory.Failure<object>("Internal server error"),
+                context.RequestAborted);
         }
     }
 }
