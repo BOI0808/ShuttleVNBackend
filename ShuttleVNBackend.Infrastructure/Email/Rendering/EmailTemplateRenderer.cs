@@ -2,11 +2,11 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.Rendering;
 
 public sealed partial class EmailTemplateRenderer
 {
-    private const string ResourcePrefix = "ShuttleVNBackend.Infrastructure.Email.Templates.";
+    private const string ResourcePrefix = "ShuttleVNBackend.Infrastructure.Email.Rendering.Templates.";
 
     private readonly ConcurrentDictionary<string, string> _templates = new();
 

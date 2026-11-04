@@ -1,4 +1,4 @@
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.Options;
 
 public sealed class EmailServiceOptions
 {

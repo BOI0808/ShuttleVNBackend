@@ -3,8 +3,10 @@ using Microsoft.Extensions.Options;
 using ShuttleVNBackend.Application.DTOs.Email;
 using ShuttleVNBackend.Application.Interfaces;
 using ShuttleVNBackend.Application.UseCases.Authentication.Helpers;
+using ShuttleVNBackend.Infrastructure.Email.Options;
+using ShuttleVNBackend.Infrastructure.Email.Rendering;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.AccountSetup;
 
 public sealed class PasswordSetupMailer(
     IEmailService emailService,

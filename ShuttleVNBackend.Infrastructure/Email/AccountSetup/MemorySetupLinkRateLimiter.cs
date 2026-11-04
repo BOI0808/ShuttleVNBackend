@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ShuttleVNBackend.Application.Interfaces;
 using ShuttleVNBackend.Application.UseCases.Authentication.Helpers;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.AccountSetup;
 
 public sealed class MemorySetupLinkRateLimiter(IMemoryCache cache, TimeProvider clock) : ISetupLinkRateLimiter
 {

@@ -8,7 +8,7 @@ using ShuttleVNBackend.Application.Interfaces;
 using ShuttleVNBackend.Core.Entities.System;
 using ShuttleVNBackend.Infrastructure.Persistence;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.Notifications;
 
 public sealed class BookingNotificationWorker(
     IServiceScopeFactory scopeFactory,

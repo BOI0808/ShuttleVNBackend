@@ -3,8 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ShuttleVNBackend.Application.Interfaces;
+using ShuttleVNBackend.Infrastructure.Email.Options;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.Providers;
 
 public static class EmailServiceRegistration
 {

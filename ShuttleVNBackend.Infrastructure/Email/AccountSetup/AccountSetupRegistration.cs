@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShuttleVNBackend.Application.Interfaces;
+using ShuttleVNBackend.Infrastructure.Email.Options;
+using ShuttleVNBackend.Infrastructure.Email.Rendering;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.AccountSetup;
 
 public static class AccountSetupRegistration
 {

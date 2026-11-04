@@ -6,8 +6,9 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using ShuttleVNBackend.Application.DTOs.Email;
 using ShuttleVNBackend.Application.Interfaces;
+using ShuttleVNBackend.Infrastructure.Email.Options;
 
-namespace ShuttleVNBackend.Infrastructure.Email;
+namespace ShuttleVNBackend.Infrastructure.Email.Providers;
 
 public sealed class SmtpEmailService(IOptions<EmailServiceOptions> options) : IEmailService
 {
