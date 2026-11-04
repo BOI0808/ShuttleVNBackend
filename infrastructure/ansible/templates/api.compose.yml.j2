@@ -1,0 +1,12 @@
+services:
+  api:
+    image: ${SHUTTLEVN_API_IMAGE:?Set SHUTTLEVN_API_IMAGE}
+    container_name: shuttlevn-api
+    restart: unless-stopped
+    env_file:
+      - ./api.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "{{ ansible_host }}:8080:8080"

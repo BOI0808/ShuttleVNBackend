@@ -1,0 +1,7 @@
+tenancy_ocid        = ""
+compartment_ocid    = ""
+ssh_public_key_path = ""
+ssh_allowed_cidr    = ""
+# availability_domain = ""
+region              = ""
+image_ocid          = ""

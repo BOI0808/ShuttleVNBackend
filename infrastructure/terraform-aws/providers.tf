@@ -1,0 +1,12 @@
+provider "aws" {
+  region  = "ap-southeast-1"
+  profile = "nt548"
+
+  default_tags {
+    tags = {
+      Project   = "ShuttleVN"
+      Course    = "NT548"
+      ManagedBy = "Terraform"
+    }
+  }
+}

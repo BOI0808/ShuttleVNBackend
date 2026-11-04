@@ -22,6 +22,12 @@ Secret keys:
 - `EmailService__ApiKey` (Resend)
 - `EmailService__Smtp__Username`
 - `EmailService__Smtp__Password`
+- `Assistant__ApiKey` (OpenAI-compatible endpoint used by the advisory chatbot)
+- `Assistant__BaseUrl` (endpoint base URL, e.g. `https://api.openai.com/v1`)
+- `Assistant__Model` (model name)
+- `Assistant__ExtraBody` (raw JSON merged into every chat request; use it to disable
+  provider-specific reasoning, e.g. `{"reasoning_effort":"none"}`, when the model only
+  supports tool calling with reasoning off)
 
 Only selected email provider needs credentials. Choose provider and SMTP endpoint
 in appsettings, or override settings using environment variables such as

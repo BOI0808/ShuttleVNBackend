@@ -1,4 +1,4 @@
-﻿## Multi-stage Dockerfile to build and run ShuttleVNBackend.Api
+## Multi-stage Dockerfile to build and run ShuttleVNBackend.Api
 # Build image
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
