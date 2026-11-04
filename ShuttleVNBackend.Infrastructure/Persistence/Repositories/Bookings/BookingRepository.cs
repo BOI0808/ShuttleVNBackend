@@ -123,7 +123,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             b.Customer.Phone,
             b.Customer.Email,
             b.CourtId,
-            b.Court.Name,
+            b.Court.Name ?? "DELETED", // to verify why this is nullable
             b.Date,
             b.StartTime,
             b.EndTime,
@@ -260,13 +260,16 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .Include(b => b.Court)
             .Include(b => b.PriceSegments)
             .Include(b => b.Invoices)
+            .AsSplitQuery()
             .AsNoTracking()
             .Where(b => b.BookingCode == bookingCode);
 
         if (!string.IsNullOrWhiteSpace(phoneOrEmail))
         {
-            var trimmed = phoneOrEmail.Trim().ToLower();
-            query = query.Where(b => b.Customer.Phone == trimmed || b.Customer.Email.ToLower() == trimmed);
+            var trimmed = phoneOrEmail.Trim();
+            query = query.Where(b =>
+                b.Customer.Phone == trimmed ||
+                b.Customer.Email.Equals(trimmed, StringComparison.CurrentCultureIgnoreCase));
         }
 
         return await query.FirstOrDefaultAsync(ct);
@@ -279,6 +282,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .Include(b => b.Court)
             .Include(b => b.PriceSegments)
             .Include(b => b.Invoices)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(b => b.BookingId == bookingId, ct);
     }
 
@@ -315,6 +319,7 @@ public class BookingRepository(ShuttleVnDbContext dbContext) : IBookingRepositor
             .Include(b => b.Court)
             .Include(b => b.PriceSegments)
             .Include(b => b.Invoices)
+            .AsSplitQuery()
             .Where(b => b.CustomerId == customerId)
             .OrderByDescending(b => b.Date)
             .ThenByDescending(b => b.StartTime)
