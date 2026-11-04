@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using ShuttleVNBackend.Application.Interfaces.Repositories;
 using ShuttleVNBackend.Application.Interfaces.Repositories.Courts;
 using ShuttleVNBackend.Core.Entities.Bookings.Enums;
 using ShuttleVNBackend.Core.Entities.Courts;
@@ -24,7 +23,7 @@ public class CourtRepository(ShuttleVnDbContext dbContext) : ICourtRepository
     public async Task<bool> NameExistsAsync(string name, int? excludeCourtId, CancellationToken ct = default)
     {
         return await dbContext.BadmintonCourts.AnyAsync(bc =>
-            EF.Functions.ILike(bc.Name, name) &&
+            EF.Functions.ILike(bc.Name ?? "", name) &&
             (excludeCourtId == null || bc.CourtId != excludeCourtId), ct);
     }
 
@@ -42,6 +41,7 @@ public class CourtRepository(ShuttleVnDbContext dbContext) : ICourtRepository
         var courts = await dbContext.BadmintonCourts.AsNoTracking()
             .Include(c => c.CourtSchedules.Where(s => s.DayOfWeek == isoDayOfWeek))
             .Include(c => c.PricingRules.Where(p => p.DayOfWeek == isoDayOfWeek))
+            .AsSplitQuery()
             .OrderBy(c => c.CourtId)
             .ToListAsync(ct);
 
