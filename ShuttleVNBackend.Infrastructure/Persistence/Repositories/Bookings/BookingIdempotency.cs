@@ -65,7 +65,7 @@ public sealed class BookingIdempotency(
         context.Response.Cookies.Append(CookieName, _protector.Protect(scope, clock.GetUtcNow().Add(GuestScopeLifetime)), new CookieOptions
         {
             HttpOnly = true,
-            Secure = context.Request.IsHttps,
+            Secure = true, // could cause problem when using localhost
             SameSite = context.Request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
             IsEssential = true,
             Path = "/api",
