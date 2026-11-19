@@ -14,7 +14,9 @@ on:
       - ShuttleVNBackend.slnx
       - Dockerfile
       - .dockerignore
-      - .github/workflows/**
+      # Only this workflow, not .github/workflows/**: editing the infra or
+      # runner workflows must not rebuild and redeploy the API image.
+      - .github/workflows/ci-cd.yml
   workflow_dispatch:
 
 concurrency:
