@@ -133,6 +133,16 @@ on a GitHub-hosted machine with no SSH key and no pre-existing runner. It needs
 `vars.GH_APP_ID` and `secrets.GH_APP_PRIVATE_KEY`, and the App must be installed
 on both repositories with `Administration: write`.
 
+`infra.yml` calls it automatically after a successful `action=apply`, so a fresh
+stack needs no second dispatch. A re-run is a no-op: the script exits early when
+an `actions.runner.*` unit already exists. Dispatch `runners.yml` by hand only
+when the instances were rebuilt outside Terraform.
+
+After registration, `infra.yml` also runs `config.yml`, because a freshly created
+host has none of the directories, Compose files, shared network, or `api.env` that
+the `ci-cd` deploy step assumes. Without it the first deploy lands on a bare
+instance and fails at `docker compose up`.
+
 The instances carry the `<name>-ssm` instance profile from the compute module, so
 Session Manager can reach them without opening SSH. Run `infra.yml` with
 `action=apply` once after that module change lands; until the profile is attached,
@@ -192,12 +202,12 @@ access keys in GitHub.
 
 | Workflow | Trigger | Effect |
 | :--- | :--- | :--- |
-| `ci-cd.yml` | Push to `main` touching application projects | SonarQube Cloud scan, image to GHCR, deploy on the private runner, health check. |
+| `ci-cd.yml` | Push to `main` touching application projects or its own workflow file | SonarQube Cloud scan, image to GHCR, deploy on the private runner, health check. |
 | `infra.yml` | Push to `main` touching `infrastructure/terraform-aws/**` | `fmt`, `validate`, `plan`. Uploads `tfplan`. Never applies. |
-| `infra.yml` | `workflow_dispatch` with `action=apply` | Downloads the plan and applies it after `production` approval. |
+| `infra.yml` | `workflow_dispatch` with `action=apply` | Downloads the plan and applies it after `production` approval, registers both self-hosted runners, then converges the hosts. |
 | `infra.yml` | `workflow_dispatch` with `action=destroy` | Tears the AWS root down after `production` approval. |
-| `config.yml` | `workflow_dispatch` | Runs Ansible converge, optionally `--check --diff` or limited to one host group. |
-| `runners.yml` | `workflow_dispatch` | Mints registration tokens with a GitHub App and installs both self-hosted runners over SSM. |
+| `config.yml` | `workflow_dispatch` / called by `infra.yml` | Runs Ansible converge, optionally `--check --diff` or limited to one host group. |
+| `runners.yml` | `workflow_dispatch` / called by `infra.yml` | Mints registration tokens with a GitHub App and installs both self-hosted runners over SSM. |
 
 Application deploys never provision infrastructure, and infrastructure changes
 never deploy application images.
