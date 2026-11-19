@@ -11,6 +11,8 @@ on:
       - ShuttleVNBackend.Application/**
       - ShuttleVNBackend.Core/**
       - ShuttleVNBackend.Infrastructure/**
+      # The build job runs `dotnet test`, so a test-only edit must still gate.
+      - tests/**
       - ShuttleVNBackend.slnx
       - Dockerfile
       - .dockerignore
