@@ -8,8 +8,13 @@ name: Runner registration
 # no SSH key and no pre-existing self-hosted runner. The instances must carry
 # the <name>-ssm instance profile that the compute module attaches, so one
 # `infra.yml action=apply` has to have run first.
+#
+# Also callable as a reusable workflow: infra.yml invokes it right after a
+# successful apply, so a fresh stack reaches a working CI without a second
+# manual dispatch. Re-running stays a no-op.
 on:
   workflow_dispatch:
+  workflow_call:
 
 concurrency:
   group: runner-registration
@@ -80,7 +85,9 @@ jobs:
             sleep 10
           done
           echo "SSM agent never registered for ${{ matrix.host }}." >&2
-          echo "The instance profile is probably missing; run infra.yml action=apply." >&2
+          echo "Either the <name>-ssm instance profile is missing, or the host" >&2
+          echo "has no outbound path to the SSM endpoints (NAT gateway disabled)." >&2
+          echo "Run infra.yml action=apply with enable_nat_gateway=true." >&2
           exit 1
 
       # Mirrors infrastructure/ansible/playbooks/runners.yml. An existing
@@ -127,6 +134,12 @@ jobs:
           sudo -u ghrunner ./config.sh --url "https://github.com/$OWNER/$REPO" --token "$token" --labels "$RUNNER_LABEL" --unattended --replace
           ./svc.sh install ghrunner
           ./svc.sh start
+          for _ in \$(seq 1 12); do
+            ./svc.sh status && exit 0
+            sleep 5
+          done
+          echo "runner service did not become active" >&2
+          exit 1
           EOF
           )
 
@@ -158,3 +171,21 @@ jobs:
 
           rm -f /tmp/send-command.json
           test "$status" = "Success"
+
+          # svc.sh start returns before the runner completes its first
+          # handshake, so a healthy unit can still leave GitHub waiting.
+          for _ in $(seq 1 30); do
+            if curl -sf \
+                 -H "Authorization: Bearer $GH_TOKEN" \
+                 -H "Accept: application/vnd.github+json" \
+                 "https://api.github.com/repos/$OWNER/$REPO/actions/runners" \
+               | jq -e --arg l "$RUNNER_LABEL" \
+                 '.runners[] | select(.status == "online") | .labels[] | select(.name == $l)' \
+                 >/dev/null; then
+              echo "$RUNNER_LABEL is online"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Runner $RUNNER_LABEL never came online; check its service log." >&2
+          exit 1

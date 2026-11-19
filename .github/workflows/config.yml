@@ -2,8 +2,10 @@ name: Server configuration
 
 # Ansible converges machine state, not application state. A push is not a
 # deployment, and `docker compose up -d` reports changed on every run, so
-# this never runs automatically. Dispatch it when playbooks or templates
-# change.
+# this never runs on a push. Dispatch it when playbooks or templates
+# change; infra.yml also calls it after an apply, because freshly created
+# hosts have none of the directories, networks, or api.env that a deploy
+# expects.
 #
 # Requires the self-hosted private runner: it lives in the VPC, so it can
 # reach the private host directly and the public host through it (see
@@ -20,6 +22,10 @@ on:
         description: 'Dry run (--check --diff)'
         type: boolean
         default: false
+  # Called by infra.yml after apply, where inputs.limit and inputs.check are
+  # unset: empty LIMIT and a non-"true" CHECK already mean "all" and "apply"
+  # in the converge step.
+  workflow_call:
 
 concurrency:
   group: config-converge

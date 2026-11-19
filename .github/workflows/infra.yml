@@ -143,6 +143,37 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+  register-runners:
+    name: Register runners
+    # A fresh stack has no self-hosted runner, so ci-cd and config cannot run
+    # until registration happens. The apply job has just attached the instance
+    # profile the SSM path needs, and runners.yml is idempotent, so re-applying
+    # never disturbs a live runner.
+    needs: apply
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.action == 'apply'
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    uses: ./.github/workflows/runners.yml
+
+  converge:
+    name: Configure hosts
+    # Instances come out of Terraform as bare Ubuntu. The deploy step runs
+    # `docker compose` in /opt/shuttlevn/backend, so the compose file, the
+    # shared network, and api.env have to exist before any ci-cd push lands.
+    needs: register-runners
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.action == 'apply'
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    uses: ./.github/workflows/config.yml
+
   destroy:
     name: Destroy
     # Dispatch only, and never on a push. The approval on the `production`
